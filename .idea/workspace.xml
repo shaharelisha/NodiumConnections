@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4de0c2d1-6df8-48cc-bb7c-8f951e006e9f" name="Default" comment="" />
+    <ignored path="Nodium2.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <ignored path=".idea/dataSources.local.xml" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="DatabaseView">
+    <option name="FLATTEN" value="false" />
+    <option name="GROUP_BY_TYPE" value="true" />
+    <option name="SORT_CHILDREN" value="false" />
+    <option name="SHOW_TABLE_CONSTRAINTS" value="true" />
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" />
+        <option name="myItemType" value="com.intellij.database.view.DbRootNodeDescriptor" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" />
+        <option name="myItemType" value="com.intellij.database.view.DbRootNodeDescriptor" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="db" />
+        <option name="myItemType" value="com.intellij.database.view.DbNodeDescriptor" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="" />
+        <option name="myItemType" value="com.intellij.database.view.DbNodeDescriptor" />
+      </PATH_ELEMENT>
+    </PATH>
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="FavoritesManager">
+    <favorites_list name="Nodium2" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="settings.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Nodium2/settings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="43" column="46" selection-start-line="43" selection-start-column="46" selection-end-line="43" selection-end-column="46" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/nod/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="255" column="27" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="27" />
+              <folding>
+                <element signature="e#0#28#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="urls.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/Nodium2/settings.py" />
+        <option value="$PROJECT_DIR$/nod/models.py" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+  </component>
+  <component name="NamedScopeManager">
+    <order />
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="y" value="23" />
+    <option name="width" value="1280" />
+    <option name="height" value="719" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+    <OptionsSetting value="true" id="Add" />
+    <OptionsSetting value="true" id="Remove" />
+    <OptionsSetting value="true" id="Checkout" />
+    <OptionsSetting value="true" id="Update" />
+    <OptionsSetting value="true" id="Status" />
+    <OptionsSetting value="true" id="Edit" />
+    <ConfirmationsSetting value="0" id="Add" />
+    <ConfirmationsSetting value="0" id="Remove" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+    </navigator>
+    <panes>
+      <pane id="Scratches" />
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nod" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nod" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="migrations" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Nodium2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="settings.editor.selected.configurable" value="reference.settings.ide.settings.file-colors" />
+    <property name="settings.editor.splitter.proportion" value="0.2" />
+    <property name="recentsLimit" value="5" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="dynamic.classpath" value="false" />
+    <property name="FullScreen" value="false" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Desktop" />
+  </component>
+  <component name="RunManager" selected="Django server.Nodium2">
+    <configuration default="true" type="Python.DjangoServer" factoryName="Django server">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Nodium2" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nodium2" type="Python.DjangoServer" factoryName="Django server">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Nodium2" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method />
+    </configuration>
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="Django server.Nodium2" />
+    </list>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4de0c2d1-6df8-48cc-bb7c-8f951e006e9f" name="Default" comment="" />
+      <created>1456409935884</created>
+      <option name="number" value="Default" />
+      <updated>1456409935884</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="23" width="1280" height="719" extended-state="1" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15185784" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33844912" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15948963" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Nodium2/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nod/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="255" column="27" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nod/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="255" column="27" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/f0349195-8356-46f6-a622-3236ce587798/console.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nod/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="255" column="27" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="uml://DATABASE/7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_admin">
+      <provider selected="true" editor-type-id="UmlEditorProvider">
+        <state>
+          <ID>DATABASE</ID>
+          <OriginalElement>7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_admin</OriginalElement>
+          <nodes>
+            <node x="107.5" y="213.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_vehicle</node>
+            <node x="615.0" y="301.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_payment</node>
+            <node x="315.0" y="969.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_task</node>
+            <node x="1429.5" y="0.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user</node>
+            <node x="1422.0" y="323.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_franchisee</node>
+            <node x="638.0" y="602.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_card</node>
+            <node x="1772.0" y="323.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_mechanic</node>
+            <node x="1597.0" y="323.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_admin</node>
+            <node x="0.0" y="947.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_invoice</node>
+            <node x="127.5" y="602.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_job</node>
+            <node x="187.5" y="0.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_bay</node>
+            <node x="766.75" y="0.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer</node>
+            <node x="0.0" y="1243.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_part</node>
+            <node x="1247.0" y="323.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_receptionist</node>
+            <node x="930.0" y="367.0">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_existingcustomer</node>
+          </nodes>
+          <notes />
+          <edges>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_admin" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user">
+              <point x="0.0" y="-48.5" />
+              <point x="1674.5" y="298.0" />
+              <point x="1626.375" y="298.0" />
+              <point x="39.375" y="136.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_task" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_job">
+              <point x="0.0" y="-103.5" />
+              <point x="442.5" y="922.0" />
+              <point x="378.75" y="922.0" />
+              <point x="83.75" y="147.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_franchisee" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user">
+              <point x="0.0" y="-48.5" />
+              <point x="1499.5" y="298.0" />
+              <point x="1547.625" y="298.0" />
+              <point x="-39.375" y="136.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_invoice" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_job">
+              <point x="0.0" y="-125.5" />
+              <point x="147.5" y="922.0" />
+              <point x="211.25" y="922.0" />
+              <point x="-83.75" y="147.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_existingcustomer" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer">
+              <point x="0.0" y="-59.5" />
+              <point x="1066.0" y="276.0" />
+              <point x="988.0" y="276.0" />
+              <point x="73.75" y="125.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_vehicle" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_bay">
+              <point x="0.0" y="-169.5" />
+              <point x="0.0" y="81.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_card" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_payment">
+              <point x="0.0" y="-48.5" />
+              <point x="0.0" y="125.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_receptionist" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user">
+              <point x="0.0" y="-48.5" />
+              <point x="1324.5" y="298.0" />
+              <point x="1468.875" y="298.0" />
+              <point x="-118.125" y="136.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_mechanic" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user">
+              <point x="0.0" y="-48.5" />
+              <point x="1849.5" y="298.0" />
+              <point x="1705.125" y="298.0" />
+              <point x="118.125" y="136.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_payment" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer">
+              <point x="0.0" y="-125.5" />
+              <point x="762.5" y="276.0" />
+              <point x="840.5" y="276.0" />
+              <point x="-73.75" y="125.5" />
+            </edge>
+            <edge source="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_job" target="7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_vehicle">
+              <point x="0.0" y="-147.5" />
+              <point x="0.0" y="169.5" />
+            </edge>
+          </edges>
+          <settings layout="Hierarchic Group" zoom="0.7592193117616846" x="1047.0" y="446.0" />
+          <SelectedNodes />
+          <Categories>
+            <Category>Columns</Category>
+            <Category>Key columns</Category>
+          </Categories>
+          <SCOPE>All</SCOPE>
+        </state>
+      </provider>
+    </entry>
+    <entry file="uml://DATABASE/7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer">
+      <provider selected="true" editor-type-id="UmlEditorProvider">
+        <state>
+          <ID>DATABASE</ID>
+          <OriginalElement>7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer</OriginalElement>
+          <nodes>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_vehicle</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_payment</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_task</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:auth_user</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_franchisee</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_mechanic</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_card</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_invoice</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_job</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_admin</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_bay</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_customer</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_part</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_receptionist</node>
+            <node x="" y="">7bfda31f-2510-45cc-9cca-7dbf0bed35d0.table:nod_existingcustomer</node>
+          </nodes>
+          <notes />
+          <edges />
+          <settings layout="Hierarchic Group" zoom="0.29463171036204744" x="964.0" y="691.0" />
+          <SelectedNodes />
+          <Categories>
+            <Category>Columns</Category>
+            <Category>Key columns</Category>
+          </Categories>
+          <SCOPE>All</SCOPE>
+        </state>
+      </provider>
+    </entry>
+    <entry file="dbDummy://dbtable:/8e36dfc1/7bfda31f-2510-45cc-9cca-7dbf0bed35d0/..nod_invoice">
+      <provider editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="43" column="46" selection-start-line="43" selection-start-column="46" selection-end-line="43" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
