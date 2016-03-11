@@ -3,7 +3,7 @@ from django.db import models
 import uuid
 
 from django.db import models
-# from django.utils import timezone
+from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 
@@ -36,74 +36,22 @@ class SoftDeleteModel(models.Model):
         abstract = True
 
 
-# class EmailModel(TimestampedModel, SoftDeleteModel):
-#     EMAIL_TYPES = (
-#         ('1', 'Work'),
-#         ('2', 'Home'),
-#         ('3', 'Other'),
-#     )
-#
-#     type = models.CharField(max_length=1, choices=EMAIL_TYPES, default='1')
-#     address = models.EmailField(max_length=120)
-#
-#     def __str__(self):
-#         return self.address
-#
-#
-# class PhoneModel(TimestampedModel, SoftDeleteModel):
-#     PHONE_TYPES = (
-#         ('1', 'Work'),
-#         ('2', 'Home'),
-#         ('3', 'Other'),
-#     )
-#
-#     type = models.CharField(max_length=1, choices=PHONE_TYPES, default='1')
-#     phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
-#                                  message="Phone number must be entered in the format:"
-#                                          " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
-#     phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)                # unique = True
-#
-#     def save(self, *args, **kwargs):
-#         clean = self.full_clean()
-#         if clean is None:
-#             super(PhoneModel, self).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         return self.phone_number
-
-
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
-    personal_id = models.CharField(max_length=15, unique=True) #check ID string length
+    # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
     forename = models.CharField(max_length=50)
     surname = models.CharField(max_length=100)
     email = models.EmailField(max_length=120)
-
+    date = models.DateField(default=timezone.now())
     phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
                                  message="Phone number must be entered in the format:"
                                          " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
     phone_number = models.CharField(validators=[phone_regex], max_length=15)
-    # emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
-    # phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
 
     def __str__(self):
         return self.forename + " " + self.surname
 
-    # def get_emails(self):
-    #         emails = self.emails.filter(is_deleted=False)
-    #         return emails
-    #
-    # def get_emails(self):
-    #     return "; ".join([s.address for s in self.emails.filter(is_deleted=False)])
 
-    # def get_phones(self):
-    #     phone_numbers = self.phone_numbers.filter(is_deleted=False)
-    #     return phone_numbers
-    #
-    # def get_phones(self):
-    #     return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
-
-
-class ExistingCustomer(Customer):
+class AccountHolders(Customer):
     address = models.CharField(max_length=80)
     postcode = models.CharField(max_length=8)
     phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
@@ -115,40 +63,44 @@ class ExistingCustomer(Customer):
         return self.forename + ' ' + self.surname
 
 
+class BusinessCustomer(AccountHolders):
+    company_name = models.CharField(max_length=100)
+    rep_role = models.CharField(max_length=80)
+
+    phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
+                                 message="Phone number must be entered in the format:"
+                                         " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
+    fax_number = models.CharField(validators=[phone_regex], max_length=15)
+
+    def __str__(self):
+        return self.company_name
+
+
+
 class StaffMember(models.Model):
-    personal_id = models.CharField(max_length=15, unique=True) #TODO: check this.
-    user = models.OneToOneField(User, null=True)
+    # personal_id = models.CharField(max_length=15, unique=True) #TODO: check this.
+    user = models.OneToOneField(User)
+    ROLES = [
+        ("1", "Mechanic"),
+        ("2", "Foreperson"),
+        ("3", "Franchisee"),
+        ("4", "Receptionist"),
+        ("5", "Admin"),
+    ]
+    role = models.CharField(max_length=1, choices=ROLES)
 
-    # def __str__(self):
-    #     return self.forename + ' ' + self.surname
-
-    class Meta:
-        abstract = True
-
-
-class Franchisee(StaffMember):
     def __str__(self):
-        return self.forename + ' ' + self.surname
-
-
-class Admin(StaffMember):
-    def __str__(self):
-        return self.forename + ' ' + self.surname
+        return self.user.first_name + ' ' + self.user.last_name
 
 
 class Mechanic(StaffMember):
+    hourly_pay = models.FloatField()
+    role = '1'
+
     def __str__(self):
-        return self.forename + ' ' + self.surname
+        return self.user.first_name + ' ' + self.user.last_name
 
-
-class Receptionist(StaffMember):
-    def __str__(self):
-        return self.forename + ' ' + self.surname
-
-
-# class Foreperson(Receptionist, Mechanic):
-#     def __str__(self):
-#         return self.forename + ' ' + self.surname
+    #TODO: generate report data methods
 
 
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -158,7 +110,7 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         ('2', 'Card'),
         ('3', 'Cheque'),
     )
-    type = models.CharField(max_length=1, choices=PAYMENT_TYPES)
+    payment_type = models.CharField(max_length=1, choices=PAYMENT_TYPES)
 
     #not the same as the timestamp ones
     time_paid = models.TimeField()
@@ -169,15 +121,16 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 #TODO: possible to automatically set to payment type = card?
 class Card(Payment):
     card_16_digit = models.BigIntegerField()
+    payment_type = '2'
     transaction_id = models.CharField(max_length=100)
 
 
-class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    BAYS = [
-        ('1', 'MOT Bay'),
-        ('2', 'Repair Bay'),
-    ]
-    bay_type = models.CharField(choices=BAYS, max_length=1)
+# class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+#     BAYS = [
+#         ('1', 'MOT Bay'),
+#         ('2', 'Repair Bay'),
+#     ]
+#     bay_type = models.CharField(choices=BAYS, max_length=1)
 
 
 class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -193,37 +146,20 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         ('2', 'Cars'),
     )
     type = models.CharField(max_length=1, choices=VEHICLE_TYPE)
-    bay = models.ForeignKey(Bay) #?????????
-
-
-
-class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    job_number = models.PositiveIntegerField()
-    # work_request = models.CharField(max_length=1000)
-    work_carried_out = models.CharField(max_length=1000)
-    time_spent = models.DurationField()
-    estimated_job_time = models.DurationField()
-    actual_time = models.DurationField()
-    JOB_STATUS = [
-        ('1', 'Complete'),
-        ('2', 'Started'),
-        ('3', 'Pending')
-    ]
-    status = models.CharField(max_length=1, choices=JOB_STATUS, default='3')
-    vehicle = models.ForeignKey(Vehicle)
-
-
-# class JobSheet(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-#     job = models.ForeignKey(Job)
-#     owner = job.customer #maybe don't automate it here, keep it open and flexible?
-#     #vehicle
-#     #model
+    #TODO: customer okay? or does it need to be a generic relationship to all its children?
+    customer = models.ForeignKey(Customer)
+    # bay = models.ForeignKey(Bay) #?????????
 
 
 class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    job = models.ForeignKey(Job)
-    # description = models.CharField(max_length=1000) #from choice list??
-    work_request = models.CharField(max_length=100) #from choice list??
+    # job = models.ForeignKey(Job)
+    task_number = models.PositiveIntegerField()
+    description = models.CharField(max_length=300) #from choice list??
+    estimated_time = models.DurationField()
+
+
+class JobTask(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    tasks = models.ManyToManyField(Task, through="Job")
     TASK_STATUS = [
         ('1', 'Complete'),
         ('2', 'Started'),
@@ -233,7 +169,7 @@ class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 
 class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    part_number = models.CharField(max_length=15)
+    # part_number = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=200)
     vehicle_type = models.CharField(max_length=100) #? choices?
@@ -242,6 +178,76 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     code = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField()
     low_level_threshold = models.PositiveIntegerField()
+
+    def increase_quantity_by_one(self):
+        q = self.quantity
+        q += 1
+        self.quantity = q
+        return q
+
+    def decrease_quantity_by_one(self):
+        q = self.quantity
+        q -= 1
+        self.quantity = q
+        return q
+
+    def set_new_quantity(self, quantity):
+        self.quantity = quantity
+        return quantity
+
+
+class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    parts = models.ManyToManyField(Part, through="Job")
+    quantity = models.PositiveIntegerField()
+    cost = models.FloatField()
+
+    #RETHINK. THIS IS WRONG.
+
+class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    # task = models.ForeignKey(Task)
+    job_tasks = models.ForeignKey(JobTask)
+    # part = models.ForeignKey(Part)
+    job_parts = models.ForeignKey(JobPart)
+    job_number = models.PositiveIntegerField()
+    vehicle = models.ForeignKey(Vehicle)
+    real_duration = models.DurationField()
+    parts = models.ManyToManyField(Part)
+    JOB_STATUS = [
+        ('1', 'Complete'),
+        ('2', 'Started'),
+        ('3', 'Pending')
+    ]
+    status = models.CharField(max_length=1, choices=JOB_STATUS, default='3')
+    booking_date = models.DateTimeField()
+    # work_request = models.CharField(max_length=1000)
+    #TODO: make it a list?
+    work_carried_out = models.CharField(max_length=1000)
+    tasks = models.ManyToManyField(Task)
+
+    # iterates through all the assigned tasks to the job, and adds the estimated
+    # time per task to get the overall estimated time for the job.
+    def calculate_estimated_time(self):
+        estimated_time = 0
+        for t in self.jobtask.task_set:
+            estimated_time += t.estimated_time
+
+        return estimated_time
+
+    # generates invoice assigned to the given job object
+    def create_invoice(self):
+        return Invoice.objects.create(job=self)
+
+    #TODO: this doesn't go here
+    def update_status(self):
+        complete = True
+        for t in self.jobtask_set:
+            if t.status != '1':
+                complete = False
+                break
+        if complete:
+            self.status = "1"
+        return self.status
+    #TODO: anything regarding 'started' vs 'pending' statuses?
 
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
