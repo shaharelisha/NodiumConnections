@@ -36,16 +36,25 @@ class SoftDeleteModel(models.Model):
         abstract = True
 
 
+class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
+    PLAN = [
+        ('1', 'Fixed'),
+        ('2', 'Flexible'),
+        ('3', 'Variable'),
+    ]
+    type = models.CharField(choices=PLAN, max_length=1)
+
+
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
     forename = models.CharField(max_length=50)
     surname = models.CharField(max_length=100)
     email = models.EmailField(max_length=120)
-    date = models.DateField(default=timezone.now())
     phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
                                  message="Phone number must be entered in the format:"
                                          " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
     phone_number = models.CharField(validators=[phone_regex], max_length=15)
+    date = models.DateField(default=timezone.now())
 
     def __str__(self):
         return self.forename + " " + self.surname
@@ -54,10 +63,7 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 class AccountHolders(Customer):
     address = models.CharField(max_length=80)
     postcode = models.CharField(max_length=8)
-    phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
-                                 message="Phone number must be entered in the format:"
-                                         " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
-    fax_number = models.CharField(validators=[phone_regex], max_length=15)
+    discount_plan = models.ForeignKey(DiscountPlan)
 
     def __str__(self):
         return self.forename + ' ' + self.surname
@@ -115,8 +121,8 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     #not the same as the timestamp ones
     time_paid = models.TimeField()
     date = models.DateField()
-    customer = models.ForeignKey(Customer)
-
+    # customer = models.ForeignKey(Customer)
+    job = models.ForeignKey(Job)
 
 #TODO: possible to automatically set to payment type = card?
 class Card(Payment):
@@ -152,20 +158,9 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 
 class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    # job = models.ForeignKey(Job)
     task_number = models.PositiveIntegerField()
     description = models.CharField(max_length=300) #from choice list??
     estimated_time = models.DurationField()
-
-
-class JobTask(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    tasks = models.ManyToManyField(Task, through="Job")
-    TASK_STATUS = [
-        ('1', 'Complete'),
-        ('2', 'Started'),
-        ('3', 'Pending')
-    ]
-    status = models.CharField(max_length=1, choices=TASK_STATUS, default='3')
 
 
 class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -196,22 +191,12 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return quantity
 
 
-class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    parts = models.ManyToManyField(Part, through="Job")
-    quantity = models.PositiveIntegerField()
-    cost = models.FloatField()
-
-    #RETHINK. THIS IS WRONG.
-
 class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    # task = models.ForeignKey(Task)
-    job_tasks = models.ForeignKey(JobTask)
-    # part = models.ForeignKey(Part)
-    job_parts = models.ForeignKey(JobPart)
+    tasks = models.ManyToManyField(Task, through="JobTask")
+    parts = models.ManyToManyField(Part, through="JobPart")
     job_number = models.PositiveIntegerField()
     vehicle = models.ForeignKey(Vehicle)
     real_duration = models.DurationField()
-    parts = models.ManyToManyField(Part)
     JOB_STATUS = [
         ('1', 'Complete'),
         ('2', 'Started'),
@@ -222,16 +207,38 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     # work_request = models.CharField(max_length=1000)
     #TODO: make it a list?
     work_carried_out = models.CharField(max_length=1000)
-    tasks = models.ManyToManyField(Task)
+    mechanic = models.ForeignKey(Mechanic)
 
     # iterates through all the assigned tasks to the job, and adds the estimated
     # time per task to get the overall estimated time for the job.
     def calculate_estimated_time(self):
         estimated_time = 0
-        for t in self.jobtask.task_set:
+        for t in self.tasks.task_set:
             estimated_time += t.estimated_time
 
         return estimated_time
+
+    def get_duration(self):
+        time = 0
+        for t in self.job_tasks:
+            time += t.duration
+        return time
+
+    def get_labour_price(self):
+        time = self.get_duration()
+        rate = self.mechanic.hourly_pay
+        return time*rate
+
+    def get_parts_price(self):
+        price = 0
+        for part in self.job_parts:
+            unit_price = part.part.price
+            quantity = part.quantity
+            price += unit_price*quantity
+        return price
+
+    def get_price(self):
+        return self.get_labour_price() + self.get_parts_price()
 
     # generates invoice assigned to the given job object
     def create_invoice(self):
@@ -250,17 +257,42 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     #TODO: anything regarding 'started' vs 'pending' statuses?
 
 
+class JobTask(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    task = models.ForeignKey(Task)
+    job = models.ForeignKey(Job)
+    TASK_STATUS = [
+        ('1', 'Complete'),
+        ('2', 'Started'),
+        ('3', 'Pending'),
+    ]
+    status = models.CharField(max_length=1, choices=TASK_STATUS, default='3')
+    duration = models.DurationField()
+
+
+class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    part = models.ForeignKey(Part)
+    job = models.ForeignKey(Job)
+    quantity = models.PositiveIntegerField()
+
+
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     invoice_number = models.PositiveIntegerField(unique=True)
     job_done = models.ForeignKey(Job)
+    vehicle = models.ForeignKey(Vehicle)
+    #parts?
+
     service_price = models.FloatField()
     issue_date = models.DateField()
     INVOICE_STATUS = [
-        ('1', 'Not Paid'),
-        ('2', 'Paid'),
-        ('3', 'Late'),
-        ('4', 'Super Late')
+        ('1', 'Invoice Sent'),
+        ('2', 'Reminder 1 Sent'),
+        ('3', 'Reminder 2 Sent'),
+        ('4', 'Reminder 3 Sent + Warning'),
+
     ]
-    status = models.CharField(choices=INVOICE_STATUS, max_length=1)
+    reminder_phase = models.CharField(choices=INVOICE_STATUS, max_length=1)
+
+    def get_price(self):
+        return self.job_done.get_price()
 
 
