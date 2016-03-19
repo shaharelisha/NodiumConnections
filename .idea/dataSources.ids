@@ -3,7 +3,7 @@
   <data-source name="SQLite -" uuid="f0349195-8356-46f6-a622-3236ce587798">
     <database-info product="" version="" jdbc-version="" driver-name="" driver-version=""/>
   </data-source>
-  <data-source name="db" uuid="7bfda31f-2510-45cc-9cca-7dbf0bed35d0">
+  <data-source name="db" uuid="21a4c73c-be22-44ac-ad8e-30dc75bdb72c">
     <database-info product="SQLite" version="3.8.9" jdbc-version="2.1" driver-name="SQLiteJDBC" driver-version="native"/>
     <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed"/>
     <schema name="" catalog=""/>
@@ -51,10 +51,7 @@
       <exported-key name="#FAKE_auth_user_groups_2" table="auth_user_groups" schema="" catalog="" columns="user_id"/>
       <exported-key name="#FAKE_auth_user_user_permissions_2" table="auth_user_user_permissions" schema="" catalog="" columns="user_id"/>
       <exported-key name="#FAKE_django_admin_log_1" table="django_admin_log" schema="" catalog="" columns="user_id"/>
-      <exported-key name="#FAKE_nod_admin_1" table="nod_admin" schema="" catalog="" columns="user_id"/>
-      <exported-key name="#FAKE_nod_franchisee_1" table="nod_franchisee" schema="" catalog="" columns="user_id"/>
-      <exported-key name="#FAKE_nod_mechanic_1" table="nod_mechanic" schema="" catalog="" columns="user_id"/>
-      <exported-key name="#FAKE_nod_receptionist_1" table="nod_receptionist" schema="" catalog="" columns="user_id"/>
+      <exported-key name="#FAKE_nod_staffmember_1" table="nod_staffmember" schema="" catalog="" columns="user_id"/>
     </table>
     <table name="auth_user_groups" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -113,29 +110,25 @@
       <primary-key columns="session_key"/>
       <index name="django_session_de54fa62" unique="true" columns="expire_date"/>
     </table>
-    <table name="nod_admin" schema="" catalog="" type="TABLE">
-      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="personal_id" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="true" jdbcType="4"/>
-      <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_admin_1" columns="user_id" ref-table="auth_user" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+    <table name="nod_accountholders" schema="" catalog="" type="TABLE">
+      <column name="customer_ptr_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="address" sqlType="VARCHAR(80)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="postcode" sqlType="VARCHAR(8)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="discount_plan_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="customer_ptr_id"/>
+      <foreign-key name="#FAKE_nod_accountholders_1" columns="discount_plan_id" ref-table="nod_discountplan" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_accountholders_2" columns="customer_ptr_id" ref-table="nod_customer" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_businesscustomer_1" table="nod_businesscustomer" schema="" catalog="" columns="accountholders_ptr_id"/>
+      <index name="nod_accountholders_df514f56" unique="true" columns="discount_plan_id"/>
     </table>
-    <table name="nod_bay" schema="" catalog="" type="TABLE">
-      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="bay_type" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <primary-key columns="id"/>
-      <exported-key name="#FAKE_nod_vehicle_1" table="nod_vehicle" schema="" catalog="" columns="bay_id"/>
-    </table>
-    <table name="nod_card" schema="" catalog="" type="TABLE">
-      <column name="payment_ptr_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="card_16_digit" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="transaction_id" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <primary-key columns="payment_ptr_id"/>
-      <foreign-key name="#FAKE_nod_card_1" columns="payment_ptr_id" ref-table="nod_payment" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+    <table name="nod_businesscustomer" schema="" catalog="" type="TABLE">
+      <column name="accountholders_ptr_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="company_name" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="rep_role" sqlType="VARCHAR(80)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="fax_number" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <primary-key columns="accountholders_ptr_id"/>
+      <foreign-key name="#FAKE_nod_businesscustomer_1" columns="accountholders_ptr_id" ref-table="nod_accountholders" ref-schema="" ref-catalog="" ref-columns="customer_ptr_id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_partorder_1" table="nod_partorder" schema="" catalog="" columns="company_id"/>
     </table>
     <table name="nod_customer" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -143,29 +136,24 @@
       <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="personal_id" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="forename" sqlType="VARCHAR(50)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="surname" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="email" sqlType="VARCHAR(120)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="phone_number" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="date" sqlType="DATE" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
-      <exported-key name="#FAKE_nod_existingcustomer_1" table="nod_existingcustomer" schema="" catalog="" columns="customer_ptr_id"/>
-      <exported-key name="#FAKE_nod_payment_1" table="nod_payment" schema="" catalog="" columns="customer_id"/>
+      <exported-key name="#FAKE_nod_accountholders_2" table="nod_accountholders" schema="" catalog="" columns="customer_ptr_id"/>
+      <exported-key name="#FAKE_nod_vehicle_1" table="nod_vehicle" schema="" catalog="" columns="customer_id"/>
     </table>
-    <table name="nod_existingcustomer" schema="" catalog="" type="TABLE">
-      <column name="customer_ptr_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="address" sqlType="VARCHAR(80)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="postcode" sqlType="VARCHAR(8)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="fax_number" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <primary-key columns="customer_ptr_id"/>
-      <foreign-key name="#FAKE_nod_existingcustomer_1" columns="customer_ptr_id" ref-table="nod_customer" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
-    </table>
-    <table name="nod_franchisee" schema="" catalog="" type="TABLE">
+    <table name="nod_discountplan" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="personal_id" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="true" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="type" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_franchisee_1" columns="user_id" ref-table="auth_user" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_accountholders_1" table="nod_accountholders" schema="" catalog="" columns="discount_plan_id"/>
     </table>
     <table name="nod_invoice" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -174,10 +162,9 @@
       <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="invoice_number" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="service_price" sqlType="REAL" precision="2000000000" scale="10" nullable="false" jdbcType="6"/>
-      <column name="issue_date" sqlType="DATE" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="status" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="job_done_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="reminder_phase" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="issue_date" sqlType="DATE" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
       <foreign-key name="#FAKE_nod_invoice_1" columns="job_done_id" ref-table="nod_job" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
       <index name="nod_invoice_803fc3de" unique="true" columns="job_done_id"/>
@@ -190,23 +177,70 @@
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="job_number" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="work_carried_out" sqlType="VARCHAR(1000)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="time_spent" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="estimated_job_time" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="actual_time" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="status" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="vehicle_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="booking_date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="mechanic_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_job_1" columns="vehicle_id" ref-table="nod_vehicle" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_job_1" columns="mechanic_id" ref-table="nod_mechanic" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_job_2" columns="vehicle_id" ref-table="nod_vehicle" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
       <exported-key name="#FAKE_nod_invoice_1" table="nod_invoice" schema="" catalog="" columns="job_done_id"/>
-      <exported-key name="#FAKE_nod_task_1" table="nod_task" schema="" catalog="" columns="job_id"/>
+      <exported-key name="#FAKE_nod_jobpart_2" table="nod_jobpart" schema="" catalog="" columns="job_id"/>
+      <exported-key name="#FAKE_nod_jobtask_2" table="nod_jobtask" schema="" catalog="" columns="job_id"/>
+      <exported-key name="#FAKE_nod_payment_1" table="nod_payment" schema="" catalog="" columns="job_id"/>
+      <index name="nod_job_3639d40b" unique="true" columns="mechanic_id"/>
       <index name="nod_job_35ec04dc" unique="true" columns="vehicle_id"/>
     </table>
-    <table name="nod_mechanic" schema="" catalog="" type="TABLE">
+    <table name="nod_jobpart" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="personal_id" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="true" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="quantity" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="job_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="part_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_mechanic_1" columns="user_id" ref-table="auth_user" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_jobpart_1" columns="part_id" ref-table="nod_part" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_jobpart_2" columns="job_id" ref-table="nod_job" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_jobpart_b4e61b8d" unique="true" columns="part_id"/>
+      <index name="nod_jobpart_d697ea38" unique="true" columns="job_id"/>
+    </table>
+    <table name="nod_jobtask" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="status" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="duration" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="job_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="task_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_jobtask_1" columns="task_id" ref-table="nod_task" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_jobtask_2" columns="job_id" ref-table="nod_job" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_jobtask_57746cc8" unique="true" columns="task_id"/>
+      <index name="nod_jobtask_d697ea38" unique="true" columns="job_id"/>
+    </table>
+    <table name="nod_mechanic" schema="" catalog="" type="TABLE">
+      <column name="staffmember_ptr_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="hourly_pay" sqlType="REAL" precision="2000000000" scale="10" nullable="false" jdbcType="6"/>
+      <primary-key columns="staffmember_ptr_id"/>
+      <foreign-key name="#FAKE_nod_mechanic_1" columns="staffmember_ptr_id" ref-table="nod_staffmember" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_job_1" table="nod_job" schema="" catalog="" columns="mechanic_id"/>
+    </table>
+    <table name="nod_motreminder" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="issue_date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="renewal_test_date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="vehicle_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_motreminder_1" columns="vehicle_id" ref-table="nod_vehicle" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_motreminder_35ec04dc" unique="true" columns="vehicle_id"/>
     </table>
     <table name="nod_part" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -214,7 +248,6 @@
       <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="part_number" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="name" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="manufacturer" sqlType="VARCHAR(200)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="vehicle_type" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
@@ -224,6 +257,32 @@
       <column name="quantity" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="low_level_threshold" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <primary-key columns="id"/>
+      <exported-key name="#FAKE_nod_jobpart_1" table="nod_jobpart" schema="" catalog="" columns="part_id"/>
+      <exported-key name="#FAKE_nod_partorder_parts_1" table="nod_partorder_parts" schema="" catalog="" columns="part_id"/>
+      <exported-key name="#FAKE_nod_sparepart_2" table="nod_sparepart" schema="" catalog="" columns="part_id"/>
+    </table>
+    <table name="nod_partorder" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="company_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_partorder_1" columns="company_id" ref-table="nod_businesscustomer" ref-schema="" ref-catalog="" ref-columns="accountholders_ptr_id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_partorder_parts_2" table="nod_partorder_parts" schema="" catalog="" columns="partorder_id"/>
+      <index name="nod_partorder_447d3092" unique="true" columns="company_id"/>
+    </table>
+    <table name="nod_partorder_parts" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="partorder_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="part_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_partorder_parts_1" columns="part_id" ref-table="nod_part" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_partorder_parts_2" columns="partorder_id" ref-table="nod_partorder" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_partorder_parts_b4e61b8d" unique="true" columns="part_id"/>
+      <index name="nod_partorder_parts_68c160dc" unique="true" columns="partorder_id"/>
     </table>
     <table name="nod_payment" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -232,21 +291,57 @@
       <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <column name="amount" sqlType="REAL" precision="2000000000" scale="10" nullable="false" jdbcType="6"/>
-      <column name="type" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="time_paid" sqlType="TIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="date" sqlType="DATE" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="customer_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="payment_type" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="job_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_payment_1" columns="customer_id" ref-table="nod_customer" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
-      <exported-key name="#FAKE_nod_card_1" table="nod_card" schema="" catalog="" columns="payment_ptr_id"/>
-      <index name="nod_payment_cb24373b" unique="true" columns="customer_id"/>
+      <foreign-key name="#FAKE_nod_payment_1" columns="job_id" ref-table="nod_job" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_payment_d697ea38" unique="true" columns="job_id"/>
     </table>
-    <table name="nod_receptionist" schema="" catalog="" type="TABLE">
+    <table name="nod_pricereport" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="personal_id" sqlType="VARCHAR(15)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="true" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_receptionist_1" columns="user_id" ref-table="auth_user" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+    </table>
+    <table name="nod_sparepart" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="initial_stock_level" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="used" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="delivery" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="part_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="report_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_sparepart_1" columns="report_id" ref-table="nod_sparepartsreport" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_nod_sparepart_2" columns="part_id" ref-table="nod_part" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="nod_sparepart_6f78b20c" unique="true" columns="report_id"/>
+      <index name="nod_sparepart_b4e61b8d" unique="true" columns="part_id"/>
+    </table>
+    <table name="nod_sparepartsreport" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="reporting_period" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <primary-key columns="id"/>
+      <exported-key name="#FAKE_nod_sparepart_1" table="nod_sparepart" schema="" catalog="" columns="report_id"/>
+    </table>
+    <table name="nod_staffmember" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="role" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="user_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
+      <foreign-key name="#FAKE_nod_staffmember_1" columns="user_id" ref-table="auth_user" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_mechanic_1" table="nod_mechanic" schema="" catalog="" columns="staffmember_ptr_id"/>
     </table>
     <table name="nod_task" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -254,12 +349,20 @@
       <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
-      <column name="work_request" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="status" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="job_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="description" sqlType="VARCHAR(300)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="estimated_time" sqlType="BIGINT" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="task_number" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_task_1" columns="job_id" ref-table="nod_job" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
-      <index name="nod_task_d697ea38" unique="true" columns="job_id"/>
+      <exported-key name="#FAKE_nod_jobtask_1" table="nod_jobtask" schema="" catalog="" columns="task_id"/>
+    </table>
+    <table name="nod_timereport" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="date" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <primary-key columns="id"/>
     </table>
     <table name="nod_vehicle" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
@@ -273,13 +376,29 @@
       <column name="engine_serial" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="chassis_number" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="color" sqlType="VARCHAR(100)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="mot_date" sqlType="DATE" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
       <column name="type" sqlType="VARCHAR(1)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
-      <column name="bay_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="customer_id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="mot_base_date" sqlType="DATE" precision="2000000000" scale="10" nullable="true" jdbcType="12"/>
       <primary-key columns="id"/>
-      <foreign-key name="#FAKE_nod_vehicle_1" columns="bay_id" ref-table="nod_bay" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
-      <exported-key name="#FAKE_nod_job_1" table="nod_job" schema="" catalog="" columns="vehicle_id"/>
-      <index name="nod_vehicle_5d015cd1" unique="true" columns="bay_id"/>
+      <foreign-key name="#FAKE_nod_vehicle_1" columns="customer_id" ref-table="nod_customer" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <exported-key name="#FAKE_nod_job_2" table="nod_job" schema="" catalog="" columns="vehicle_id"/>
+      <exported-key name="#FAKE_nod_motreminder_1" table="nod_motreminder" schema="" catalog="" columns="vehicle_id"/>
+      <index name="nod_vehicle_cb24373b" unique="true" columns="customer_id"/>
+    </table>
+    <table name="nod_vehiclereport" schema="" catalog="" type="TABLE">
+      <column name="id" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="uuid" sqlType="VARCHAR(32)" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="created" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="updated" sqlType="DATETIME" precision="2000000000" scale="10" nullable="false" jdbcType="12"/>
+      <column name="is_deleted" sqlType="BOOL" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="month" sqlType="INTEGER" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="dropin_mot" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="dropin_annual" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="dropin_repair" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="account_holders_mot" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="account_holders_annual" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <column name="account_holders_repair" sqlType="INTEGER UNSIGNED" precision="2000000000" scale="10" nullable="false" jdbcType="4"/>
+      <primary-key columns="id"/>
     </table>
     <table name="sqlite_sequence" schema="" catalog="" type="TABLE">
       <column name="name" sqlType="" precision="2000000000" scale="10" nullable="true" jdbcType="12"/>
