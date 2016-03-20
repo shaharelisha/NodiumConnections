@@ -191,7 +191,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     status = models.CharField(max_length=1, choices=JOB_STATUS, default='3')
     booking_date = models.DateTimeField(default=timezone.datetime.now)
     #TODO: make it a list?
-    work_carried_out = models.CharField(max_length=1000)
+    work_carried_out = models.CharField(max_length=1000, blank=True)
     mechanic = models.ForeignKey(Mechanic)
 
     # iterates through all the assigned tasks to the job, and adds the estimated
@@ -254,7 +254,7 @@ class JobTask(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         ('3', 'Pending'),
     ]
     status = models.CharField(max_length=1, choices=TASK_STATUS, default='3')
-    duration = models.DurationField()
+    duration = models.DurationField(null=True)
 
 
 class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
