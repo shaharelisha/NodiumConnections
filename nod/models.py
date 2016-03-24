@@ -61,6 +61,36 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
         return self.forename + " " + self.surname
 
 
+class Dropin(Customer):
+    def __str__(self):
+        return self.forename + " " + self.surname
+
+    # TODO: needs to be checked between dates.
+    def get_number_mot_jobs(self):
+        mot = 0
+        for v in self.vehicle_set:
+            for job in v.job_set:
+                if job.type is '1':
+                    mot += 1
+        return mot
+
+    def get_number_repair_jobs(self):
+        repair = 0
+        for v in self.vehicle_set:
+            for job in v.job_set:
+                if job.type is '2':
+                    repair += 1
+        return repair
+
+    def get_number_annual_jobs(self):
+        annual = 0
+        for v in self.vehicle_set:
+            for job in v.job_set:
+                if job.type is '1':
+                    annual += 1
+        return annual
+
+
 class AccountHolders(Customer):
     address = models.CharField(max_length=80)
     postcode = models.CharField(max_length=8)
@@ -81,7 +111,6 @@ class BusinessCustomer(AccountHolders):
 
     def __str__(self):
         return self.company_name
-
 
 
 class StaffMember(models.Model):
@@ -183,6 +212,12 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     parts = models.ManyToManyField(Part, through="JobPart")
     job_number = models.PositiveIntegerField()
     vehicle = models.ForeignKey(Vehicle)
+    JOB_TYPE = [
+        ('1', 'MOT'),
+        ('2', 'Repair'),
+        ('3', 'Annual')
+    ]
+    type = models.CharField(max_length=1, choices=JOB_TYPE)
     JOB_STATUS = [
         ('1', 'Complete'),
         ('2', 'Started'),
@@ -361,12 +396,29 @@ class PriceReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     # mechanic = models.ForeignKey(Mechanic)
 
+    def get_average_labour_price_per_mechanic(self, mechanic):
+        total_price = 0
+        for j in mechanic.job_set:
+            total_price += j.get_labour_price()
+        total_jobs = mechanic.job_set.count()
+        average_price = total_price/total_jobs
+        return average_price
+
     def get_average_price_per_mechanic(self, mechanic):
         total_price = 0
         for j in mechanic.job_set:
-            total_price += j.get_labour_price() #not j.get_price()?
+            total_price += j.get_price()
         total_jobs = mechanic.job_set.count()
         average_price = total_price/total_jobs
+        return average_price
+
+    def get_average_labour_price(self):
+        jobs = Job.objects.filter(is_deleted=False)
+        total_price = 0
+        job_count = jobs.count()
+        for j in jobs:
+            total_price += j.get_labour_price()
+        average_price = total_price/job_count
         return average_price
 
     def get_average_price(self):
@@ -399,7 +451,66 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         average_time = total_time/job_count
         return average_time
 
-    # TODO: per service/repair requested?!
+    def get_average_time_for_mot_per_mechanic(self, mechanic):
+        total_time = 0
+        for j in mechanic.job_set:
+            if j.type is '1':
+                total_time += j.get_duration()
+        total_jobs = mechanic.job_set.count()
+        average_time = total_time/total_jobs
+        return average_time
+
+    def get_average_time_for_repair_per_mechanic(self, mechanic):
+        total_time = 0
+        for j in mechanic.job_set:
+            if j.type is '2':
+                total_time += j.get_duration()
+        total_jobs = mechanic.job_set.count()
+        average_time = total_time/total_jobs
+        return average_time
+
+    def get_average_time_for_annual_per_mechanic(self, mechanic):
+        total_time = 0
+        for j in mechanic.job_set:
+            if j.type is '3':
+                total_time += j.get_duration()
+        total_jobs = mechanic.job_set.count()
+        average_time = total_time/total_jobs
+        return average_time
+
+    def get_average_time_for_mot(self):
+        jobs = Job.objects.filter(is_deleted=False)
+        total_time = 0
+        job_count = jobs.count()
+        for j in jobs:
+            if j.type is '1':
+                total_time += j.get_duration()
+        average_time = total_time/job_count
+        return average_time
+
+    def get_average_time_for_repair(self):
+        jobs = Job.objects.filter(is_deleted=False)
+        total_time = 0
+        job_count = jobs.count()
+        for j in jobs:
+            if j.type is '2':
+                total_time += j.get_duration()
+        average_time = total_time/job_count
+        return average_time
+
+    def get_average_time_for_annual(self):
+        jobs = Job.objects.filter(is_deleted=False)
+        total_time = 0
+        job_count = jobs.count()
+        for j in jobs:
+            if j.type is '3':
+                total_time += j.get_duration()
+        average_time = total_time/job_count
+        return average_time
+
+    # TODO: good test: check that average time/per type == average time overall.
+
+    # TODO: per task requested?!
 
 # number of vehicles booked in on a monthly basis, overall and per service requested
 # (MoT, annual service, repair, etc.), and type of customer (casual or account holder)
@@ -429,6 +540,8 @@ class VehicleReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
     def overall(self):
         return self.dropin_overall() + self.account_holders_overall()
+
+    # TODO: calculate automatically amount of how many of each per view.
 
 
 # class MOTReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
