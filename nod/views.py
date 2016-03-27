@@ -5,17 +5,22 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.db import IntegrityError, transaction
 from django.contrib import messages
+from django_tables2 import RequestConfig
+from django.forms.formsets import formset_factory
+from django.contrib.auth import update_session_auth_hash
+import json
+from django.template import RequestContext, loader
 
 # london_tz = pytz.timezone("Europe/London")
 
-from nod.forms import *
-from nod.models import *
+from .forms import *
+from .models import *
 
 
 def index(request):
     return render(request, "nod/base.html")
 
-@login_required
+# @login_required
 def create_job(request):
     TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm)
     tasks_data = []
@@ -32,15 +37,13 @@ def create_job(request):
             job_number = form.cleaned_data['job_number']
             vehicle = form.cleaned_data['vehicle']
             booking_date = form.cleaned_data['booking_date']
-            mechanic = form.cleaned_data['mechanic']
+            bay = form.cleaned_data['bay']
 
 
             vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
-
-            # TODO: split mechanic name into two parts
-            mechanic = get_object_or_404(Mechanic, first_name=mechanic, last_name=mechanic)
+            # bay = get_object_or_404(Bay, bay_type=bay)
             job = Job.objects.create(job_number=job_number, vehicle=vehicle, status='3', booking_date=booking_date,
-                                     mechanic=mechanic)
+                                     bay=bay)
             # job.job_number = job.id?
             try:
                 with transaction.atomic():

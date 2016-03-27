@@ -130,7 +130,7 @@ class Dropin(Customer):
         return annual
 
 
-class AccountHolders(Customer):
+class AccountHolder(Customer):
     address = models.CharField(max_length=80)
     postcode = models.CharField(max_length=8)
     discount_plan = models.ForeignKey(DiscountPlan)
@@ -139,7 +139,7 @@ class AccountHolders(Customer):
         return self.forename + ' ' + self.surname
 
 
-class BusinessCustomer(AccountHolders):
+class BusinessCustomer(AccountHolder):
     company_name = models.CharField(max_length=100)
     rep_role = models.CharField(max_length=80)
 
@@ -155,7 +155,7 @@ class Supplier(models.Model):
         return self.company_name
 
 
-class StaffMember(models.Model):
+class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #TODO: check this.
     user = models.OneToOneField(User)
     ROLES = [
@@ -271,7 +271,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     booking_date = models.DateTimeField(default=timezone.datetime.now)
     #TODO: make it a list?
     work_carried_out = models.CharField(max_length=1000, blank=True)
-    mechanic = models.ForeignKey(Mechanic)
+    mechanic = models.ForeignKey(Mechanic, null=True)
 
     # iterates through all the assigned tasks to the job, and adds the estimated
     # time per task to get the overall estimated time for the job.
