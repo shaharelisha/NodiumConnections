@@ -173,7 +173,6 @@ class StaffMember(models.Model):
 
 class Mechanic(StaffMember):
     hourly_pay = models.FloatField()
-    role = '1'
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
@@ -181,12 +180,14 @@ class Mechanic(StaffMember):
     #TODO: generate report data methods
 
 
-# class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-#     BAYS = [
-#         ('1', 'MOT Bay'),
-#         ('2', 'Repair Bay'),
-#     ]
-#     bay_type = models.CharField(choices=BAYS, max_length=1)
+class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    BAYS = [
+        ('1', 'MOT Bay'),
+        ('2', 'Repair Bay'),
+    ]
+    bay_type = models.CharField(choices=BAYS, max_length=1)
+    total_spots = models.PositiveSmallIntegerField()
+    free_spots = models.PositiveIntegerField()
 
 
 class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -260,6 +261,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         ('3', 'Annual')
     ]
     type = models.CharField(max_length=1, choices=JOB_TYPE)
+    bay = models.ForeignKey(Bay)
     JOB_STATUS = [
         ('1', 'Complete'),
         ('2', 'Started'),
@@ -378,13 +380,15 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     # customer = models.ForeignKey(Customer)
     job = models.ForeignKey(Job)
-#
-#
-# #TODO: possible to automatically set to payment type = card?
-# class Card(Payment):
-#     card_16_digit = models.BigIntegerField()
-#     payment_type = '2'
-#     transaction_id = models.CharField(max_length=100)
+
+
+class Card(Payment):
+    last_4_digits = models.PositiveIntegerField()
+    cvv = models.PositiveSmallIntegerField()
+
+    def __init__(self, *args, **kwargs):
+        super(Card, self).__init__(*args, **kwargs)
+        self.payment_type = '2'
 
 
 class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
@@ -557,7 +561,8 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 # number of vehicles booked in on a monthly basis, overall and per service requested
 # (MoT, annual service, repair, etc.), and type of customer (casual or account holder)
 class VehicleReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
-    month = models.IntegerField(default=timezone.now().month)
+    # month = models.IntegerField(default=timezone.now().month)
+    date = models.DateTimeField(default=timezone.datetime.now)
     dropin_mot = models.PositiveIntegerField()
     dropin_annual = models.PositiveIntegerField()
     dropin_repair = models.PositiveIntegerField()
@@ -586,8 +591,21 @@ class VehicleReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     # TODO: calculate automatically amount of how many of each per view.
 
 
-# class MOTReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
-#     vehicle = models.
+class ResponseRateReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
+    date = models.DateTimeField(default=timezone.datetime.now)
+    # TODO: other (annual) reminders as well
+    mot_reminders_sent = models.PositiveIntegerField()
+    # annual_reminders_sent = models.PositiveIntegerField()
+    mot_jobs = models.PositiveIntegerField()
+    # annual_jobs = models.PositiveIntegerField()
+
+    mot_response_rate = models.PositiveSmallIntegerField(null=True)
+    # annual_response_rate = models.PositiveSmallIntegerField(null=True)
+
+    def get_mot_response_rate(self):
+        self.mot_response_rate = 100*self.mot_jobs/self.mot_reminders_sent
+        return self.mot_response_rate
+
 
 
 class MOTReminder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
