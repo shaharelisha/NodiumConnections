@@ -37,6 +37,48 @@ class SoftDeleteModel(models.Model):
         abstract = True
 
 
+class EmailModel(TimestampedModel, SoftDeleteModel):
+    EMAIL_TYPES = (
+        ('1', 'Work'),
+        ('2', 'Home'),
+        ('3', 'Other'),
+    )
+
+    type = models.CharField(max_length=1, choices=EMAIL_TYPES, default='1')
+    address = models.EmailField(max_length=120)
+
+    def __str__(self):
+        return self.address
+
+
+class PhoneModel(TimestampedModel, SoftDeleteModel):
+    PHONE_TYPES = (
+        ('1', 'Work'),
+        ('2', 'Home'),
+        ('3', 'Fax'),
+        ('4', 'Other'),
+    )
+
+    type = models.CharField(max_length=1, choices=PHONE_TYPES, default='1')
+    phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
+                                 message="Phone number must be entered in the format:"
+                                         " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
+    phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)                # unique = True
+
+    def save(self, *args, **kwargs):
+        # try:
+        clean = self.full_clean()
+        if clean is None:
+            # print("yay")
+            super(PhoneModel, self).save(*args, **kwargs)
+        # except ValidationError:
+        #     # print("Invalid")
+        #     pass
+
+    def __str__(self):
+        return self.phone_number
+
+
 class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     PLAN = [
         ('1', 'Fixed'),
@@ -50,11 +92,8 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
     forename = models.CharField(max_length=50)
     surname = models.CharField(max_length=100)
-    email = models.EmailField(max_length=120)
-    phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
-                                 message="Phone number must be entered in the format:"
-                                         " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
-    phone_number = models.CharField(validators=[phone_regex], max_length=15)
+    emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
+    phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
     date = models.DateField(default=timezone.datetime.now)
 
     def __str__(self):
@@ -104,10 +143,13 @@ class BusinessCustomer(AccountHolders):
     company_name = models.CharField(max_length=100)
     rep_role = models.CharField(max_length=80)
 
-    phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
-                                 message="Phone number must be entered in the format:"
-                                         " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
-    fax_number = models.CharField(validators=[phone_regex], max_length=15)
+    def __str__(self):
+        return self.company_name
+
+
+class Supplier(models.Model):
+    company_name = models.CharField(max_length=100)
+    emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
 
     def __str__(self):
         return self.company_name
@@ -382,7 +424,7 @@ class SparePart(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
 class PartOrder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     date = models.DateTimeField(default=timezone.datetime.now)
-    company = models.ForeignKey(BusinessCustomer)
+    supplier = models.ForeignKey(Supplier)
     parts = models.ManyToManyField(Part)
 
     def get_total_price(self):
