@@ -189,6 +189,9 @@ class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     total_spots = models.PositiveSmallIntegerField()
     free_spots = models.PositiveIntegerField()
 
+    def __str__(self):
+        bay_name = next(name for value, name in Bay.BAYS if value==self.bay_type)
+        return bay_name
 
 class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     reg_number = models.CharField(max_length=100)

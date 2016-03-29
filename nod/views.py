@@ -28,12 +28,18 @@ def create_job(request):
     PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
     parts_data = []
 
-    if request.POST == 'POST':
+    task_helper = TaskFormSetHelper()
+    part_helper = PartFormSetHelper()
+    print("a")
+
+    if request.method == 'POST':
+        print("b")
         form = JobCreateForm(request.POST)
         task_formset = TaskFormSet(request.POST, prefix='fs1')
         part_formset = PartFormSet(request.POST, prefix='fs2')
 
         if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
+            print("c")
             job_number = form.cleaned_data['job_number']
             vehicle = form.cleaned_data['vehicle']
             booking_date = form.cleaned_data['booking_date']
@@ -73,6 +79,7 @@ def create_job(request):
                 messages.error(request, "There was an error saving")
 
     else:
+        print("d")
         data = {}
 
         form = JobCreateForm(initial=data)
@@ -82,7 +89,9 @@ def create_job(request):
     context = {
         'form': form,
         'task_formset': task_formset,
-        'part_formset': part_formset
+        'part_formset': part_formset,
+        'task_helper': task_helper,
+        'part_helper': part_helper,
     }
 
     return render(request, 'nod/create_jobsheet.html', context)

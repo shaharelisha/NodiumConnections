@@ -208,6 +208,22 @@ class BaseJobTaskForm(BaseFormSet):
                     )
 
 
+class TaskFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(TaskFormSetHelper, self).__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.form_class = 'form-horizontal'
+        self.label_class = 'col-lg-8'
+        self.field_class = 'col-lg-5'
+        self.form_tag = False
+        self.layout = Layout(
+            'task_name',
+            'status',
+            'duration'
+        )
+        self.render_required_fields = True
+
+
 class JobPartForm(forms.Form):
     part_name = forms.ModelChoiceField(queryset=Part.objects.filter(is_deleted=False))
     quantity = forms.IntegerField(min_value=0, initial=1)
@@ -251,13 +267,28 @@ class BaseJobPartForm(BaseFormSet):
                     )
 
 
+class PartFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(PartFormSetHelper, self).__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.form_class = 'form-horizontal'
+        self.label_class = 'col-lg-8'
+        self.field_class = 'col-lg-5'
+        self.form_tag = False
+        self.layout = Layout(
+            'part_name',
+            'quantity',
+        )
+        self.render_required_fields = True
+
+
 class JobCreateForm(forms.Form):
     # tasks = forms.ModelMultipleChoiceField(queryset=Task.objects.filter(is_deleted=False),
     #                                        widget=forms.CheckboxSelectMultiple)
     # parts = forms.ModelMultipleChoiceField(queryset=Part.objects.filter(is_deleted=False),
     #                                        widget=forms.CheckboxSelectMultiple)
     job_number = forms.IntegerField(min_value=0)
-    vehicle = forms.CharField(max_length=300, widget=forms.Textarea(
+    vehicle = forms.CharField(max_length=300, widget=forms.TextInput(
         attrs={'placeholder': "Vehicle Registration No.",'rows': '1'}))
     JOB_TYPE = [
         ('1', 'MOT'),
@@ -279,12 +310,14 @@ class JobCreateForm(forms.Form):
         self.helper.layout = Layout(
             'job_number',
             'vehicle',
+            'type',
             'booking_date',
             'bay',
         )
         super(JobCreateForm, self).__init__(*args, **kwargs)
         self.fields['job_number'].label = "Job Number"
         self.fields['vehicle'].label = "Vehicle Registration No."
+        self.fields['type'].label = "Type"
         self.fields['booking_date'].label = "Booking Date"
         self.fields['bay'].label = "Bay"
 
@@ -308,7 +341,7 @@ class JobEditForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.label_class = 'col-lg-8'
         self.helper.field_class = 'col-lg-5'
-        self.helper.form_tag = False
+        # self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',
             'vehicle',
