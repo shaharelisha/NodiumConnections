@@ -152,14 +152,14 @@ class TaskForm(forms.Form):
 
 
 class JobTaskForm(forms.Form):
-    task_name = forms.ModelChoiceField(queryset=Task.objects.filter(is_deleted=False))
+    task_name = forms.ModelChoiceField(queryset=Task.objects.filter(is_deleted=False), required=False)
     TASK_STATUS = [
         ('1', 'Complete'),
         ('2', 'Started'),
         ('3', 'Pending'),
     ]
-    status = forms.ChoiceField(choices=TASK_STATUS, initial='3')
-    duration = forms.DurationField()
+    status = forms.ChoiceField(choices=TASK_STATUS, initial='3', required=False)
+    duration = forms.DurationField(required=False)
 
 
 class BaseJobTaskForm(BaseFormSet):
@@ -225,8 +225,8 @@ class TaskFormSetHelper(FormHelper):
 
 
 class JobPartForm(forms.Form):
-    part_name = forms.ModelChoiceField(queryset=Part.objects.filter(is_deleted=False))
-    quantity = forms.IntegerField(min_value=0, initial=1)
+    part_name = forms.ModelChoiceField(queryset=Part.objects.filter(is_deleted=False), required=False)
+    quantity = forms.IntegerField(min_value=0, initial=1, required=False)
 
 
 class BaseJobPartForm(BaseFormSet):

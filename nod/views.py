@@ -60,9 +60,9 @@ def create_job(request):
 
                         if task_name:
                             task = get_object_or_404(Task, description=task_name)
-                            job = JobTask.objects.create(task=task, job=job, status='3')
-                            job.duration = task.estimated_time
-                            job.save()
+                            jobtask = JobTask.objects.create(task=task, job=job, status='3')
+                            jobtask.duration = task.estimated_time
+                            jobtask.save()
 
 
                     for part_form in part_formset:
