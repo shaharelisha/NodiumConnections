@@ -340,7 +340,7 @@ class JobEditForm(forms.Form):
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
         self.helper.label_class = 'col-lg-8'
-        self.helper.field_class = 'col-lg-5'
+        self.helper.field_class = 'col-lg-8'
         # self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',

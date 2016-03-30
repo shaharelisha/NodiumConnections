@@ -36,18 +36,22 @@
 {#        <div class="form-group">Estimated job time (hours) <input type="text" class="form-control" placeholder="e.g. 3 hours"></div>#}
 {#        <div class="form-group">Task 1: <input type="text" class="form-control" placeholder="e.g. replace exhaust catalytic converter"> / <input type="text" class="form-control eta" value="1 hour"></div>#}
 {#        <a class="addtask">+Task</a>#}
+    <h4>Tasks</h4>
     {{ task_formset.management_form|crispy }}
     {% for form in task_formset %}
-{#        <div class="variation-formset">#}
+        <div class="task-formset">
          {% crispy form task_helper 'bootstrap3' %}
+        <br/>
         </div>
     {% endfor %}
 
-{#    TODO: HELPER#}
+    <br/>
+    <h4>Parts</h4>
     {{ part_formset.management_form|crispy }}
     {% for form in part_formset %}
-{#        <div class="variation-formset">#}
+        <div class="part-formset">
          {% crispy form part_helper 'bootstrap3' %}
+        <br/>
         </div>
     {% endfor %}
 
@@ -62,4 +66,25 @@
 </form>
 {#    </div>#}
 {#</div>#}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
+<script>
+
+    $(".task-formset").formset({
+        addText: 'add task',
+        deleteText: 'remove',
+        prefix: '{{ task_formset.prefix }}',
+        formCssClass: 'task-formset',
+{#        deleteCssClass: 'task-formset'#}
+    });
+
+    $(".part-formset").formset({
+        addText: 'add part',
+        deleteText: 'remove',
+        prefix: '{{ part_formset.prefix }}',
+        formCssClass: 'part-formset',
+{#        deleteCssClass: 'part-formset'#}
+    });
+
+</script>
 {% endblock %}
