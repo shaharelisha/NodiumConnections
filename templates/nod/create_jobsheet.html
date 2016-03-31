@@ -27,43 +27,43 @@
 {#<div id="pagename">Customers</div>#}
 <div id="main">
     <div id="job_add_form">
-<h3>Create New Job</h3>
-<form action='{% url 'create-job' %}' method="post">
-    {% csrf_token %}
-    {% crispy form form.helper 'bootstrap3' %}
-{#    {{ form|crispy }}#}
-{#        <div class="form-group">Customer <input type="text" class="form-control" placeholder="Start typing to search for customers..."></div>#}
-{#        <div class="form-group">Estimated job time (hours) <input type="text" class="form-control" placeholder="e.g. 3 hours"></div>#}
-{#        <div class="form-group">Task 1: <input type="text" class="form-control" placeholder="e.g. replace exhaust catalytic converter"> / <input type="text" class="form-control eta" value="1 hour"></div>#}
-{#        <a class="addtask">+Task</a>#}
-    <h4>Tasks</h4>
-    {{ task_formset.management_form|crispy }}
-    {% for form in task_formset %}
-        <div class="task-formset">
-         {% crispy form task_helper 'bootstrap3' %}
-        <br/>
-        </div>
-    {% endfor %}
+        <h3>Create New Job</h3>
+        <form action='{% url 'create-job' %}' method="post">
+            {% csrf_token %}
+            {% crispy form form.helper 'bootstrap3' %}
+        {#    {{ form|crispy }}#}
+        {#        <div class="form-group">Customer <input type="text" class="form-control" placeholder="Start typing to search for customers..."></div>#}
+        {#        <div class="form-group">Estimated job time (hours) <input type="text" class="form-control" placeholder="e.g. 3 hours"></div>#}
+        {#        <div class="form-group">Task 1: <input type="text" class="form-control" placeholder="e.g. replace exhaust catalytic converter"> / <input type="text" class="form-control eta" value="1 hour"></div>#}
+        {#        <a class="addtask">+Task</a>#}
+            <h4>Tasks</h4>
+            {{ task_formset.management_form|crispy }}
+            {% for form in task_formset %}
+                <div class="task-formset">
+                 {% crispy form task_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
 
-    <br/>
-    <h4>Parts</h4>
-    {{ part_formset.management_form|crispy }}
-    {% for form in part_formset %}
-        <div class="part-formset">
-         {% crispy form part_helper 'bootstrap3' %}
-        <br/>
-        </div>
-    {% endfor %}
-
-
-    <div class="form-group">
-        <div class="col-lg-10 col-lg-offset-2">
             <br/>
-            <button type="reset" class="btn btn-default">Cancel</button>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
-    </div>
-</form>
+            <h4>Parts</h4>
+            {{ part_formset.management_form|crispy }}
+            {% for form in part_formset %}
+                <div class="part-formset">
+                 {% crispy form part_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
+
+            <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                    <br/>
+                    <button type="reset" class="btn btn-default">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 

@@ -371,7 +371,7 @@ class JobEditForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         # self.helper.label_class = 'col-lg-8'
         # self.helper.field_class = 'col-lg-8'
-        # self.helper.form_tag = False
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',
             'vehicle',
@@ -387,6 +387,31 @@ class JobEditForm(forms.Form):
         self.fields['work_carried_out'].label = "Work Carried Out"
 
 
+class ProfileForm(forms.Form):
+    # forename = forms.CharField(max_length=50, required=False, widget=forms.TextInput(
+    #     attrs={'placeholder': "Forename",'rows': '1', 'disabled': True}))
+    # surname = forms.CharField(max_length=100, required=False, widget=forms.TextInput(
+    #     attrs={'placeholder': "Surname",'rows': '1', 'disabled': True}))
+    user_name = forms.CharField(max_length=40, required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            # 'forename',
+            # 'surname',
+            'user_name',
+        )
+        super(ProfileForm, self).__init__(*args, **kwargs)
+        # self.fields['forename'].label = "Forename"
+        # self.fields['surname'].label = "Surname"
+        self.fields['user_name'].label = "Username"
+
+
 class SetPasswordForm(forms.Form):
     """
     A form that lets a user change set their password without entering the old
@@ -395,14 +420,24 @@ class SetPasswordForm(forms.Form):
     error_messages = {
         'password_mismatch': ("The two password fields didn't match."),
     }
-    new_password1 = forms.CharField(label=("New password"),
-                                    widget=forms.PasswordInput, required=False)
-    new_password2 = forms.CharField(label=("New password confirmation"),
-                                    widget=forms.PasswordInput, required=False)
+    new_password1 = forms.CharField(widget=forms.PasswordInput, required=False)
+    new_password2 = forms.CharField(widget=forms.PasswordInput, required=False)
 
-    def __init__(self, user, *args, **kwargs):
-        self.user = user
-        super(SetPasswordForm, self).__init__(*args, **kwargs)
+    # def __init__(self, user, *args, **kwargs):
+    #     self.user = user
+    #     self.helper = FormHelper()
+    #     self.helper.form_action = 'POST'
+    #     self.helper.form_class = 'form-horizontal'
+    #     # self.helper.label_class = 'col-lg-8'
+    #     # self.helper.field_class = 'col-lg-8'
+    #     self.helper.form_tag = False
+    #     self.helper.layout = Layout(
+    #         'new_password1',
+    #         'new_password2',
+    #     )
+    #     super(SetPasswordForm, self).__init__(*args, **kwargs)
+    #     self.fields['new_password1'].label = "New Password"
+    #     self.fields['new_password2'].label = "New Password Confirmation"
 
     def clean_new_password2(self):
         password1 = self.cleaned_data.get('new_password1')
@@ -431,8 +466,7 @@ class PasswordChangeForm(SetPasswordForm):
         'password_incorrect': ("Your old password was entered incorrectly. "
                                "Please enter it again."),
     })
-    old_password = forms.CharField(label=("Old password"),
-                                   widget=forms.PasswordInput, required=False)
+    old_password = forms.CharField(widget=forms.PasswordInput, required=False)
 
     def clean_old_password(self):
         """
@@ -445,6 +479,25 @@ class PasswordChangeForm(SetPasswordForm):
                 code='password_incorrect',
             )
         return old_password
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'old_password',
+            'new_password1',
+            'new_password2',
+        )
+        super(PasswordChangeForm, self).__init__(*args, **kwargs)
+        self.fields['old_password'].label = "Old Password"
+        self.fields['new_password1'].label = "New Password"
+        self.fields['new_password2'].label = "New Password Confirmation"
+
 
 PasswordChangeForm.base_fields = OrderedDict(
     (k, PasswordChangeForm.base_fields[k])

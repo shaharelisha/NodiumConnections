@@ -20,7 +20,7 @@ from .models import *
 def index(request):
     return render(request, "nod/base.html")
 
-# @login_required
+@login_required
 def create_job(request):
     TaskCreateFormSet = formset_factory(JobCreateTaskForm, formset=BaseJobTaskCreateForm)
     tasks_data = []
@@ -221,3 +221,39 @@ def edit_job(request, uuid):
     }
 
     return render(request, 'nod/edit_jobsheet.html', context)
+
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = ProfileForm(request.POST)
+        password_form = PasswordChangeForm(user=request.user, data=request.POST)
+
+        if form.is_valid() and password_form.is_valid():
+            username = form.cleaned_data['user_name']
+            password_form.save()
+            update_session_auth_hash(request, password_form.user)
+
+            request.user.username = username
+
+            request.user.save()
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        print('b')
+        data = {}
+        # data['forename'] = request.user.first_name
+        # data['surname'] = request.user.last_name
+        data['user_name'] = request.user.username
+
+        form = ProfileForm(initial=data)
+        password_form = PasswordChangeForm(user=request.user)
+
+    context = {
+        'form': form,
+        'password_form': password_form,
+        'user': request.user
+    }
+
+    return render(request, 'nod/edit_profile.html', context)
