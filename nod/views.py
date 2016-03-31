@@ -22,10 +22,10 @@ def index(request):
 
 # @login_required
 def create_job(request):
-    TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm)
+    TaskCreateFormSet = formset_factory(JobCreateTaskForm, formset=BaseJobTaskCreateForm)
     tasks_data = []
 
-    PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
+    PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
     parts_data = []
 
     task_helper = TaskFormSetHelper()
@@ -35,8 +35,8 @@ def create_job(request):
     if request.method == 'POST':
         print("b")
         form = JobCreateForm(request.POST)
-        task_formset = TaskFormSet(request.POST, prefix='fs1')
-        part_formset = PartFormSet(request.POST, prefix='fs2')
+        task_formset = TaskCreateFormSet(request.POST, prefix='fs1')
+        part_formset = PartCreateFormSet(request.POST, prefix='fs2')
 
         if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
             print("c")
@@ -55,8 +55,6 @@ def create_job(request):
                 with transaction.atomic():
                     for task_form in task_formset:
                         task_name = task_form.cleaned_data['task_name']
-                        # status = task_form.cleaned_data['status']
-                        # duration = task_form.cleaned_data['duration']
 
                         if task_name:
                             task = get_object_or_404(Task, description=task_name)
@@ -93,10 +91,12 @@ def create_job(request):
     else:
         print("d")
         data = {}
-
+        last_id = Job.objects.last().id
+        new_id = last_id + 1
+        data['job_number'] = new_id
         form = JobCreateForm(initial=data)
-        task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
-        part_formset = PartFormSet(initial=parts_data, prefix='fs2')
+        task_formset = TaskCreateFormSet(initial=tasks_data, prefix='fs1')
+        part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
 
     context = {
         'form': form,
@@ -127,7 +127,7 @@ def edit_job(request, uuid):
     part_helper = PartFormSetHelper()
 
     if request.method == 'POST':
-        form = JobCreateForm(request.POST)
+        form = JobEditForm(request.POST)
         task_formset = TaskFormSet(request.POST, prefix='fs1')
         part_formset = PartFormSet(request.POST, prefix='fs2')
 
@@ -203,11 +203,11 @@ def edit_job(request, uuid):
         data['type'] = job.type
         data['bay'] = job.bay
         data['status'] = job.status
-        data['booking_date'] = job.booking_date
+        data['booking_date'] = job.booking_date.strftime('%d/%m/%Y')
         data['work_carried_out'] = job.work_carried_out
         data['mechanic'] = job.mechanic
 
-        form = JobCreateForm(initial=data)
+        form = JobEditForm(initial=data)
         task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
         part_formset = PartFormSet(initial=parts_data, prefix='fs2')
 
