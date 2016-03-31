@@ -213,8 +213,8 @@ class TaskFormSetHelper(FormHelper):
         super(TaskFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        self.label_class = 'col-lg-8'
-        self.field_class = 'col-lg-5'
+        # self.label_class = 'col-lg-8'
+        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'task_name',
@@ -272,8 +272,8 @@ class PartFormSetHelper(FormHelper):
         super(PartFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        self.label_class = 'col-lg-8'
-        self.field_class = 'col-lg-5'
+        # self.label_class = 'col-lg-8'
+        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'part_name',
@@ -283,10 +283,6 @@ class PartFormSetHelper(FormHelper):
 
 
 class JobCreateForm(forms.Form):
-    # tasks = forms.ModelMultipleChoiceField(queryset=Task.objects.filter(is_deleted=False),
-    #                                        widget=forms.CheckboxSelectMultiple)
-    # parts = forms.ModelMultipleChoiceField(queryset=Part.objects.filter(is_deleted=False),
-    #                                        widget=forms.CheckboxSelectMultiple)
     job_number = forms.IntegerField(min_value=0)
     vehicle = forms.CharField(max_length=300, widget=forms.TextInput(
         attrs={'placeholder': "Vehicle Registration No.",'rows': '1'}))
@@ -304,8 +300,8 @@ class JobCreateForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-8'
-        self.helper.field_class = 'col-lg-5'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-5'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',
@@ -317,7 +313,7 @@ class JobCreateForm(forms.Form):
         super(JobCreateForm, self).__init__(*args, **kwargs)
         self.fields['job_number'].label = "Job Number"
         self.fields['vehicle'].label = "Vehicle Registration No."
-        self.fields['type'].label = "Type"
+        self.fields['type'].label = "Service Type"
         self.fields['booking_date'].label = "Booking Date"
         self.fields['bay'].label = "Bay"
 

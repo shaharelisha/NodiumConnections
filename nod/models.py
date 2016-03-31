@@ -256,7 +256,7 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     tasks = models.ManyToManyField(Task, through="JobTask")
     parts = models.ManyToManyField(Part, through="JobPart")
-    job_number = models.PositiveIntegerField()
+    job_number = models.PositiveIntegerField(unique=True)
     vehicle = models.ForeignKey(Vehicle)
     JOB_TYPE = [
         ('1', 'MOT'),
