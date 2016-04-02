@@ -39,6 +39,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'nod',
     'crispy_forms',
+    'widget_tweaks',
+    'django_tables2',
+    # 'simple_history'
 )
 
 MIDDLEWARE_CLASSES = (

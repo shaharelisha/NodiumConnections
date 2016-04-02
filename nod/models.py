@@ -89,11 +89,11 @@ class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
-    forename = models.CharField(max_length=50)
-    surname = models.CharField(max_length=100)
+    forename = models.CharField(max_length=50, blank=True)
+    surname = models.CharField(max_length=100, blank=True)
     emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
     phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
-    date = models.DateField(default=timezone.datetime.now)
+    date = models.DateField(default=timezone.datetime.now, null=True)
 
     def __str__(self):
         return self.forename + " " + self.surname
@@ -130,17 +130,17 @@ class Dropin(Customer):
 
 
 class AccountHolder(Customer):
-    address = models.CharField(max_length=80)
-    postcode = models.CharField(max_length=8)
-    discount_plan = models.ForeignKey(DiscountPlan)
+    address = models.CharField(max_length=80, blank=True)
+    postcode = models.CharField(max_length=8, blank=True)
+    discount_plan = models.ForeignKey(DiscountPlan, null=True)
 
     def __str__(self):
         return self.forename + ' ' + self.surname
 
 
 class BusinessCustomer(AccountHolder):
-    company_name = models.CharField(max_length=100)
-    rep_role = models.CharField(max_length=80)
+    company_name = models.CharField(max_length=100, blank=True)
+    rep_role = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return self.company_name
@@ -193,7 +193,7 @@ class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return bay_name
 
 class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    reg_number = models.CharField(max_length=100)
+    reg_number = models.CharField(max_length=100, unique=True)
     make = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     engine_serial = models.CharField(max_length=100)

@@ -3,6 +3,11 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+
+    {% block extra_js%}
+        <script src="http://malsup.github.com/jquery.form.js"></script>
+{#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
+    {% endblock %}
 {% if messages %}
     <ul class="messages">
         {% for message in messages %}
@@ -26,10 +31,14 @@
 
 <div id="main">
     <div id="job_add_form">
-        <h3>Edit Business Customer: {{ business_company.company_name }}</h3>
-        <form action='{% url 'edit-business-customer' business_company.uuid %}' method="post">
+        <h3>Edit Business Customer: {{ business_customer.company_name }}</h3>
+        <form action='{% url 'edit-business-customer' business_customer.uuid %}' method="post">
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
+
+            <p>Click <a data-toggle="modal" data-target="#modal" href="{% url 'create-vehicle' business_customer.uuid %}">here</a> to add a Vehicle</p>
+            <div class="modal fade" id="modal"></div>
+            <div id="vehicles"></div>
 
             <h4>Emails</h4>
             {{ email_formset.management_form|crispy }}
@@ -62,11 +71,48 @@
     </div>
 </div>
 
+<script>
+    $('#modal').on('show.bs.modal', function (event) {
+        var modal = $(this)
+        $.ajax({
+            url: "{% url 'create-vehicle' business_customer.uuid %}",
+            context: document.body
+        }).done(function(response) {
+            modal.html(response);
+        });
+    });
+
+    $('#modal').on('hidden.bs.modal', function (event) {
+      $.getJSON( "{% url 'get-vehicles' business_customer.uuid %}", function( data ) {
+        var items = [];
+        data.forEach(function(val) {
+          var id = val.uuid;
+          var url_mask = "{% url 'edit-vehicle' business_customer.uuid 12345 %}".replace(/12345/, id);
+          items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+        });
+        document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
+      });
+    });
+
+
+    $( document ).ready(function() {
+      $.getJSON( "{% url 'get-vehicles' business_customer.uuid %}", function( data ) {
+        var items = [];
+        data.forEach(function(val) {
+          var id = val.uuid;
+          var url_mask = "{% url 'edit-vehicle' business_customer.uuid 12345 %}".replace(/12345/, id);
+          items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+        });
+        document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
+      });
+    });
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
 <script>
 
     $(".email-formset").formset({
-        addText: 'add task',
+        addText: 'add email',
         deleteText: 'remove',
         prefix: '{{ email_formset.prefix }}',
         formCssClass: 'email-formset',
@@ -74,7 +120,7 @@
     });
 
     $(".phone-formset").formset({
-        addText: 'add part',
+        addText: 'add phone',
         deleteText: 'remove',
         prefix: '{{ phone_formset.prefix }}',
         formCssClass: 'phone-formset',

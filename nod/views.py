@@ -8,6 +8,7 @@ from django.contrib import messages
 from django_tables2 import RequestConfig
 from django.forms.formsets import formset_factory
 from django.contrib.auth import update_session_auth_hash
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 import json
 from django.template import RequestContext, loader
 
@@ -274,13 +275,28 @@ def create_dropin(request):
         email_formset = EmailFormSet(request.POST, prefix='fs1')
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
+        customer_uuid = form.data['customer_uuid']
+
+        try:
+            dropin = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+        except MultipleObjectsReturned:
+            pass
+        except ObjectDoesNotExist:
+            pass
+
         if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
             forename = form.cleaned_data['forename']
             surname = form.cleaned_data['surname']
             date = form.cleaned_data['date']
 
             # create Dropin Customer object using input data
-            dropin = Dropin.objects.create(forename=forename, surname=surname, date=date)
+            # dropin = Dropin.objects.create(forename=forename, surname=surname, date=date)
+
+            dropin.forename = forename
+            dropin.surname = surname
+            dropin.date = date
+
+            dropin.save()
 
             try:
                 with transaction.atomic():
@@ -311,12 +327,13 @@ def create_dropin(request):
                             dropin.phone_numbers.add(phone)
                             dropin.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
+        dropin = Dropin.objects.create()
         form = DropinForm()
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
@@ -327,6 +344,7 @@ def create_dropin(request):
         'phone_formset': phone_formset,
         'email_helper': email_helper,
         'phone_helper': phone_helper,
+        'dropin': dropin,
     }
 
     return render(request, 'nod/create_dropin.html', context)
@@ -336,12 +354,12 @@ def create_dropin(request):
 def edit_dropin(request, uuid):
     dropin = get_object_or_404(Dropin, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
     user_emails = dropin.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
     user_phone_numbers = dropin.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -405,7 +423,7 @@ def edit_dropin(request, uuid):
                             dropin.phone_numbers.add(phone)
                             dropin.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -447,6 +465,15 @@ def create_account_holder(request):
         email_formset = EmailFormSet(request.POST, prefix='fs1')
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
+        customer_uuid = form.data['customer_uuid']
+
+        try:
+            account_holder = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+        except MultipleObjectsReturned:
+            pass
+        except ObjectDoesNotExist:
+            pass
+
         if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
             forename = form.cleaned_data['forename']
             surname = form.cleaned_data['surname']
@@ -456,9 +483,18 @@ def create_account_holder(request):
             discount_plan = form.cleaned_data['discount_plan']
 
             # create Account Holder Customer object using input data
-            account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
-                                                          address=address, postcode=postcode,
-                                                          discount_plan=discount_plan)
+            # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
+            #                                               address=address, postcode=postcode,
+            #                                               discount_plan=discount_plan)
+
+            account_holder.forename = forename
+            account_holder.surname = surname
+            account_holder.date = date
+            account_holder.address = address
+            account_holder.postcode = postcode
+            account_holder.discount_plan = discount_plan
+
+            account_holder.save()
 
             try:
                 with transaction.atomic():
@@ -489,12 +525,13 @@ def create_account_holder(request):
                             account_holder.phone_numbers.add(phone)
                             account_holder.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
+        account_holder = AccountHolder.objects.create()
         form = AccountHolderForm()
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
@@ -505,6 +542,7 @@ def create_account_holder(request):
         'phone_formset': phone_formset,
         'email_helper': email_helper,
         'phone_helper': phone_helper,
+        'account_holder': account_holder,
     }
 
     return render(request, 'nod/create_account_holder.html', context)
@@ -514,12 +552,12 @@ def create_account_holder(request):
 def edit_account_holder(request, uuid):
     account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
     user_emails = account_holder.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
     user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -589,7 +627,7 @@ def edit_account_holder(request, uuid):
                             account_holder.phone_numbers.add(phone)
                             account_holder.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -634,6 +672,15 @@ def create_business_customer(request):
         email_formset = EmailFormSet(request.POST, prefix='fs1')
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
+        customer_uuid = form.data['customer_uuid']
+
+        try:
+            business_customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+        except MultipleObjectsReturned:
+            pass
+        except ObjectDoesNotExist:
+            pass
+
         if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
             company_name = form.cleaned_data['company_name']
             forename = form.cleaned_data['forename']
@@ -645,10 +692,21 @@ def create_business_customer(request):
             discount_plan = form.cleaned_data['discount_plan']
 
             # create Business Company Customer object using input data
-            business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
-                                                                address=address, postcode=postcode,
-                                                                discount_plan=discount_plan, company_name=company_name,
-                                                                rep_role=rep_role)
+            # business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
+            #                                                     address=address, postcode=postcode,
+            #                                                     discount_plan=discount_plan, company_name=company_name,
+            #                                                     rep_role=rep_role)
+
+            business_customer.company_name = company_name
+            business_customer.forename = forename
+            business_customer.surname = surname
+            business_customer.rep_role = rep_role
+            business_customer.date = date
+            business_customer.address = address
+            business_customer.postcode = postcode
+            business_customer.discount_plan = discount_plan
+
+            business_customer.save()
 
             try:
                 with transaction.atomic():
@@ -679,12 +737,13 @@ def create_business_customer(request):
                             business_customer.phone_numbers.add(phone)
                             business_customer.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
+        business_customer = BusinessCustomer.objects.create()
         form = BusinessCustomerForm()
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
@@ -695,6 +754,7 @@ def create_business_customer(request):
         'phone_formset': phone_formset,
         'email_helper': email_helper,
         'phone_helper': phone_helper,
+        'business_customer': business_customer
     }
 
     return render(request, 'nod/create_business_customer.html', context)
@@ -704,12 +764,12 @@ def create_business_customer(request):
 def edit_business_customer(request, uuid):
     business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
     user_emails = business_customer.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
     user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -783,7 +843,7 @@ def edit_business_customer(request, uuid):
                             business_customer.phone_numbers.add(phone)
                             business_customer.save()
 
-                    return redirect('/thanks/')
+                    return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -809,7 +869,162 @@ def edit_business_customer(request, uuid):
         'phone_formset': phone_formset,
         'email_helper': email_helper,
         'phone_helper': phone_helper,
-        'business_company': business_customer,
+        'business_customer': business_customer,
     }
 
     return render(request, 'nod/edit_business_customer.html', context)
+
+
+def create_vehicle(request, customer_uuid):
+    # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
+    # check for account holder, if still not found, check business customer.
+    try:
+        customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    if request.method == 'POST':
+        form = VehicleForm(request.POST)
+
+        if form.is_valid():
+            reg_number = form.cleaned_data['reg_number']
+            make = form.cleaned_data['make']
+            model = form.cleaned_data['model']
+            engine_serial = form.cleaned_data['engine_serial']
+            chassis_number = form.cleaned_data['chassis_number']
+            color = form.cleaned_data['color']
+            mot_base_date = form.cleaned_data['mot_base_date']
+            type = form.cleaned_data['type']
+
+            vehicle = Vehicle.objects.create(customer=customer, reg_number=reg_number, make=make, model=model,
+                                             engine_serial=engine_serial, chassis_number=chassis_number, color=color,
+                                             mot_base_date=mot_base_date, type=type)
+
+            return render(request, 'nod/create_vehicle_success.html', {'vehicle': vehicle})
+
+    else:
+        form = VehicleForm()
+
+        context = {
+            'form': form,
+            'customer': customer,
+        }
+        return render(request, 'nod/create_vehicle.html', context)
+
+
+def edit_vehicle(request, customer_uuid, uuid):
+    # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
+    # check for account holder, if still not found, check business customer.
+    try:
+        customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    vehicle = get_object_or_404(Vehicle, uuid=uuid)
+    print(uuid)
+    print(vehicle.uuid)
+    if request.method == 'POST':
+        form = VehicleForm(request.POST)
+
+        if form.is_valid():
+            reg_number = form.cleaned_data['reg_number']
+            make = form.cleaned_data['make']
+            model = form.cleaned_data['model']
+            engine_serial = form.cleaned_data['engine_serial']
+            chassis_number = form.cleaned_data['chassis_number']
+            color = form.cleaned_data['color']
+            mot_base_date = form.cleaned_data['mot_base_date']
+            type = form.cleaned_data['type']
+
+            vehicle.reg_number = reg_number
+            vehicle.make = make
+            vehicle.model = model
+            vehicle.engine_serial = engine_serial
+            vehicle.chassis_number = chassis_number
+            vehicle.color = color
+            vehicle.mot_base_date = mot_base_date
+            vehicle.type = type
+
+            vehicle.save()
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        data = {}
+        data['reg_number'] = vehicle.reg_number
+        data['make'] = vehicle.make
+        data['model'] = vehicle.model
+        data['engine_serial'] = vehicle.engine_serial
+        data['chassis_number'] = vehicle.chassis_number
+        data['color'] = vehicle.color
+        data['mot_base_date'] = vehicle.mot_base_date
+        data['type'] = vehicle.type
+
+        form = VehicleForm(initial=data)
+
+        context = {
+            'form': form,
+            'customer': customer,
+            'vehicle': vehicle
+        }
+        return render(request, 'nod/edit_vehicle.html', context)
+
+
+def get_vehicles(request, customer_uuid):
+    # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
+    # check for account holder, if still not found, check business customer.
+    try:
+        customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    data = None
+    if request.is_ajax():
+        vehicles = customer.vehicle_set.filter(is_deleted=False)
+        results = []
+        for v in vehicles:
+            c_json = {}
+            c_json['reg_number'] = v.reg_number
+            c_json['make'] = v.make
+            c_json['model'] = v.model
+            c_json['uuid'] = v.uuid
+            results.append(c_json)
+        data = json.dumps(results)
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)

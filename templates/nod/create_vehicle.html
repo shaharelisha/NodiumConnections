@@ -1,0 +1,56 @@
+{% load i18n widget_tweaks %}
+{% load crispy_forms_tags %}
+
+<div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+                            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                                {#          Data saved successfully #}
+                                <li class="success">
+                                    {{ message }}
+                                </li>
+                            {% endif %}
+                            {#        Data not saved. Validation errors#}
+                            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                                <li class="error">
+                                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                    <hr/>
+                {% endif %}
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title">Add New Vehicle</h4>
+            </div>
+            <form action="{% url 'create-vehicle' customer.uuid %}" method="post" id="create_vehicle" class="form">
+                {% csrf_token %}
+                <div class="modal-body">
+    {#            <form action="" method="post">#}
+                      {% crispy form form.helper 'bootstrap3' %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <input id="pass-data" type="submit" class="btn btn-primary" value="Save changes"/>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+
+
+</div><!-- /.modal-dialog -->
+
+{#<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>#}
+{#<script src="{% static 'nod/js/jquery.formset.js' %}"></script>#}
+<script>
+
+    var form_options = { target: '.modal-dialog', success: function(response) {} };
+    $('#create_vehicle').ajaxForm(form_options);
+
+</script>

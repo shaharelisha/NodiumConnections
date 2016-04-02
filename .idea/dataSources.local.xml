@@ -5,6 +5,6 @@
       <secret-storage>master_key</secret-storage>
       <first-sync>true</first-sync>
     </data-source>
-    <data-source name="db" uuid="21a4c73c-be22-44ac-ad8e-30dc75bdb72c" />
+    <data-source name="db" uuid="1b97938e-9faf-4cc7-8c3a-a1d68ef5b358" />
   </component>
 </project>

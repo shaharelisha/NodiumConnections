@@ -349,7 +349,7 @@ class PartFormSetHelper(FormHelper):
 
 class JobCreateForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
-    vehicle = forms.CharField(max_length=300, widget=forms.TextInput(
+    vehicle = forms.CharField(max_length=100, widget=forms.TextInput(
         attrs={'placeholder': "Vehicle Registration No.",'rows': '1'}))
     JOB_TYPE = [
         ('1', 'MOT'),
@@ -420,6 +420,7 @@ class JobEditForm(forms.Form):
 
 
 class CustomerForm(forms.Form):
+    customer_uuid = forms.CharField(widget=forms.HiddenInput())
     forename = forms.CharField(max_length=50, widget=forms.TextInput(
         attrs={'placeholder': "Forename",'rows': '1'}))
     surname = forms.CharField(max_length=100, widget=forms.TextInput(
@@ -518,6 +519,54 @@ class BusinessCustomerForm(CustomerForm):
         self.fields['company_name'].label = "Company Name"
         self.fields['rep_role'].label = "Representative Role"
         self.fields['discount_plan'].label = "Discount Plan"
+
+
+class VehicleForm(forms.Form):
+    reg_number = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Registration No.",'rows': '1'}))
+    make = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Make",'rows': '1'}))
+    model = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Model",'rows': '1'}))
+    engine_serial = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Engine Serial",'rows': '1'}))
+    chassis_number = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Chassis No.",'rows': '1'}))
+    color = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Colour",'rows': '1'}))
+    mot_base_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput(), required=False)
+    VEHICLE_TYPE = (
+        ('1', 'Vans/Light Vehicles'),
+        ('2', 'Cars'),
+    )
+    type = forms.ChoiceField(choices=VEHICLE_TYPE, initial='2')
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'reg_number',
+            'make',
+            'model',
+            'engine_serial',
+            'chassis_number',
+            'color',
+            'mot_base_date',
+            'type',
+        )
+        super(VehicleForm, self).__init__(*args, **kwargs)
+        self.fields['reg_number'].label = "Registration Number"
+        self.fields['make'].label = "Make"
+        self.fields['model'].label = "Model"
+        self.fields['engine_serial'].label = "Engine Serial"
+        self.fields['chassis_number'].label = "Chassis Number"
+        self.fields['color'].label = "Colour"
+        self.fields['mot_base_date'].label = "MoT Base Date"
+        self.fields['type'].label = "Type"
 
 
 class ProfileForm(forms.Form):
