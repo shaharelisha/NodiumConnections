@@ -1,0 +1,85 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+
+<div id="main">
+    <div id="job_add_form">
+        <h3>Create New Business Customer</h3>
+        <form action='{% url 'create-business-customer' %}' method="post">
+            {% csrf_token %}
+            {% crispy form form.helper 'bootstrap3' %}
+
+            <h4>Emails</h4>
+            {{ email_formset.management_form|crispy }}
+            {% for form in email_formset %}
+                <div class="email-formset">
+                 {% crispy form email_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
+            <br/>
+            <h4>Phone Numbers</h4>
+            {{ phone_formset.management_form|crispy }}
+            {% for form in phone_formset %}
+                <div class="phone-formset">
+                 {% crispy form phone_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
+
+            <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                    <br/>
+                    <button type="reset" class="btn btn-default">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
+<script>
+
+    $(".email-formset").formset({
+        addText: 'add task',
+        deleteText: 'remove',
+        prefix: '{{ email_formset.prefix }}',
+        formCssClass: 'email-formset',
+{#        deleteCssClass: 'task-formset'#}
+    });
+
+    $(".phone-formset").formset({
+        addText: 'add part',
+        deleteText: 'remove',
+        prefix: '{{ phone_formset.prefix }}',
+        formCssClass: 'phone-formset',
+{#        deleteCssClass: 'part-formset'#}
+    });
+
+</script>
+{% endblock %}

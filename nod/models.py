@@ -2,7 +2,6 @@ from django.db import models
 
 import uuid
 
-from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import RegexValidator

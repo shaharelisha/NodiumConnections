@@ -257,3 +257,562 @@ def edit_profile(request):
     }
 
     return render(request, 'nod/edit_profile.html', context)
+
+
+@login_required
+def create_dropin(request):
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    email_data = []
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    phone_data = []
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = DropinForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            date = form.cleaned_data['date']
+
+            # create Dropin Customer object using input data
+            dropin = Dropin.objects.create(forename=forename, surname=surname, date=date)
+
+            try:
+                with transaction.atomic():
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            dropin.emails.add(email)
+                            dropin.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            dropin.phone_numbers.add(phone)
+                            dropin.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        form = DropinForm()
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+    }
+
+    return render(request, 'nod/create_dropin.html', context)
+
+
+@login_required
+def edit_dropin(request, uuid):
+    dropin = get_object_or_404(Dropin, uuid=uuid)
+
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    user_emails = dropin.emails.filter(is_deleted=False)
+    email_data = [{'email_address': e.address, 'email_type': e.type}
+                  for e in user_emails]
+
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    user_phone_numbers = dropin.phone_numbers.filter(is_deleted=False)
+    phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                  for p in user_phone_numbers]
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = DropinForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            date = form.cleaned_data['date']
+
+            dropin.forename = forename
+            dropin.surname = surname
+            dropin.date = date
+
+            dropin.save()
+
+            try:
+                with transaction.atomic():
+                    old_emails = dropin.emails.all()
+                    print(old_emails)
+                    for e in old_emails:
+                        e.is_deleted = True
+                        e.save()
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            # updates = {'is_deleted':'True'}
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            dropin.emails.add(email)
+                            dropin.save()
+
+                    old_phones = dropin.phone_numbers.all()
+                    for p in old_phones:
+                        p.is_deleted = True
+                        p.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            dropin.phone_numbers.add(phone)
+                            dropin.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                #If the transaction failed
+                messages.error(request, 'There was an error saving your profile.')
+    else:
+        data = {}
+        data['forename'] = dropin.forename
+        data['surname'] = dropin.surname
+        data['date'] = dropin.date
+        data['address'] = dropin.address
+        data['postcode'] = dropin.postcode
+        data['discount_plan'] = dropin.discount_plan
+
+        form = BusinessCustomerForm(initial=data)
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+        'dropin': dropin,
+    }
+
+    return render(request, 'nod/edit_dropin.html', context)
+
+
+@login_required
+def create_account_holder(request):
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    email_data = []
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    phone_data = []
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = AccountHolderForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            date = form.cleaned_data['date']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+            discount_plan = form.cleaned_data['discount_plan']
+
+            # create Account Holder Customer object using input data
+            account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
+                                                          address=address, postcode=postcode,
+                                                          discount_plan=discount_plan)
+
+            try:
+                with transaction.atomic():
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            account_holder.emails.add(email)
+                            account_holder.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            account_holder.phone_numbers.add(phone)
+                            account_holder.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        form = AccountHolderForm()
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+    }
+
+    return render(request, 'nod/create_account_holder.html', context)
+
+
+@login_required
+def edit_account_holder(request, uuid):
+    account_holder = get_object_or_404(AccountHolder, uuid=uuid)
+
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    user_emails = account_holder.emails.filter(is_deleted=False)
+    email_data = [{'email_address': e.address, 'email_type': e.type}
+                  for e in user_emails]
+
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
+    phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                  for p in user_phone_numbers]
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = AccountHolderForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            date = form.cleaned_data['date']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+            discount_plan = form.cleaned_data['discount_plan']
+
+            account_holder.forename = forename
+            account_holder.surname = surname
+            account_holder.date = date
+            account_holder.address = address
+            account_holder.postcode = postcode
+            account_holder.discount_plan = discount_plan
+
+            account_holder.save()
+
+            try:
+                with transaction.atomic():
+                    old_emails = account_holder.emails.all()
+                    print(old_emails)
+                    for e in old_emails:
+                        e.is_deleted = True
+                        e.save()
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            # updates = {'is_deleted':'True'}
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            account_holder.emails.add(email)
+                            account_holder.save()
+
+                    old_phones = account_holder.phone_numbers.all()
+                    for p in old_phones:
+                        p.is_deleted = True
+                        p.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            account_holder.phone_numbers.add(phone)
+                            account_holder.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                #If the transaction failed
+                messages.error(request, 'There was an error saving your profile.')
+    else:
+        data = {}
+        data['forename'] = account_holder.forename
+        data['surname'] = account_holder.surname
+        data['date'] = account_holder.date
+        data['address'] = account_holder.address
+        data['postcode'] = account_holder.postcode
+        data['discount_plan'] = account_holder.discount_plan
+
+        form = BusinessCustomerForm(initial=data)
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'account_holder': account_holder,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+    }
+
+    return render(request, 'nod/edit_account_holder.html', context)
+
+
+@login_required
+def create_business_customer(request):
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    email_data = []
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    phone_data = []
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = BusinessCustomerForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            company_name = form.cleaned_data['company_name']
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            rep_role = form.cleaned_data['rep_role']
+            date = form.cleaned_data['date']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+            discount_plan = form.cleaned_data['discount_plan']
+
+            # create Business Company Customer object using input data
+            business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
+                                                                address=address, postcode=postcode,
+                                                                discount_plan=discount_plan, company_name=company_name,
+                                                                rep_role=rep_role)
+
+            try:
+                with transaction.atomic():
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            business_customer.emails.add(email)
+                            business_customer.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            business_customer.phone_numbers.add(phone)
+                            business_customer.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        form = BusinessCustomerForm()
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+    }
+
+    return render(request, 'nod/create_business_customer.html', context)
+
+
+@login_required
+def edit_business_customer(request, uuid):
+    business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
+
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    user_emails = business_customer.emails.filter(is_deleted=False)
+    email_data = [{'email_address': e.address, 'email_type': e.type}
+                  for e in user_emails]
+
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
+    phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                  for p in user_phone_numbers]
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = BusinessCustomerForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            company_name = form.cleaned_data['company_name']
+            forename = form.cleaned_data['forename']
+            surname = form.cleaned_data['surname']
+            rep_role = form.cleaned_data['rep_role']
+            date = form.cleaned_data['date']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+            discount_plan = form.cleaned_data['discount_plan']
+
+            business_customer.company_name = company_name
+            business_customer.forename = forename
+            business_customer.surname = surname
+            business_customer.rep_role = rep_role
+            business_customer.date = date
+            business_customer.address = address
+            business_customer.postcode = postcode
+            business_customer.discount_plan = discount_plan
+
+            business_customer.save()
+
+            try:
+                with transaction.atomic():
+                    old_emails = business_customer.emails.all()
+                    print(old_emails)
+                    for e in old_emails:
+                        e.is_deleted = True
+                        e.save()
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            # updates = {'is_deleted':'True'}
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            business_customer.emails.add(email)
+                            business_customer.save()
+
+                    old_phones = business_customer.phone_numbers.all()
+                    for p in old_phones:
+                        p.is_deleted = True
+                        p.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            business_customer.phone_numbers.add(phone)
+                            business_customer.save()
+
+                    return redirect('/thanks/')
+
+            except IntegrityError:
+                #If the transaction failed
+                messages.error(request, 'There was an error saving your profile.')
+    else:
+        data = {}
+        data['company_name'] = business_customer.company_name
+        data['forename'] = business_customer.forename
+        data['surname'] = business_customer.surname
+        data['rep_role'] = business_customer.rep_role
+        data['date'] = business_customer.date
+        data['address'] = business_customer.address
+        data['postcode'] = business_customer.postcode
+        data['discount_plan'] = business_customer.discount_plan
+
+        form = BusinessCustomerForm(initial=data)
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+        'business_company': business_customer,
+    }
+
+    return render(request, 'nod/edit_business_customer.html', context)

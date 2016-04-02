@@ -69,6 +69,21 @@ class BaseEmailFormSet(BaseFormSet):
                          )
 
 
+class EmailFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(EmailFormSetHelper, self).__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.form_class = 'form-horizontal'
+        # self.label_class = 'col-lg-8'
+        # self.field_class = 'col-lg-5'
+        self.form_tag = False
+        self.layout = Layout(
+            'email_type',
+            'email_address',
+        )
+        self.render_required_fields = True
+
+
 class PhoneForm(forms.Form):
     CONTACT_TYPE = [
         ('1', 'Work'),
@@ -115,6 +130,23 @@ class BasePhoneFormSet(BaseFormSet):
                         "All phone numbers must have a type.",
                         code="missing_phone_type"
                     )
+
+
+
+class PhoneFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(PhoneFormSetHelper, self).__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.form_class = 'form-horizontal'
+        # self.label_class = 'col-lg-8'
+        # self.field_class = 'col-lg-5'
+        self.form_tag = False
+        self.layout = Layout(
+            'phone_type',
+            'phone_number',
+        )
+        self.render_required_fields = True
+
 
 # class BaseTrackerForm(FoundationModelForm):
 #     def __init__(self, user=None, title=None, *args, **kwargs):
@@ -387,11 +419,108 @@ class JobEditForm(forms.Form):
         self.fields['work_carried_out'].label = "Work Carried Out"
 
 
+class CustomerForm(forms.Form):
+    forename = forms.CharField(max_length=50, widget=forms.TextInput(
+        attrs={'placeholder': "Forename",'rows': '1'}))
+    surname = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Surname",'rows': '1'}))
+
+    # define today's date in order to autofill the 'joining date' attribute to today's date.
+    today = timezone.now().date().strftime('%d/%m/%Y')
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput(), initial=today)
+
+
+class DropinForm(CustomerForm):
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'forename',
+            'surname',
+            'date',
+        )
+        super(DropinForm, self).__init__(*args, **kwargs)
+        self.fields['forename'].label = "Forename"
+        self.fields['surname'].label = "Surname"
+        self.fields['date'].label = "Date Arrived"
+
+
+class AccountHolderForm(CustomerForm):
+    address = forms.CharField(max_length=80, widget=forms.Textarea(
+        attrs={'placeholder': "Address",'rows': '1'}))
+    postcode = forms.CharField(max_length=8, widget=forms.TextInput(
+        attrs={'placeholder': "Postcode",'rows': '1'}))
+    discount_plan = forms.ModelChoiceField(queryset=DiscountPlan.objects.filter(is_deleted=False))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'forename',
+            'surname',
+            'date',
+            'address',
+            'postcode',
+            'discount_plan',
+        )
+        super(AccountHolderForm, self).__init__(*args, **kwargs)
+        self.fields['forename'].label = "Forename"
+        self.fields['surname'].label = "Surname"
+        self.fields['date'].label = "Date Joined"
+        self.fields['address'].label = "Address"
+        self.fields['postcode'].label = "Postcode"
+        self.fields['discount_plan'].label = "Discount Plan"
+
+
+class BusinessCustomerForm(CustomerForm):
+    company_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Company Name",'rows': '1'}))
+    rep_role = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Representative Role", 'rows': '1'}))
+    address = forms.CharField(max_length=80, widget=forms.Textarea(
+        attrs={'placeholder': "Address",'rows': '1'}))
+    postcode = forms.CharField(max_length=8, widget=forms.TextInput(
+        attrs={'placeholder': "Postcode",'rows': '1'}))
+    discount_plan = forms.ModelChoiceField(queryset=DiscountPlan.objects.filter(is_deleted=False))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'company_name',
+            'date',
+            'forename',
+            'surname',
+            'rep_role',
+            'address',
+            'postcode',
+            'discount_plan',
+        )
+        super(BusinessCustomerForm, self).__init__(*args, **kwargs)
+        self.fields['forename'].label = "Representative Forename"
+        self.fields['surname'].label = "Representative Surname"
+        self.fields['date'].label = "Date Joined"
+        self.fields['address'].label = "Address"
+        self.fields['postcode'].label = "Postcode"
+        self.fields['discount_plan'].label = "Discount Plan"
+        self.fields['company_name'].label = "Company Name"
+        self.fields['rep_role'].label = "Representative Role"
+        self.fields['discount_plan'].label = "Discount Plan"
+
+
 class ProfileForm(forms.Form):
-    # forename = forms.CharField(max_length=50, required=False, widget=forms.TextInput(
-    #     attrs={'placeholder': "Forename",'rows': '1', 'disabled': True}))
-    # surname = forms.CharField(max_length=100, required=False, widget=forms.TextInput(
-    #     attrs={'placeholder': "Surname",'rows': '1', 'disabled': True}))
     user_name = forms.CharField(max_length=40, required=False)
 
     def __init__(self, *args, **kwargs):
@@ -402,8 +531,6 @@ class ProfileForm(forms.Form):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
-            # 'forename',
-            # 'surname',
             'user_name',
         )
         super(ProfileForm, self).__init__(*args, **kwargs)
