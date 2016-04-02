@@ -201,8 +201,8 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     color = models.CharField(max_length=100)
     mot_base_date = models.DateField(null=True) # required?
     VEHICLE_TYPE = (
-        ('1', 'Vans/Light Vehicles'),
-        ('2', 'Cars'),
+        ('1', 'Van/Light Vehicle'),
+        ('2', 'Car'),
     )
     type = models.CharField(max_length=1, choices=VEHICLE_TYPE)
     #TODO: customer okay? or does it need to be a generic relationship to all its children?

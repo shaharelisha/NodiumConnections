@@ -536,8 +536,8 @@ class VehicleForm(forms.Form):
         attrs={'placeholder': "Colour",'rows': '1'}))
     mot_base_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput(), required=False)
     VEHICLE_TYPE = (
-        ('1', 'Vans/Light Vehicles'),
-        ('2', 'Cars'),
+        ('1', 'Van/Light Vehicle'),
+        ('2', 'Car'),
     )
     type = forms.ChoiceField(choices=VEHICLE_TYPE, initial='2')
 
@@ -567,6 +567,29 @@ class VehicleForm(forms.Form):
         self.fields['color'].label = "Colour"
         self.fields['mot_base_date'].label = "MoT Base Date"
         self.fields['type'].label = "Type"
+
+
+class PartForm(forms.Form):
+    low_level_threshold = forms.IntegerField(min_value=0, initial=10)
+    price = forms.FloatField(min_value=0)
+    quantity = forms.IntegerField(min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'quantity',
+            'price',
+            'low_level_threshold',
+        )
+        super(PartForm, self).__init__(*args, **kwargs)
+        self.fields['quantity'].label = "Quantity"
+        self.fields['price'].label = "Price"
+        self.fields['low_level_threshold'].label = "Low Level Threshold"
 
 
 class ProfileForm(forms.Form):

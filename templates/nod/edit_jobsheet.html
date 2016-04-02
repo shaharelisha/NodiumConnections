@@ -28,7 +28,7 @@
 <div id="main">
     <div id="job_add_form">
         <h3>Edit Job No.{{ job.job_number }}</h3>
-        <form action='{% url 'create-job' %}' method="post">
+        <form action='{% url 'edit-job' job.uuid %}' method="post">
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
         {#    {{ form|crispy }}#}

@@ -972,6 +972,8 @@ def edit_vehicle(request, customer_uuid, uuid):
             vehicle.save()
 
             return HttpResponseRedirect('/thanks/')
+        else:
+            messages.error(request, "There was an error with the data input.")
 
     else:
         data = {}
@@ -1028,3 +1030,39 @@ def get_vehicles(request, customer_uuid):
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+def edit_part(request, uuid):
+    part = get_object_or_404(Part, uuid=uuid)
+
+    if request.method == 'POST':
+        form = PartForm(request.POST)
+
+        if form.is_valid():
+            quantity = form.cleaned_data['quantity']
+            price = form.cleaned_data['price']
+            low_level_threshold = form.cleaned_data['low_level_threshold']
+
+            part.quantity = quantity
+            part.price = price
+            part.low_level_threshold = low_level_threshold
+
+            part.save()
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        data = {}
+        data['quantity'] = part.quantity
+        data['price'] = part.price
+        data['low_level_threshold'] = part.low_level_threshold
+
+        form = PartForm(initial=data)
+
+        context = {
+            'form': form,
+            'part': part,
+        }
+        return render(request, 'nod/edit_part.html', context)
+
+
