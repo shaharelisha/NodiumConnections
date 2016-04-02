@@ -336,12 +336,12 @@ def create_dropin(request):
 def edit_dropin(request, uuid):
     dropin = get_object_or_404(Dropin, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
     user_emails = dropin.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
     user_phone_numbers = dropin.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -414,12 +414,9 @@ def edit_dropin(request, uuid):
         data = {}
         data['forename'] = dropin.forename
         data['surname'] = dropin.surname
-        data['date'] = dropin.date
-        data['address'] = dropin.address
-        data['postcode'] = dropin.postcode
-        data['discount_plan'] = dropin.discount_plan
+        data['date'] = dropin.date.strftime('%d/%m/%Y')
 
-        form = BusinessCustomerForm(initial=data)
+        form = DropinForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -517,12 +514,12 @@ def create_account_holder(request):
 def edit_account_holder(request, uuid):
     account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
     user_emails = account_holder.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
     user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -601,12 +598,12 @@ def edit_account_holder(request, uuid):
         data = {}
         data['forename'] = account_holder.forename
         data['surname'] = account_holder.surname
-        data['date'] = account_holder.date
+        data['date'] = account_holder.date.strftime('%d/%m/%Y')
         data['address'] = account_holder.address
         data['postcode'] = account_holder.postcode
         data['discount_plan'] = account_holder.discount_plan
 
-        form = BusinessCustomerForm(initial=data)
+        form = DropinForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -707,12 +704,12 @@ def create_business_customer(request):
 def edit_business_customer(request, uuid):
     business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
-    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, extra=0)
     user_emails = business_customer.emails.filter(is_deleted=False)
     email_data = [{'email_address': e.address, 'email_type': e.type}
                   for e in user_emails]
 
-    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, extra=0)
     user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
     phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                   for p in user_phone_numbers]
@@ -797,7 +794,7 @@ def edit_business_customer(request, uuid):
         data['forename'] = business_customer.forename
         data['surname'] = business_customer.surname
         data['rep_role'] = business_customer.rep_role
-        data['date'] = business_customer.date
+        data['date'] = business_customer.date.strftime('%d/%m/%Y')
         data['address'] = business_customer.address
         data['postcode'] = business_customer.postcode
         data['discount_plan'] = business_customer.discount_plan
