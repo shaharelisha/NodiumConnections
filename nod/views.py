@@ -114,12 +114,12 @@ def create_job(request):
 def edit_job(request, uuid):
     job = get_object_or_404(Job, uuid=uuid)
 
-    TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, extra=0)
+    TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
     task_set = job.jobtask_set.all()
     tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
                   for t in task_set]
 
-    PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, extra=0)
+    PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
     part_set = job.jobpart_set.all()
     parts_data = [{'part_name': p.part, 'quantity': p.quantity}
                   for p in part_set]
@@ -222,6 +222,15 @@ def edit_job(request, uuid):
     }
 
     return render(request, 'nod/edit_jobsheet.html', context)
+
+
+def delete_job(request, uuid):
+    job = get_object_or_404(Job, uuid=uuid)
+
+    job.is_deleted = True
+    job.save()
+
+    return HttpResponseRedirect('/deleted/')
 
 
 @login_required
@@ -875,6 +884,30 @@ def edit_business_customer(request, uuid):
     return render(request, 'nod/edit_business_customer.html', context)
 
 
+def delete_customer(request, uuid):
+    try:
+        customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    customer.is_deleted = True
+    customer.save()
+
+    return HttpResponseRedirect('/deleted/')
+
+
 def create_vehicle(request, customer_uuid):
     # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
     # check for account holder, if still not found, check business customer.
@@ -996,6 +1029,15 @@ def edit_vehicle(request, customer_uuid, uuid):
         return render(request, 'nod/edit_vehicle.html', context)
 
 
+def delete_vehicle(request, uuid):
+    vehicle = get_object_or_404(Vehicle, uuid=uuid)
+
+    vehicle.is_deleted = True
+    vehicle.save()
+
+    return HttpResponseRedirect('/deleted/')
+
+
 def get_vehicles(request, customer_uuid):
     # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
     # check for account holder, if still not found, check business customer.
@@ -1021,12 +1063,12 @@ def get_vehicles(request, customer_uuid):
         vehicles = customer.vehicle_set.filter(is_deleted=False)
         results = []
         for v in vehicles:
-            c_json = {}
-            c_json['reg_number'] = v.reg_number
-            c_json['make'] = v.make
-            c_json['model'] = v.model
-            c_json['uuid'] = v.uuid
-            results.append(c_json)
+            v_json = {}
+            v_json['reg_number'] = v.reg_number
+            v_json['make'] = v.make
+            v_json['model'] = v.model
+            v_json['uuid'] = v.uuid
+            results.append(v_json)
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
@@ -1064,5 +1106,23 @@ def edit_part(request, uuid):
             'part': part,
         }
         return render(request, 'nod/edit_part.html', context)
+
+
+def get_vehicles_autocomplete(request):
+    if request.is_ajax():
+        q = request.GET.get('term')
+        vehicles = Vehicle.objects.filter(reg_number__icontains=q, is_deleted=False)[:10]
+        results = []
+        for v in vehicles:
+            v_json = {}
+            v_json['id'] = v.id
+            v_json['label'] = v.reg_number
+            v_json['value'] = v.reg_number
+            results.append(v_json)
+        data = json.dumps(results)
+    else:
+        data = 'fail'
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)
 
 

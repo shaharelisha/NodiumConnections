@@ -1,3 +1,5 @@
+import calendar
+
 from django import forms
 from django.forms.formsets import BaseFormSet
 from collections import OrderedDict
@@ -25,8 +27,8 @@ class EmailForm(forms.Form):
 class BaseEmailFormSet(BaseFormSet):
          def clean(self):
              """
-             Adds validation to check that no two links have the same anchor or URL
-             and that all links have both an anchor and URL.
+             Adds validation to check that no two emails have the same type or address
+             and that all emails have both a type and address.
              """
              if any(self.errors):
                  return
@@ -56,7 +58,7 @@ class BaseEmailFormSet(BaseFormSet):
                              code='duplicate_emails'
                          )
 
-                     # Check that all links have both an anchor and URL
+                     # Check that all emails have both a type and address
                      # if email_type and not email_address:
                      #     raise forms.ValidationError(
                      #         'All emails must have an address.',
@@ -350,7 +352,7 @@ class PartFormSetHelper(FormHelper):
 class JobCreateForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
     vehicle = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Vehicle Registration No.",'rows': '1'}))
+        attrs={'placeholder': "Vehicle Registration No.",'rows': '1', "id": "vehicles"}))
     JOB_TYPE = [
         ('1', 'MOT'),
         ('2', 'Repair'),
@@ -360,8 +362,8 @@ class JobCreateForm(forms.Form):
 
     # define today's date in order to autofill the 'booking date' attribute to today's date.
     today = timezone.now().date().strftime('%d/%m/%Y')
-    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'],
-                                   widget=forms.DateInput(), initial=today)
+    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'], initial=today,
+                                   widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     # mechanic = forms.ModelChoiceField(queryset=Mechanic.objects.filter(is_deleted=False))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
 
@@ -391,8 +393,9 @@ class JobEditForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
     vehicle = forms.CharField(max_length=300, widget=forms.TextInput(
         attrs={'placeholder': "Vehicle Registration No.",'rows': '1', 'readonly': True}))
-    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput())
-    work_carried_out = forms.CharField(max_length=1000, widget=forms.Textarea(
+    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'],
+                                   widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+    work_carried_out = forms.CharField(max_length=1000, required=False, widget=forms.Textarea(
         attrs={'placeholder': "Work Carried Out",'rows': '3'}))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
 
@@ -428,7 +431,8 @@ class CustomerForm(forms.Form):
 
     # define today's date in order to autofill the 'joining date' attribute to today's date.
     today = timezone.now().date().strftime('%d/%m/%Y')
-    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput(), initial=today)
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
 
 
 class DropinForm(CustomerForm):
@@ -534,7 +538,9 @@ class VehicleForm(forms.Form):
         attrs={'placeholder': "Chassis No.",'rows': '1'}))
     color = forms.CharField(max_length=100, widget=forms.TextInput(
         attrs={'placeholder': "Colour",'rows': '1'}))
-    mot_base_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], widget=forms.DateInput(), required=False)
+    mot_base_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], required=False,
+                                    widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+
     VEHICLE_TYPE = (
         ('1', 'Van/Light Vehicle'),
         ('2', 'Car'),

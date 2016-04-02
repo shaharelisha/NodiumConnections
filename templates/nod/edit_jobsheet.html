@@ -60,6 +60,7 @@
                 <div class="col-lg-10 col-lg-offset-2">
                     <br/>
                     <button type="reset" class="btn btn-default">Cancel</button>
+                    <a href="{% url 'delete-job' job.uuid %}" class="btn btn-danger">Delete</a>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </div>
@@ -85,6 +86,15 @@
         formCssClass: 'part-formset',
 {#        deleteCssClass: 'part-formset'#}
     });
+
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js" type="text/javascript"></script>
+<script>
+
+      $("#vehicles").autocomplete({
+        source: '{% url 'get-vehicles-autocomplete' %}',
+          position: {my: "left top"},
+      });
 
 </script>
 {% endblock %}

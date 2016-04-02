@@ -16,5 +16,10 @@ urlpatterns = [
     url(r'^customers/business_customer/(?P<uuid>\w+)/edit/$', views.edit_business_customer, name='edit-business-customer'),
     url(r'^customers/(?P<customer_uuid>\w+)/vehicle/create/$', views.create_vehicle, name='create-vehicle'),
     url(r'^customers/(?P<customer_uuid>\w+)/vehicle/(?P<uuid>\w+)/edit/$', views.edit_vehicle, name='edit-vehicle'),
-    url(r'^api/get_vehicles/(?P<customer_uuid>\w+)/$', views.get_vehicles, name='get-vehicles')
+    url(r'^api/get_vehicles/(?P<customer_uuid>\w+)/$', views.get_vehicles, name='get-vehicles'),
+    url(r'^api/get_vehicles/', views.get_vehicles_autocomplete, name='get-vehicles-autocomplete'),
+    url(r'^delete/job/(?P<uuid>\w+)/$', views.delete_job, name='delete-job'),
+    url(r'^delete/vehicle/(?P<uuid>\w+)/$', views.delete_vehicle, name='delete-vehicle'),
+    url(r'^delete/customers/(?P<uuid>\w+)/$', views.delete_customer, name='delete-customer'),
+
 ]
