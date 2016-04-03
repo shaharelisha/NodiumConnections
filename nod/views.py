@@ -1633,4 +1633,75 @@ def create_user(request):
     else:
         form = UserForm()
 
-    return  render(request, 'nod/create_user.html', {'form': form})
+    return render(request, 'nod/create_user.html', {'form': form})
+
+
+def edit_user(request, uuid):
+    try:
+        staff = get_object_or_404(Mechanic, uuid=uuid)
+    except ObjectDoesNotExist:
+        staff = get_object_or_404(StaffMember, uuid=uuid)
+
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            username = form.cleaned_data['user_name']
+            role = form.cleaned_data['role']
+            hourly_rate = form.cleaned_data['hourly_rate']
+            password = form.cleaned_data['password']
+
+            # TODO: superuser if admin??
+            # TODO: specify permissions
+            staff.user.first_name = first_name
+            staff.user.last_name = last_name
+            staff.user.password = password
+            staff.user.username = username
+
+            # mechanic or foreperson
+            if staff.role == '1' or staff.role == '2':
+                if role == '1' or role == '2':
+                    staff.hourly_pay = hourly_rate
+                    staff.role = role
+                else:
+                    staff.hourly_pay = None
+            else:
+                if role == '1' or role == '2':
+                    staff.hourly_pay = hourly_rate
+
+            staff.role = role
+            staff.save()
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        data = {}
+        data['first_name'] = staff.user.first_name
+        data['last_name'] = staff.user.last_name
+        data['user_name'] = staff.user.username
+        try:
+            data['hourly_rate'] = staff.hourly_rate
+        except AttributeError:
+            pass
+        data['role'] = staff.role
+        form = UserForm(initial=data)
+
+    context = {
+        'form': form,
+        'staff': staff
+    }
+
+    return render(request, 'nod/edit_user.html', context)
+
+def delete_user(request, uuid):
+    try:
+        staff = get_object_or_404(Mechanic, uuid=uuid)
+    except ObjectDoesNotExist:
+        staff = get_object_or_404(StaffMember, uuid=uuid)
+
+    staff.is_deleted = True
+    staff.save()
+
+    return HttpResponseRedirect('/deleted/')
