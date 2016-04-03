@@ -1429,3 +1429,51 @@ def edit_supplier(request, uuid):
     }
 
     return render(request, 'nod/edit_supplier.html', context)
+
+
+def create_payment(request, job_uuid):
+    job = get_object_or_404(Job, uuid=job_uuid)
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            date = form.cleaned_data['date']
+            payment_type = form.cleaned_data['payment_type']
+            last_4_digits = form.cleaned_data['last_4_digits']
+            cvv = form.cleaned_data['cvv']
+
+            try:
+                with transaction.atomic():
+                    if payment_type == '2':
+                        if last_4_digits and cvv:
+                            Card.objects.create(amount=amount, date=date, payment_type=payment_type, last_4_digits=last_4_digits,
+                                                cvv=cvv, job=job)
+                        else:
+                            raise forms.ValidationError(
+                                'No card details filled.',
+                                code='card_details_missing'
+                            )
+                    else:
+                        Payment.objects.create(amount=amount, date=date, payment_type=payment_type, job=job)
+
+                    job.invoice.paid = True
+                    job.invoice.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        data = {}
+        form = PaymentForm()
+
+    context = {
+        'form': form,
+        'job': job,
+    }
+
+    return render(request, 'nod/create_payment.html', context)
+
+

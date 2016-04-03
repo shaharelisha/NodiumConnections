@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^profile/edit/$', views.edit_profile, name='edit-profile'),
     url(r'^jobs/create/$', views.create_job, name='create-job'),
     url(r'^jobs/(?P<uuid>\w+)/edit/$', views.edit_job, name='edit-job'),
+    url(r'^jobs/(?P<job_uuid>\w+)/payment/$', views.create_payment, name='create-payment'),
     url(r'^parts/(?P<uuid>\w+)/edit/$', views.edit_part, name='edit-part'),
     url(r'^customers/dropin/create/$', views.create_dropin, name='create-dropin'),
     url(r'^customers/dropin/(?P<uuid>\w+)/edit/$', views.edit_dropin, name='edit-dropin'),
@@ -26,6 +27,7 @@ urlpatterns = [
     url(r'^api/get_suppliers/', views.get_suppliers_autocomplete, name='get-suppliers-autocomplete'),
     url(r'^suppliers/create/$', views.create_supplier, name='create-supplier'),
     url(r'^suppliers/(?P<uuid>\w+)/edit/$', views.edit_supplier, name='edit-supplier'),
+
 
 
 ]

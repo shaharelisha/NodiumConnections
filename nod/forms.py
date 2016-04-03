@@ -594,7 +594,7 @@ class PartForm(forms.Form):
         )
         super(PartForm, self).__init__(*args, **kwargs)
         self.fields['quantity'].label = "Quantity"
-        self.fields['price'].label = "Price"
+        self.fields['price'].label = "Price (£)"
         self.fields['low_level_threshold'].label = "Low Level Threshold"
 
 
@@ -645,6 +645,42 @@ class SupplierForm(forms.Form):
         self.fields['address'].label = "Address"
         self.fields['postcode'].label = "Postcode"
         self.fields['company_name'].label = "Company Name"
+
+
+class PaymentForm(forms.Form):
+    amount = forms.FloatField(min_value=0)
+    PAYMENT_TYPES = (
+        ('1', 'Cash'),
+        ('2', 'Card'),
+        ('3', 'Cheque'),
+    )
+    payment_type = forms.ChoiceField(choices=PAYMENT_TYPES)
+    today = timezone.now().date()
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+    last_4_digits = forms.IntegerField(min_value=0, max_value=9999, required=False)
+    cvv = forms.IntegerField(min_value=0, required=False, max_value=999)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'amount',
+            'date',
+            'payment_type',
+            'last_4_digits',
+            'cvv',
+        )
+        super(PaymentForm, self).__init__(*args, **kwargs)
+        self.fields['amount'].label = "Amount (£)"
+        self.fields['payment_type'].label = "Payment Type"
+        self.fields['date'].label = "Date"
+        self.fields['last_4_digits'].label = "Last 4 Digits"
+        self.fields['cvv'].label = "CVV"
 
 
 class ProfileForm(forms.Form):

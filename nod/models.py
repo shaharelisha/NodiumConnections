@@ -350,7 +350,7 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     invoice_number = models.PositiveIntegerField(unique=True)
-    job_done = models.ForeignKey(Job, null=True)
+    job_done = models.OneToOneField(Job, null=True)
     parts = models.ManyToManyField(Part)
     issue_date = models.DateField(default=timezone.datetime.now)
     INVOICE_STATUS = [
@@ -384,7 +384,7 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         ('3', 'Cheque'),
     )
     payment_type = models.CharField(max_length=1, choices=PAYMENT_TYPES)
-    date = models.DateTimeField(default=timezone.datetime.now)
+    date = models.DateField(default=timezone.datetime.now)
     # customer = models.ForeignKey(Customer)
     job = models.ForeignKey(Job)
 
