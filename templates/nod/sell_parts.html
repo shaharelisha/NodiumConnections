@@ -27,16 +27,30 @@
 {#<div id="pagename">Customers</div>#}
 <div id="main">
     <div id="job_add_form">
-        <h3>Edit Part: {{ part.name }} ({{ part.code }})</h3>
-        <form action='{% url 'edit-part' part.uuid %}' method="post">
+    {% if customer.company_name %}
+        <h3>Sell Parts Order: {{ customer.company_name }} </h3>
+    {% else %}
+        <h3>Sell Parts Order for: {{ customer.forename }} {{ customer.surname }}</h3>
+    {% endif %}
+        <form action='{% url 'sell-parts' customer.uuid %}' method="post">
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
+
+            <br/>
+            <h4>Parts</h4>
+            {{ part_formset.management_form|crispy }}
+            {% for form in part_formset %}
+                <div class="part-formset">
+                 {% crispy form part_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
 
             <div class="form-group">
                 <div class="col-lg-10 col-lg-offset-2">
                     <br/>
                     <button type="reset" class="btn btn-default">Cancel</button>
-                    <a href="{% url 'delete-part' part.uuid %}" class="btn btn-danger">Delete</a>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </div>
@@ -44,4 +58,16 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
+<script>
+
+    $(".part-formset").formset({
+        addText: 'add part',
+        deleteText: 'remove',
+        prefix: '{{ part_formset.prefix }}',
+        formCssClass: 'part-formset',
+{#        deleteCssClass: 'part-formset'#}
+    });
+
+</script>
 {% endblock %}

@@ -6,7 +6,9 @@ from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
-
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 
 class RandomUUIDModel(models.Model):
     uuid = models.CharField(max_length=32, editable=False, blank=True, null=False, default='')
@@ -87,6 +89,50 @@ class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     type = models.CharField(choices=PLAN, max_length=1)
 
 
+class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    # part_number = models.CharField(max_length=15)
+    name = models.CharField(max_length=100)
+    manufacturer = models.CharField(max_length=100)
+    vehicle_type = models.CharField(max_length=100)
+    years = models.CharField(max_length=9)
+    price = models.FloatField()
+    code = models.CharField(max_length=20, unique=True)
+    quantity = models.PositiveIntegerField()
+    low_level_threshold = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name
+
+    def increase_quantity_by_one(self):
+        q = self.quantity
+        q += 1
+        self.quantity = q
+        return q
+
+    def decrease_quantity_by_one(self):
+        q = self.quantity
+        q -= 1
+        self.quantity = q
+        return q
+
+    def set_new_quantity(self, quantity):
+        self.quantity = quantity
+        return quantity
+
+
+class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    # generic relationship limited to the different types of customers
+    limit = Q(app_label="nod", model="dropin") | \
+        Q(app_label="nod", model="accountholder") | \
+        Q(app_label="nod", model="businesscustomer")
+    content_type = models.ForeignKey(ContentType, limit_choices_to=limit, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    date = models.DateTimeField(default=timezone.datetime.now)
+    parts = models.ManyToManyField(Part, through="SellPart")
+
+
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
     forename = models.CharField(max_length=50, blank=True)
@@ -94,6 +140,7 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
     phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
     date = models.DateField(default=timezone.datetime.now, null=True)
+    part_orders = GenericRelation(CustomerPartsOrder)
 
     def __str__(self):
         return self.forename + " " + self.surname
@@ -196,6 +243,7 @@ class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         bay_name = next(name for value, name in Bay.BAYS if value==self.bay_type)
         return bay_name
 
+
 class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     reg_number = models.CharField(max_length=100, unique=True)
     make = models.CharField(max_length=100)
@@ -216,6 +264,7 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_customer(self):
         return self.customer
 
+
 class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     task_number = models.PositiveIntegerField()
     description = models.CharField(max_length=300) #from choice list??
@@ -223,37 +272,6 @@ class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def __str__(self):
         return self.description
-
-
-class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    # part_number = models.CharField(max_length=15)
-    name = models.CharField(max_length=100)
-    manufacturer = models.CharField(max_length=200)
-    vehicle_type = models.CharField(max_length=100) #? choices?
-    year = models.PositiveIntegerField() #CHECK YEAR IN EVALUCOM DB
-    price = models.FloatField()
-    code = models.CharField(max_length=100)
-    quantity = models.PositiveIntegerField()
-    low_level_threshold = models.PositiveIntegerField()
-
-    def __str__(self):
-        return self.name
-
-    def increase_quantity_by_one(self):
-        q = self.quantity
-        q += 1
-        self.quantity = q
-        return q
-
-    def decrease_quantity_by_one(self):
-        q = self.quantity
-        q -= 1
-        self.quantity = q
-        return q
-
-    def set_new_quantity(self, quantity):
-        self.quantity = quantity
-        return quantity
 
 
 class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -346,12 +364,22 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     part = models.ForeignKey(Part)
     job = models.ForeignKey(Job)
     quantity = models.PositiveIntegerField()
+    sufficient_quantity = models.BooleanField(default=True)
+
+
+class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    part = models.ForeignKey(Part)
+    order = models.ForeignKey(CustomerPartsOrder)
+    quantity = models.PositiveIntegerField()
+    sufficient_quantity = models.BooleanField(default=True)
 
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     invoice_number = models.PositiveIntegerField(unique=True)
     job_done = models.OneToOneField(Job, null=True)
-    parts = models.ManyToManyField(Part)
+    part_order = models.OneToOneField(CustomerPartsOrder, null=True)
+    parts_for_job = models.ManyToManyField(JobPart)
+    parts_sold = models.ManyToManyField(SellPart)
     issue_date = models.DateField(default=timezone.datetime.now)
     INVOICE_STATUS = [
         ('1', 'Invoice Sent'),

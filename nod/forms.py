@@ -399,7 +399,6 @@ class JobEditForm(forms.Form):
         attrs={'placeholder': "Work Carried Out",'rows': '3'}))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
 
-
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
@@ -421,6 +420,24 @@ class JobEditForm(forms.Form):
         self.fields['booking_date'].label = "Booking Date"
         self.fields['work_carried_out'].label = "Work Carried Out"
 
+
+class CustomerPartsOrderForm(forms.Form):
+    today = timezone.now().date().strftime('%d/%m/%Y')
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'date',
+        )
+        super(CustomerPartsOrderForm, self).__init__(*args, **kwargs)
+        self.fields['date'].label = "Date"
 
 class CustomerForm(forms.Form):
     customer_uuid = forms.CharField(widget=forms.HiddenInput())
@@ -575,7 +592,7 @@ class VehicleForm(forms.Form):
         self.fields['type'].label = "Type"
 
 
-class PartForm(forms.Form):
+class EditPartForm(forms.Form):
     low_level_threshold = forms.IntegerField(min_value=0, initial=10)
     price = forms.FloatField(min_value=0)
     quantity = forms.IntegerField(min_value=0)
@@ -592,7 +609,50 @@ class PartForm(forms.Form):
             'price',
             'low_level_threshold',
         )
-        super(PartForm, self).__init__(*args, **kwargs)
+        super(EditPartForm, self).__init__(*args, **kwargs)
+        self.fields['quantity'].label = "Quantity"
+        self.fields['price'].label = "Price (£)"
+        self.fields['low_level_threshold'].label = "Low Level Threshold"
+
+
+class CreatePartForm(forms.Form):
+    name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Name",'rows': '1'}))
+    manufacturer = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Manufacturer",'rows': '1'}))
+    vehicle_type = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Vehicle Type",'rows': '1'}))
+    years = forms.CharField(max_length=9, widget=forms.TextInput(
+        attrs={'placeholder': "Year(s)",'rows': '1'}))
+    code = forms.CharField(max_length=20, widget=forms.TextInput(
+        attrs={'placeholder': "Code",'rows': '1'}))
+    low_level_threshold = forms.IntegerField(min_value=0, initial=10)
+    price = forms.FloatField(min_value=0)
+    quantity = forms.IntegerField(min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'name',
+            'manufacturer',
+            'vehicle_type',
+            'years',
+            'code',
+            'quantity',
+            'price',
+            'low_level_threshold',
+        )
+        super(CreatePartForm, self).__init__(*args, **kwargs)
+        self.fields['name'].label = "Name"
+        self.fields['manufacturer'].label = "Manufacturer"
+        self.fields['vehicle_type'].label = "Vehicle Type"
+        self.fields['years'].label = "Years"
+        self.fields['code'].label = "Code"
         self.fields['quantity'].label = "Quantity"
         self.fields['price'].label = "Price (£)"
         self.fields['low_level_threshold'].label = "Low Level Threshold"

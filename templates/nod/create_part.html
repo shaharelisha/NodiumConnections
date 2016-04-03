@@ -27,8 +27,8 @@
 {#<div id="pagename">Customers</div>#}
 <div id="main">
     <div id="job_add_form">
-        <h3>Edit Part: {{ part.name }} ({{ part.code }})</h3>
-        <form action='{% url 'edit-part' part.uuid %}' method="post">
+        <h3>Create New Part</h3>
+        <form action='{% url 'create-part' %}' method="post">
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
 
@@ -36,7 +36,6 @@
                 <div class="col-lg-10 col-lg-offset-2">
                     <br/>
                     <button type="reset" class="btn btn-default">Cancel</button>
-                    <a href="{% url 'delete-part' part.uuid %}" class="btn btn-danger">Delete</a>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </div>

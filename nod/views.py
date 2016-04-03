@@ -75,6 +75,7 @@ def create_job(request):
                             # checks that the quantity required is not more than the total quantity in stock.
                             # if it is, it removes the quantity used for a job from the total quantity and,
                             # creates a job part object, otherwise, it throws an error.
+                            # TODO: do something to warn if drops below threshold
                             if part.quantity >= quantity:
                                 part.quantity -= quantity
                                 JobPart.objects.create(part=part, job=job, quantity=quantity)
@@ -149,6 +150,11 @@ def edit_job(request, uuid):
                     job.booking_date = booking_date
                     job.bay = bay
 
+                    old_jobtasks = job.jobtask_set.all()
+                    for jt in old_jobtasks:
+                        jt.is_deleted = True
+                        jt.save()
+
                     for task_form in task_formset:
                         task_name = task_form.cleaned_data.get('task_name')
                         status = task_form.cleaned_data.get('status')
@@ -157,9 +163,15 @@ def edit_job(request, uuid):
                         if task_name:
                             task = get_object_or_404(Task, description=task_name)
                             # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-                            jobtask = job.jobtask_set.get_or_create(task=task, is_deleted=False)
+                            jobtask = job.jobtask_set.get_or_create(task=task)
 
                             # get_or_create returns tuple {object returned, whether it was created or just retrieved}
+                            if jobtask[0].is_deleted is True:
+                                jobtask[0].is_deleted = False
+                                jobtask[0].save()
+                            if jobtask[1] is True:
+                                job.jobtask_set.add(jobtask[0])
+
                             jobtask = jobtask[0]
                             if status:
                                 jobtask.status = status
@@ -171,6 +183,11 @@ def edit_job(request, uuid):
                                 jobtask.duration = task.estimated_time
                             jobtask.save()
 
+                    old_jobparts = job.jobpart_set.all()
+                    for jp in old_jobparts:
+                        jp.is_deleted = True
+                        jp.save()
+
                     for part_form in part_formset:
                         part_name = part_form.cleaned_data.get('part_name')
                         quantity = part_form.cleaned_data.get('quantity')
@@ -178,22 +195,32 @@ def edit_job(request, uuid):
                         if part_name and quantity:
                             part = get_object_or_404(Part, name=part_name)
                             # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
-                            jobpart = job.jobpart_set.get_or_create(part=part, is_deleted=False)
+                            jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
 
-                            jobpart = jobpart[0]
+                            if jobpart[0].is_deleted is True:
+                                jobpart[0].is_deleted = False
+                                jobpart[0].save()
+                            if jobpart[1] is True:
+                                job.jobpart_set.add(jobpart[0])
+
+                            # jobpart[0].quantity = quantity
+
 
                             # checks that the quantity required is not more than the total quantity in stock.
                             # if it is, it removes the quantity used for a job from the total quantity and assigns,
                             # the quantity to the job part object, otherwise, it throws an error.
+                            # TODO: do something if q drops below threshold
                             if part.quantity >= quantity:
                                 part.quantity -= quantity
-                                jobpart.quantity = quantity
+                                part.save()
                             else:
-                                raise forms.ValidationError(
-                                    'Not enough parts in stock.',
-                                    code='insufficient_parts'
-                                )
-                            jobpart.save()
+                                # TODO: when changed back to TRUE, must subtract ^
+                                jobpart[0].sufficient_quantity = False
+                                # raise forms.ValidationError(
+                                #     'Not enough parts in stock.',
+                                #     code='insufficient_parts'
+                                # )
+                                jobpart[0].save()
 
                     return HttpResponseRedirect('/thanks/')
 
@@ -1069,11 +1096,36 @@ def get_vehicles(request, customer_uuid):
     return HttpResponse(data, mimetype)
 
 
+def create_part(request):
+    if request.method == 'POST':
+        form = CreatePartForm(request.POST)
+
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            manufacturer = form.cleaned_data['manufacturer']
+            vehicle_type = form.cleaned_data['vehicle_type']
+            years = form.cleaned_data['years']
+            code = form.cleaned_data['code']
+            quantity = form.cleaned_data['quantity']
+            price = form.cleaned_data['price']
+            low_level_threshold = form.cleaned_data['low_level_threshold']
+
+            Part.objects.create(name=name, manufacturer=manufacturer, vehicle_type=vehicle_type, years=years,
+                                code=code, quantity=quantity, price=price, low_level_threshold=low_level_threshold)
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        form = CreatePartForm()
+
+    return render(request, 'nod/create_part.html', {'form': form})
+
+
 def edit_part(request, uuid):
     part = get_object_or_404(Part, uuid=uuid)
 
     if request.method == 'POST':
-        form = PartForm(request.POST)
+        form = EditPartForm(request.POST)
 
         if form.is_valid():
             quantity = form.cleaned_data['quantity']
@@ -1094,13 +1146,22 @@ def edit_part(request, uuid):
         data['price'] = part.price
         data['low_level_threshold'] = part.low_level_threshold
 
-        form = PartForm(initial=data)
+        form = EditPartForm(initial=data)
 
-        context = {
-            'form': form,
-            'part': part,
-        }
-        return render(request, 'nod/edit_part.html', context)
+    context = {
+        'form': form,
+        'part': part,
+    }
+    return render(request, 'nod/edit_part.html', context)
+
+
+def delete_part(request, uuid):
+    part = get_object_or_404(Part, uuid=uuid)
+
+    part.is_deleted = True
+    part.save()
+
+    return HttpResponseRedirect('/deleted/')
 
 
 def get_vehicles_autocomplete(request):
@@ -1475,5 +1536,73 @@ def create_payment(request, job_uuid):
     }
 
     return render(request, 'nod/create_payment.html', context)
+
+
+def sell_parts(request, customer_uuid):
+    # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
+    # check for account holder, if still not found, check business customer.
+    try:
+        customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
+    parts_data = []
+
+    part_helper = PartFormSetHelper()
+
+    if request.method == 'POST':
+        part_formset = PartCreateFormSet(request.POST, prefix='fs2')
+        form = CustomerPartsOrderForm(request.POST)
+
+        if form.is_valid() and part_formset.is_valid():
+            date = form.cleaned_data['date']
+
+            try:
+                with transaction.atomic():
+
+                    order = CustomerPartsOrder.objects.create(date=date, content_object=customer)
+                    customer.part_orders.add(order)
+
+                    for part_form in part_formset:
+                        part_name = part_form.cleaned_data['part_name']
+                        quantity = part_form.cleaned_data['quantity']
+
+                        if part_name and quantity:
+                            part = get_object_or_404(Part, name=part_name)
+                            part_sold = SellPart.objects.create(part=part, quantity=quantity, order=order)
+                            #TODO: don't allow to drop below 0. and raise error if drops below threshold.
+                            part.quantity -= quantity
+                            part.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
+        form = CustomerPartsOrderForm()
+
+    context = {
+        'part_formset': part_formset,
+        'part_helper': part_helper,
+        'form': form,
+        'customer': customer
+    }
+
+    return render(request, 'nod/sell_parts.html', context)
 
 
