@@ -154,10 +154,10 @@ def edit_job(request, uuid):
                         if task_name:
                             task = get_object_or_404(Task, description=task_name)
                             # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-                            jobtask = job.jobtask_set.filter(task=task, is_deleted=False)
+                            jobtask = job.jobtask_set.get_or_create(task=task, is_deleted=False)
 
                             # get_or_create returns tuple {object returned, whether it was created or just retrieved}
-                            # jobtask = jobtask[0]
+                            jobtask = jobtask[0]
                             if status:
                                 jobtask.status = status
                             else:
@@ -175,9 +175,9 @@ def edit_job(request, uuid):
                         if part_name and quantity:
                             part = get_object_or_404(Part, name=part_name)
                             # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
-                            jobpart = job.jobpart_set.filter(part=part, is_deleted=False)
+                            jobpart = job.jobpart_set.get_or_create(part=part, is_deleted=False)
 
-                            # jobpart = jobpart[0]
+                            jobpart = jobpart[0]
 
                             # checks that the quantity required is not more than the total quantity in stock.
                             # if it is, it removes the quantity used for a job from the total quantity and assigns,
@@ -204,7 +204,7 @@ def edit_job(request, uuid):
         data['type'] = job.type
         data['bay'] = job.bay
         data['status'] = job.status
-        data['booking_date'] = job.booking_date.strftime('%d/%m/%Y')
+        data['booking_date'] = job.booking_date
         data['work_carried_out'] = job.work_carried_out
         data['mechanic'] = job.mechanic
 
@@ -251,10 +251,7 @@ def edit_profile(request):
             return HttpResponseRedirect('/thanks/')
 
     else:
-        print('b')
         data = {}
-        # data['forename'] = request.user.first_name
-        # data['surname'] = request.user.last_name
         data['user_name'] = request.user.username
 
         form = ProfileForm(initial=data)
@@ -1126,3 +1123,63 @@ def get_vehicles_autocomplete(request):
     return HttpResponse(data, mimetype)
 
 
+def replenish_stock(request):
+    PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
+    parts_data = []
+
+    part_helper = PartFormSetHelper()
+
+    if request.method == 'POST':
+        part_formset = PartCreateFormSet(request.POST, prefix='fs2')
+        form = ReplenishmentOrderForm(request.POST)
+
+        if form.is_valid() and part_formset.is_valid():
+            supplier_name = form.cleaned_data['supplier_name']
+            supplier = get_object_or_404(Supplier, company_name=supplier_name)
+
+            try:
+                with transaction.atomic():
+                    for part_form in part_formset:
+                        part_name = part_form.cleaned_data['part_name']
+                        quantity = part_form.cleaned_data['quantity']
+
+                        if part_name and quantity:
+                            part = get_object_or_404(Part, name=part_name)
+
+                            part.quantity += quantity
+                            part.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
+        form = ReplenishmentOrderForm()
+
+    context = {
+        'part_formset': part_formset,
+        'part_helper': part_helper,
+        'form': form
+    }
+
+    return render(request, 'nod/replenish_order.html', context)
+
+
+def get_suppliers_autocomplete(request):
+    if request.is_ajax():
+        q = request.GET.get('term')
+        suppliers = Supplier.objects.filter(company_name__icontains=q, is_deleted=False)[:10]
+        results = []
+        for s in suppliers:
+            s_json = {}
+            s_json['id'] = s.id
+            s_json['label'] = s.reg_number
+            s_json['value'] = s.reg_number
+            results.append(s_json)
+        data = json.dumps(results)
+    else:
+        data = 'fail'
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)

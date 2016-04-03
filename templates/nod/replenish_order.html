@@ -1,0 +1,78 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+
+{#<div id="pagename">Customers</div>#}
+<div id="main">
+    <div id="job_add_form">
+        <h3>Replenishment Order</h3>
+        <form action='{% url 'create-job' %}' method="post">
+            {% csrf_token %}
+            {% crispy form form.helper 'bootstrap3' %}
+
+            <br/>
+            <h4>Parts</h4>
+            {{ part_formset.management_form|crispy }}
+            {% for form in part_formset %}
+                <div class="part-formset">
+                 {% crispy form part_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
+
+            <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                    <br/>
+                    <button type="reset" class="btn btn-default">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
+<script>
+
+    $(".part-formset").formset({
+        addText: 'add part',
+        deleteText: 'remove',
+        prefix: '{{ part_formset.prefix }}',
+        formCssClass: 'part-formset',
+{#        deleteCssClass: 'part-formset'#}
+    });
+
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js" type="text/javascript"></script>
+<script>
+
+      $("#suppliers").autocomplete({
+        source: '{% url 'get-suppliers-autocomplete' %}',
+          position: {my: "left top"},
+      });
+
+</script>
+{% endblock %}

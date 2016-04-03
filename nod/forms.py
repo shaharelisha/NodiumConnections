@@ -361,8 +361,8 @@ class JobCreateForm(forms.Form):
     type = forms.ChoiceField(choices=JOB_TYPE)
 
     # define today's date in order to autofill the 'booking date' attribute to today's date.
-    today = timezone.now().date().strftime('%d/%m/%Y')
-    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'], initial=today,
+    today = timezone.now().date()
+    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
                                    widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     # mechanic = forms.ModelChoiceField(queryset=Mechanic.objects.filter(is_deleted=False))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
@@ -598,6 +598,50 @@ class PartForm(forms.Form):
         self.fields['low_level_threshold'].label = "Low Level Threshold"
 
 
+class ReplenishmentOrderForm(forms.Form):
+    supplier_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Supplier Company Name",'rows': '1', 'id': 'suppliers'}))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'supplier_name',
+        )
+        super(ReplenishmentOrderForm, self).__init__(*args, **kwargs)
+        self.fields['supplier_name'].label = "Supplier Name"
+
+
+class SupplierForm(forms.Form):
+    company_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Company Name",'rows': '1'}))
+    address = forms.CharField(max_length=80, widget=forms.Textarea(
+        attrs={'placeholder': "Address",'rows': '1'}))
+    postcode = forms.CharField(max_length=8, widget=forms.TextInput(
+        attrs={'placeholder': "Postcode",'rows': '1'}))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'company_name',
+            'address',
+            'postcode',
+        )
+        super(SupplierForm, self).__init__(*args, **kwargs)
+        self.fields['address'].label = "Address"
+        self.fields['postcode'].label = "Postcode"
+        self.fields['company_name'].label = "Company Name"
+
+
 class ProfileForm(forms.Form):
     user_name = forms.CharField(max_length=40, required=False)
 
@@ -627,22 +671,6 @@ class SetPasswordForm(forms.Form):
     }
     new_password1 = forms.CharField(widget=forms.PasswordInput, required=False)
     new_password2 = forms.CharField(widget=forms.PasswordInput, required=False)
-
-    # def __init__(self, user, *args, **kwargs):
-    #     self.user = user
-    #     self.helper = FormHelper()
-    #     self.helper.form_action = 'POST'
-    #     self.helper.form_class = 'form-horizontal'
-    #     # self.helper.label_class = 'col-lg-8'
-    #     # self.helper.field_class = 'col-lg-8'
-    #     self.helper.form_tag = False
-    #     self.helper.layout = Layout(
-    #         'new_password1',
-    #         'new_password2',
-    #     )
-    #     super(SetPasswordForm, self).__init__(*args, **kwargs)
-    #     self.fields['new_password1'].label = "New Password"
-    #     self.fields['new_password2'].label = "New Password Confirmation"
 
     def clean_new_password2(self):
         password1 = self.cleaned_data.get('new_password1')

@@ -133,6 +133,7 @@ class AccountHolder(Customer):
     address = models.CharField(max_length=80, blank=True)
     postcode = models.CharField(max_length=8, blank=True)
     discount_plan = models.ForeignKey(DiscountPlan, null=True)
+    suspended = models.BooleanField(default=False)
 
     def __str__(self):
         return self.forename + ' ' + self.surname
@@ -149,6 +150,9 @@ class BusinessCustomer(AccountHolder):
 class Supplier(models.Model):
     company_name = models.CharField(max_length=100)
     emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
+    phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
+    address = models.CharField(max_length=80, blank=True)
+    postcode = models.CharField(max_length=8, blank=True)
 
     def __str__(self):
         return self.company_name
