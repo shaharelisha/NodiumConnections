@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4de0c2d1-6df8-48cc-bb7c-8f951e006e9f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/templates/nod/price_control.html" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/templates/registration/login.html" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/templates/nod/login.html" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db.sqlite3" afterPath="$PROJECT_DIR$/db.sqlite3" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nod/forms.py" afterPath="$PROJECT_DIR$/nod/forms.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nod/models.py" afterPath="$PROJECT_DIR$/nod/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nod/urls.py" afterPath="$PROJECT_DIR$/nod/urls.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/nod/base.html" afterPath="$PROJECT_DIR$/templates/nod/base.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Nodium2/urls.py" afterPath="$PROJECT_DIR$/Nodium2/urls.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nod/views.py" afterPath="$PROJECT_DIR$/nod/views.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -72,7 +72,7 @@
     <favorites_list name="Nodium2" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.3887297">
+    <splitter split-orientation="horizontal" split-proportion="0.64784396">
       <split-first>
         <leaf>
           <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
@@ -97,21 +97,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="edit_user.html" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/templates/nod/edit_user.html">
+          <file leaf-file-name="urls.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-11.291667">
-                  <caret line="37" column="53" selection-start-line="37" selection-start-column="53" selection-end-line="37" selection-end-column="53" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="edit_vehicle.html" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/templates/nod/edit_vehicle.html">
-              <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-9.166667">
-                  <caret line="43" column="60" selection-start-line="43" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="21" column="68" selection-start-line="21" selection-start-column="68" selection-end-line="21" selection-end-column="68" />
                   <folding />
                 </state>
               </provider>
@@ -120,8 +110,8 @@
           <file leaf-file-name="create_part.html" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/templates/nod/create_part.html">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-0.6666667">
-                  <caret line="25" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="45" selection-end-column="14" />
+                <state vertical-scroll-proportion="-5.6666665">
+                  <caret line="33" column="0" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -130,11 +120,31 @@
           <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/nod/views.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.59057075">
-                  <caret line="1718" column="32" selection-start-line="1718" selection-start-column="32" selection-end-line="1718" selection-end-column="32" />
+                <state vertical-scroll-proportion="0.81885856">
+                  <caret line="27" column="41" selection-start-line="27" selection-start-column="41" selection-end-line="27" selection-end-column="41" />
                   <folding>
                     <element signature="e#0#36#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="base.html" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/templates/nod/base.html">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="-12.541667">
+                  <caret line="48" column="47" selection-start-line="48" selection-start-column="47" selection-end-line="48" selection-end-column="47" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="login.html" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/templates/registration/login.html">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="-8.75">
+                  <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -179,16 +189,6 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="create_user.html" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/templates/nod/create_user.html">
-              <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-6.0833335">
-                  <caret line="33" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="45" selection-end-column="14" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
         </leaf>
       </split-first>
       <split-second>
@@ -217,7 +217,7 @@
             <entry file="file://$PROJECT_DIR$/nod/views.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="-3.4074075">
-                  <caret line="280" column="51" selection-start-line="280" selection-start-column="12" selection-end-line="280" selection-end-column="51" />
+                  <caret line="286" column="51" selection-start-line="286" selection-start-column="12" selection-end-line="286" selection-end-column="51" />
                   <folding>
                     <element signature="e#0#36#0" expanded="true" />
                   </folding>
@@ -297,7 +297,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/templates/base.html" />
-        <option value="$PROJECT_DIR$/Nodium2/urls.py" />
         <option value="$PROJECT_DIR$/nod/static/nod/css/login.css" />
         <option value="$PROJECT_DIR$/nod/static/nod/css/style.css" />
         <option value="$PROJECT_DIR$/templates/nod/editprofile.html" />
@@ -306,7 +305,6 @@
         <option value="$PROJECT_DIR$/Nodium2/settings.py" />
         <option value="$PROJECT_DIR$/templates/nod/create_vehicle_success.html" />
         <option value="$PROJECT_DIR$/templates/nod/create_vehicle.html" />
-        <option value="$PROJECT_DIR$/templates/nod/base.html" />
         <option value="$PROJECT_DIR$/templates/nod/create_business_customer.html" />
         <option value="$PROJECT_DIR$/templates/nod/create_account_holder.html" />
         <option value="$PROJECT_DIR$/templates/nod/create_dropin.html" />
@@ -329,10 +327,13 @@
         <option value="$PROJECT_DIR$/templates/nod/edit-user.html" />
         <option value="$PROJECT_DIR$/templates/nod/edit_user.html" />
         <option value="$PROJECT_DIR$/nod/models.py" />
-        <option value="$PROJECT_DIR$/nod/urls.py" />
         <option value="$PROJECT_DIR$/templates/nod/price_control.html" />
-        <option value="$PROJECT_DIR$/nod/views.py" />
         <option value="$PROJECT_DIR$/nod/forms.py" />
+        <option value="$PROJECT_DIR$/nod/urls.py" />
+        <option value="$PROJECT_DIR$/templates/registration/login.html" />
+        <option value="$PROJECT_DIR$/Nodium2/urls.py" />
+        <option value="$PROJECT_DIR$/templates/nod/base.html" />
+        <option value="$PROJECT_DIR$/nod/views.py" />
       </list>
     </option>
   </component>
@@ -404,7 +405,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="nod" />
+              <option name="myItemId" value="registration" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -418,43 +419,11 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="nod" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Nodium2" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Nodium2" />
+              <option name="myItemId" value="templates" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="nod" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="static" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Nodium2" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Nodium2" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="nod" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="migrations" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -750,7 +719,7 @@
     <frame x="0" y="23" width="1278" height="719" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15291262" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16343042" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -789,48 +758,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/nod/static/nod/css/style.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="73" column="17" selection-start-line="73" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="dbDummy://dbtable:/8e36dfc1/21a4c73c-be22-44ac-ad8e-30dc75bdb72c/..nod_job">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-      <provider editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="dbDummy://dbtable:/8e36dfc1/1b97938e-9faf-4cc7-8c3a-a1d68ef5b358/..auth_user">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-      <provider editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Nodium2/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="44" column="1" selection-start-line="44" selection-start-column="1" selection-end-line="44" selection-end-column="1" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="dbDummy://dbtable:/8e36dfc1/1b97938e-9faf-4cc7-8c3a-a1d68ef5b358/..nod_businesscustomer">
       <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
         <state>
@@ -874,14 +801,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.24390244">
           <caret line="6" column="4" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/nod/base.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-11.875">
-          <caret line="27" column="60" selection-start-line="27" selection-start-column="60" selection-end-line="27" selection-end-column="60" />
           <folding />
         </state>
       </provider>
@@ -1256,26 +1175,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/nod/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="35" column="72" selection-start-line="35" selection-start-column="72" selection-end-line="35" selection-end-column="72" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/nod/price_control.html">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-6.9166665">
           <caret line="30" column="37" selection-start-line="30" selection-start-column="37" selection-end-line="30" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/nod/create_part.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.6666667">
-          <caret line="25" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="45" selection-end-column="14" />
           <folding />
         </state>
       </provider>
@@ -1290,10 +1193,58 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/templates/nod/report1.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nod/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="35" column="72" selection-start-line="35" selection-start-column="72" selection-end-line="35" selection-end-column="72" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/nod/create_part.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-5.6666665">
+          <caret line="33" column="0" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/registration/login.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-8.75">
+          <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Nodium2/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="21" column="68" selection-start-line="21" selection-start-column="68" selection-end-line="21" selection-end-column="68" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/nod/base.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-12.541667">
+          <caret line="48" column="47" selection-start-line="48" selection-start-column="47" selection-end-line="48" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/nod/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.59057075">
-          <caret line="1718" column="32" selection-start-line="1718" selection-start-column="32" selection-end-line="1718" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.81885856">
+          <caret line="27" column="41" selection-start-line="27" selection-start-column="41" selection-end-line="27" selection-end-column="41" />
           <folding>
             <element signature="e#0#36#0" expanded="true" />
           </folding>

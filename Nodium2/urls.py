@@ -18,6 +18,9 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    url(r'^accounts/logout/$', 'nod.views.logout_view', name='logout'),
+    url(r'^accounts/profile/$', 'nod.views.index'),
     url(r'^garits/', include('nod.urls')),
 ]
 

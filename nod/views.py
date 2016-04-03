@@ -11,6 +11,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 import json
 from django.template import RequestContext, loader
+from django.contrib.auth import logout
 
 # london_tz = pytz.timezone("Europe/London")
 
@@ -20,6 +21,11 @@ from .models import *
 
 def index(request):
     return render(request, "nod/base.html")
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return render(request, 'registration/login.html')
 
 @login_required
 def create_job(request):
