@@ -1256,3 +1256,101 @@ def create_supplier(request):
     }
 
     return render(request, 'nod/create_supplier.html', context)
+
+
+def edit_supplier(request, uuid):
+    supplier = get_object_or_404(Supplier, uuid=uuid)
+
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+    user_emails = supplier.emails.filter(is_deleted=False)
+    email_data = [{'email_address': e.address, 'email_type': e.type}
+                  for e in user_emails]
+
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+    user_phone_numbers = supplier.phone_numbers.filter(is_deleted=False)
+    phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                  for p in user_phone_numbers]
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            company_name = form.cleaned_data['company_name']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+
+            supplier.company_name = company_name
+            supplier.address = address
+            supplier.postcode = postcode
+
+            supplier.save()
+
+            try:
+                with transaction.atomic():
+                    old_emails = supplier.emails.all()
+                    print(old_emails)
+                    for e in old_emails:
+                        e.is_deleted = True
+                        e.save()
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            supplier.emails.add(email)
+                            supplier.save()
+
+                    old_phones = supplier.phone_numbers.all()
+                    for p in old_phones:
+                        p.is_deleted = True
+                        p.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            supplier.phone_numbers.add(phone)
+                            supplier.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                #If the transaction failed
+                messages.error(request, 'There was an error saving your profile.')
+    else:
+        data = {}
+        data['company_name'] = supplier.company_name
+        data['address'] = supplier.address
+        data['postcode'] = supplier.postcode
+
+        form = SupplierForm(initial=data)
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+        'supplier': supplier,
+    }
+
+    return render(request, 'nod/edit_supplier.html', context)

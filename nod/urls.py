@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^replenishment_order/place_order/$', views.replenish_stock, name='replenish-order'),
     url(r'^api/get_suppliers/', views.get_suppliers_autocomplete, name='get-suppliers-autocomplete'),
     url(r'^suppliers/create/$', views.create_supplier, name='create-supplier'),
+    url(r'^suppliers/(?P<uuid>\w+)/edit/$', views.edit_supplier, name='edit-supplier'),
 
 
 ]
