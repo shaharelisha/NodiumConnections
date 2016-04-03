@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^delete/customers/(?P<uuid>\w+)/$', views.delete_customer, name='delete-customer'),
     url(r'^replenishment_order/place_order/$', views.replenish_stock, name='replenish-order'),
     url(r'^api/get_suppliers/', views.get_suppliers_autocomplete, name='get-suppliers-autocomplete'),
+    url(r'^suppliers/create/$', views.create_supplier, name='create-supplier'),
 
 
 ]

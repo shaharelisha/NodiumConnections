@@ -3,6 +3,11 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+
+    {% block extra_js%}
+        <script src="http://malsup.github.com/jquery.form.js"></script>
+{#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
+    {% endblock %}
 {% if messages %}
     <ul class="messages">
         {% for message in messages %}
@@ -24,20 +29,28 @@
     <hr/>
 {% endif %}
 
-{#<div id="pagename">Customers</div>#}
 <div id="main">
     <div id="job_add_form">
-        <h3>Replenishment Order</h3>
-        <form action='{% url 'replenish-order' %}' method="post">
+        <h3>Create New Supplier</h3>
+        <form action='{% url 'create-supplier' %}' method="post">
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
 
+            <h4>Emails</h4>
+            {{ email_formset.management_form|crispy }}
+            {% for form in email_formset %}
+                <div class="email-formset">
+                 {% crispy form email_helper 'bootstrap3' %}
+                <br/>
+                </div>
+            {% endfor %}
+
             <br/>
-            <h4>Parts</h4>
-            {{ part_formset.management_form|crispy }}
-            {% for form in part_formset %}
-                <div class="part-formset">
-                 {% crispy form part_helper 'bootstrap3' %}
+            <h4>Phone Numbers</h4>
+            {{ phone_formset.management_form|crispy }}
+            {% for form in phone_formset %}
+                <div class="phone-formset">
+                 {% crispy form phone_helper 'bootstrap3' %}
                 <br/>
                 </div>
             {% endfor %}
@@ -57,22 +70,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
 <script>
 
-    $(".part-formset").formset({
-        addText: 'add part',
+    $(".email-formset").formset({
+        addText: 'add email',
         deleteText: 'remove',
-        prefix: '{{ part_formset.prefix }}',
-        formCssClass: 'part-formset',
-{#        deleteCssClass: 'part-formset'#}
+        prefix: '{{ email_formset.prefix }}',
+        formCssClass: 'email-formset',
+{#        deleteCssClass: 'task-formset'#}
     });
 
-</script>
-<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js" type="text/javascript"></script>
-<script>
-
-      $("#suppliers").autocomplete({
-        source: '{% url 'get-suppliers-autocomplete' %}',
-          position: {my: "left top"},
-      });
+    $(".phone-formset").formset({
+        addText: 'add phone',
+        deleteText: 'remove',
+        prefix: '{{ phone_formset.prefix }}',
+        formCssClass: 'phone-formset',
+{#        deleteCssClass: 'part-formset'#}
+    });
 
 </script>
 {% endblock %}

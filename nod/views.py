@@ -1183,3 +1183,76 @@ def get_suppliers_autocomplete(request):
         data = 'fail'
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+def create_supplier(request):
+    EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+    email_data = []
+    PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+    phone_data = []
+
+    email_helper = EmailFormSetHelper()
+    phone_helper = PhoneFormSetHelper()
+
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        email_formset = EmailFormSet(request.POST, prefix='fs1')
+        phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+
+        if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            company_name = form.cleaned_data['company_name']
+            address = form.cleaned_data['address']
+            postcode = form.cleaned_data['postcode']
+
+            # create Supplier object using input data
+            supplier = Supplier.objects.create(company_name=company_name, address=address, postcode=postcode)
+
+            try:
+                with transaction.atomic():
+
+                    for email_form in email_formset:
+                        email_address = email_form.cleaned_data.get('email_address')
+                        email_type = email_form.cleaned_data.get('email_type')
+
+                        if email_address and email_type:
+                            email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                            email = email[0]
+                            if email.is_deleted is True:
+                                email.is_deleted = False
+                                email.save()
+                            supplier.emails.add(email)
+                            supplier.save()
+
+                    for phone_form in phone_formset:
+                        phone_number = phone_form.cleaned_data.get('phone_number')
+                        phone_type = phone_form.cleaned_data.get('phone_type')
+
+                        if phone_number and phone_type:
+                            phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                            phone = phone[0]
+                            if phone.is_deleted is True:
+                                phone.is_deleted = False
+                                phone.save()
+                            supplier.phone_numbers.add(phone)
+                            supplier.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        form = SupplierForm()
+        email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+        phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+    context = {
+        'form': form,
+        'email_formset': email_formset,
+        'phone_formset': phone_formset,
+        'email_helper': email_helper,
+        'phone_helper': phone_helper,
+    }
+
+    return render(request, 'nod/create_supplier.html', context)
