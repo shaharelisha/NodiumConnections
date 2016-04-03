@@ -30,6 +30,8 @@ urlpatterns = [
     url(r'^api/get_suppliers/', views.get_suppliers_autocomplete, name='get-suppliers-autocomplete'),
     url(r'^suppliers/create/$', views.create_supplier, name='create-supplier'),
     url(r'^suppliers/(?P<uuid>\w+)/edit/$', views.edit_supplier, name='edit-supplier'),
+    url(r'^users/create/$', views.create_user, name='create-user'),
+
 
 
 

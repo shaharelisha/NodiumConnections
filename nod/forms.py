@@ -743,8 +743,50 @@ class PaymentForm(forms.Form):
         self.fields['cvv'].label = "CVV"
 
 
+class UserForm(forms.Form):
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        attrs={'placeholder': "Forename",'rows': '1'}))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        attrs={'placeholder': "Surname",'rows': '1'}))
+    user_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        attrs={'placeholder': "Username",'rows': '1'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1'}))
+    ROLES = [
+        ("1", "Mechanic"),
+        ("2", "Foreperson"),
+        ("3", "Franchisee"),
+        ("4", "Receptionist"),
+        ("5", "Admin"),
+    ]
+    role = forms.ChoiceField(choices=ROLES)
+    hourly_rate = forms.FloatField(min_value=0, required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'first_name',
+            'last_name',
+            'role',
+            'hourly_rate',
+            'user_name',
+            'password'
+        )
+        super(UserForm, self).__init__(*args, **kwargs)
+        self.fields['user_name'].label = "Username"
+        self.fields['first_name'].label = "Forename"
+        self.fields['last_name'].label = "Surname"
+        self.fields['role'].label = "Role"
+        self.fields['password'].label = "Password"
+        self.fields['hourly_rate'].label = "Hourly Rate"
+
+
 class ProfileForm(forms.Form):
-    user_name = forms.CharField(max_length=40, required=False)
+    user_name = forms.CharField(max_length=30, required=False)
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -757,8 +799,6 @@ class ProfileForm(forms.Form):
             'user_name',
         )
         super(ProfileForm, self).__init__(*args, **kwargs)
-        # self.fields['forename'].label = "Forename"
-        # self.fields['surname'].label = "Surname"
         self.fields['user_name'].label = "Username"
 
 

@@ -1606,3 +1606,31 @@ def sell_parts(request, customer_uuid):
     return render(request, 'nod/sell_parts.html', context)
 
 
+def create_user(request):
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            username = form.cleaned_data['user_name']
+            role = form.cleaned_data['role']
+            hourly_rate = form.cleaned_data['hourly_rate']
+            password = form.cleaned_data['password']
+
+            # TODO: superuser if admin??
+            # TODO: specify permissions
+            user = User.objects.create(first_name=first_name, last_name=last_name, username=username,
+                                           password=password)
+            # mechanic or foreperson
+            if role == '1' or role == '2':
+                Mechanic.objects.create(user=user, role=role, hourly_rate=hourly_rate)
+            else:
+                StaffMember.objects.create(user=user, role=role)
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        form = UserForm()
+
+    return  render(request, 'nod/create_user.html', {'form': form})
