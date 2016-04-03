@@ -147,7 +147,7 @@ class BusinessCustomer(AccountHolder):
         return self.company_name
 
 
-class Supplier(models.Model):
+class Supplier(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     company_name = models.CharField(max_length=100)
     emails = models.ManyToManyField(EmailModel, related_name='%(app_label)s_%(class)s_emailaddress')
     phone_numbers = models.ManyToManyField(PhoneModel, related_name='%(app_label)s_%(class)s_phonenumber')
@@ -350,8 +350,8 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     invoice_number = models.PositiveIntegerField(unique=True)
-    job_done = models.ForeignKey(Job)
-    #parts?
+    job_done = models.ForeignKey(Job, null=True)
+    parts = models.ManyToManyField(Part)
     issue_date = models.DateField(default=timezone.datetime.now)
     INVOICE_STATUS = [
         ('1', 'Invoice Sent'),
@@ -361,6 +361,7 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     ]
     reminder_phase = models.CharField(choices=INVOICE_STATUS, max_length=1, default='1')
+    paid = models.BooleanField(default=False)
 
     def get_price(self):
         return self.job_done.get_price()
@@ -435,13 +436,20 @@ class SparePart(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 class PartOrder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     supplier = models.ForeignKey(Supplier)
-    parts = models.ManyToManyField(Part)
+    parts = models.ManyToManyField(Part, through="OrderPartRelationship")
+    # arrived = models.BooleanField(default=False)
 
     def get_total_price(self):
         cost = 0
         for p in self.parts:
             cost += p.price
         return cost
+
+
+class OrderPartRelationship(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    part = models.ForeignKey(Part)
+    order = models.ForeignKey(PartOrder)
+    quantity = models.PositiveIntegerField()
 
 
 class PriceReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):

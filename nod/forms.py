@@ -599,8 +599,11 @@ class PartForm(forms.Form):
 
 
 class ReplenishmentOrderForm(forms.Form):
-    supplier_name = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Supplier Company Name",'rows': '1', 'id': 'suppliers'}))
+    today = timezone.now().date()
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+    company_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'placeholder': "Supplier Company Name",'rows': '1', "id": 'suppliers'}))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -610,10 +613,12 @@ class ReplenishmentOrderForm(forms.Form):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
-            'supplier_name',
+            'company_name',
+            'date',
         )
         super(ReplenishmentOrderForm, self).__init__(*args, **kwargs)
-        self.fields['supplier_name'].label = "Supplier Name"
+        self.fields['company_name'].label = "Supplier Name"
+        self.fields['date'].label = "Date"
 
 
 class SupplierForm(forms.Form):

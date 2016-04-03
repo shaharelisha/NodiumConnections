@@ -49,11 +49,12 @@ def create_job(request):
 
             vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
             # bay = get_object_or_404(Bay, bay_type=bay)
-            job = Job.objects.create(job_number=job_number, vehicle=vehicle, status='3', booking_date=booking_date,
-                                     bay=bay)
-            # job.job_number = job.id?
             try:
                 with transaction.atomic():
+                    job = Job.objects.create(job_number=job_number, vehicle=vehicle, status='3', booking_date=booking_date,
+                                     bay=bay)
+            # job.job_number = job.id?
+
                     for task_form in task_formset:
                         task_name = task_form.cleaned_data['task_name']
 
@@ -141,11 +142,13 @@ def edit_job(request, uuid):
 
             vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
             # bay = get_object_or_404(Bay, bay_type=bay)
-            job.booking_date = booking_date
-            job.bay = bay
+
             # job.job_number = job.id?
             try:
                 with transaction.atomic():
+                    job.booking_date = booking_date
+                    job.bay = bay
+
                     for task_form in task_formset:
                         task_name = task_form.cleaned_data.get('task_name')
                         status = task_form.cleaned_data.get('status')
@@ -298,14 +301,13 @@ def create_dropin(request):
             # create Dropin Customer object using input data
             # dropin = Dropin.objects.create(forename=forename, surname=surname, date=date)
 
-            dropin.forename = forename
-            dropin.surname = surname
-            dropin.date = date
-
-            dropin.save()
-
             try:
                 with transaction.atomic():
+                    dropin.forename = forename
+                    dropin.surname = surname
+                    dropin.date = date
+
+                    dropin.save()
 
                     for email_form in email_formset:
                         email_address = email_form.cleaned_data.get('email_address')
@@ -383,14 +385,14 @@ def edit_dropin(request, uuid):
             surname = form.cleaned_data['surname']
             date = form.cleaned_data['date']
 
-            dropin.forename = forename
-            dropin.surname = surname
-            dropin.date = date
-
-            dropin.save()
-
             try:
                 with transaction.atomic():
+                    dropin.forename = forename
+                    dropin.surname = surname
+                    dropin.date = date
+
+                    dropin.save()
+
                     old_emails = dropin.emails.all()
                     print(old_emails)
                     for e in old_emails:
@@ -492,18 +494,16 @@ def create_account_holder(request):
             # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
             #                                               address=address, postcode=postcode,
             #                                               discount_plan=discount_plan)
-
-            account_holder.forename = forename
-            account_holder.surname = surname
-            account_holder.date = date
-            account_holder.address = address
-            account_holder.postcode = postcode
-            account_holder.discount_plan = discount_plan
-
-            account_holder.save()
-
             try:
                 with transaction.atomic():
+                    account_holder.forename = forename
+                    account_holder.surname = surname
+                    account_holder.date = date
+                    account_holder.address = address
+                    account_holder.postcode = postcode
+                    account_holder.discount_plan = discount_plan
+
+                    account_holder.save()
 
                     for email_form in email_formset:
                         email_address = email_form.cleaned_data.get('email_address')
@@ -584,17 +584,17 @@ def edit_account_holder(request, uuid):
             postcode = form.cleaned_data['postcode']
             discount_plan = form.cleaned_data['discount_plan']
 
-            account_holder.forename = forename
-            account_holder.surname = surname
-            account_holder.date = date
-            account_holder.address = address
-            account_holder.postcode = postcode
-            account_holder.discount_plan = discount_plan
-
-            account_holder.save()
-
             try:
                 with transaction.atomic():
+                    account_holder.forename = forename
+                    account_holder.surname = surname
+                    account_holder.date = date
+                    account_holder.address = address
+                    account_holder.postcode = postcode
+                    account_holder.discount_plan = discount_plan
+
+                    account_holder.save()
+
                     old_emails = account_holder.emails.all()
                     print(old_emails)
                     for e in old_emails:
@@ -702,20 +702,18 @@ def create_business_customer(request):
             #                                                     address=address, postcode=postcode,
             #                                                     discount_plan=discount_plan, company_name=company_name,
             #                                                     rep_role=rep_role)
-
-            business_customer.company_name = company_name
-            business_customer.forename = forename
-            business_customer.surname = surname
-            business_customer.rep_role = rep_role
-            business_customer.date = date
-            business_customer.address = address
-            business_customer.postcode = postcode
-            business_customer.discount_plan = discount_plan
-
-            business_customer.save()
-
             try:
                 with transaction.atomic():
+                    business_customer.company_name = company_name
+                    business_customer.forename = forename
+                    business_customer.surname = surname
+                    business_customer.rep_role = rep_role
+                    business_customer.date = date
+                    business_customer.address = address
+                    business_customer.postcode = postcode
+                    business_customer.discount_plan = discount_plan
+
+                    business_customer.save()
 
                     for email_form in email_formset:
                         email_address = email_form.cleaned_data.get('email_address')
@@ -798,19 +796,19 @@ def edit_business_customer(request, uuid):
             postcode = form.cleaned_data['postcode']
             discount_plan = form.cleaned_data['discount_plan']
 
-            business_customer.company_name = company_name
-            business_customer.forename = forename
-            business_customer.surname = surname
-            business_customer.rep_role = rep_role
-            business_customer.date = date
-            business_customer.address = address
-            business_customer.postcode = postcode
-            business_customer.discount_plan = discount_plan
-
-            business_customer.save()
-
             try:
                 with transaction.atomic():
+                    business_customer.company_name = company_name
+                    business_customer.forename = forename
+                    business_customer.surname = surname
+                    business_customer.rep_role = rep_role
+                    business_customer.date = date
+                    business_customer.address = address
+                    business_customer.postcode = postcode
+                    business_customer.discount_plan = discount_plan
+
+                    business_customer.save()
+
                     old_emails = business_customer.emails.all()
                     print(old_emails)
                     for e in old_emails:
@@ -1134,17 +1132,24 @@ def replenish_stock(request):
         form = ReplenishmentOrderForm(request.POST)
 
         if form.is_valid() and part_formset.is_valid():
-            supplier_name = form.cleaned_data['supplier_name']
+            supplier_name = form.cleaned_data['company_name']
+            date = form.cleaned_data['date']
+
             supplier = get_object_or_404(Supplier, company_name=supplier_name)
 
             try:
                 with transaction.atomic():
+                    order = PartOrder.objects.create(supplier=supplier, date=date)
+
                     for part_form in part_formset:
                         part_name = part_form.cleaned_data['part_name']
                         quantity = part_form.cleaned_data['quantity']
 
                         if part_name and quantity:
                             part = get_object_or_404(Part, name=part_name)
+
+                            order.orderpartrelationship_set.create(part=part, quantity=quantity,
+                                                                                      is_deleted=False)
 
                             part.quantity += quantity
                             part.save()
@@ -1167,6 +1172,77 @@ def replenish_stock(request):
     return render(request, 'nod/replenish_order.html', context)
 
 
+def edit_replenish_stock(request, uuid):
+    order = get_object_or_404(PartOrder, uuid=uuid)
+    PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
+    part_set = order.orderpartrelationship_set.all()
+    parts_data = [{'part_name': p.part, 'quantity': p.quantity}
+                  for p in part_set]
+
+    part_helper = PartFormSetHelper()
+
+    if request.method == 'POST':
+        part_formset = PartCreateFormSet(request.POST, prefix='fs2')
+        form = ReplenishmentOrderForm(request.POST)
+
+        if form.is_valid() and part_formset.is_valid():
+            supplier_name = form.cleaned_data['company_name']
+            date = form.cleaned_data['date']
+
+            supplier = get_object_or_404(Supplier, company_name=supplier_name)
+
+            try:
+                with transaction.atomic():
+                    for part_form in part_formset:
+                        part_name = part_form.cleaned_data['part_name']
+                        quantity = part_form.cleaned_data['quantity']
+
+                        if part_name and quantity:
+                            part = get_object_or_404(Part, name=part_name)
+                            print('a')
+                            print(order)
+                            print(part)
+                            print(order.orderpartrelationship_set.all())
+                            print(order.orderpartrelationship_set.get_or_create(part=part, is_deleted=False))
+                            op = order.orderpartrelationship_set.get_or_create(part=part, is_deleted=False)
+
+                            print('d')
+                            # if object was created
+                            if op[1] is True:
+                                print('b')
+                                op[0].quantity = quantity
+                                op[0].save()
+                                part.quantity += quantity
+                                part.save()
+                            else:
+                                print('c')
+                                part.quantity = part.quantity - op[0].quantity + quantity
+                                part.save()
+                                op[0].quantity = quantity
+                                op[0].save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        data = {}
+        data['company_name'] = order.supplier.company_name
+        data['date'] = order.date
+        part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
+        form = ReplenishmentOrderForm(initial=data)
+
+    context = {
+        'part_formset': part_formset,
+        'part_helper': part_helper,
+        'form': form,
+        'order': order
+    }
+
+    return render(request, 'nod/edit_replenish_order.html', context)
+
+
 def get_suppliers_autocomplete(request):
     if request.is_ajax():
         q = request.GET.get('term')
@@ -1175,8 +1251,8 @@ def get_suppliers_autocomplete(request):
         for s in suppliers:
             s_json = {}
             s_json['id'] = s.id
-            s_json['label'] = s.reg_number
-            s_json['value'] = s.reg_number
+            s_json['label'] = s.company_name
+            s_json['value'] = s.company_name
             results.append(s_json)
         data = json.dumps(results)
     else:
@@ -1205,11 +1281,10 @@ def create_supplier(request):
             address = form.cleaned_data['address']
             postcode = form.cleaned_data['postcode']
 
-            # create Supplier object using input data
-            supplier = Supplier.objects.create(company_name=company_name, address=address, postcode=postcode)
-
             try:
                 with transaction.atomic():
+                    # create Supplier object using input data
+                    supplier = Supplier.objects.create(company_name=company_name, address=address, postcode=postcode)
 
                     for email_form in email_formset:
                         email_address = email_form.cleaned_data.get('email_address')
@@ -1284,14 +1359,14 @@ def edit_supplier(request, uuid):
             address = form.cleaned_data['address']
             postcode = form.cleaned_data['postcode']
 
-            supplier.company_name = company_name
-            supplier.address = address
-            supplier.postcode = postcode
-
-            supplier.save()
-
             try:
                 with transaction.atomic():
+                    supplier.company_name = company_name
+                    supplier.address = address
+                    supplier.postcode = postcode
+
+                    supplier.save()
+
                     old_emails = supplier.emails.all()
                     print(old_emails)
                     for e in old_emails:
