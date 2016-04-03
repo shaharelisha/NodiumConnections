@@ -80,6 +80,11 @@ class PhoneModel(TimestampedModel, SoftDeleteModel):
         return self.phone_number
 
 
+class PriceControl(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
+    vat = models.FloatField()
+    marked_up = models.FloatField()
+
+
 class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     PLAN = [
         ('1', 'Fixed'),

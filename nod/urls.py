@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^suppliers/(?P<uuid>\w+)/edit/$', views.edit_supplier, name='edit-supplier'),
     url(r'^users/create/$', views.create_user, name='create-user'),
     url(r'^users/(?P<uuid>\w+)/edit/$', views.edit_user, name='edit-user'),
+    url(r'^price_control/$', views.price_control, name='price-control'),
 
 
 

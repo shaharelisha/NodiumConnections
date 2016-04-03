@@ -1620,8 +1620,9 @@ def create_user(request):
 
             # TODO: superuser if admin??
             # TODO: specify permissions
-            user = User.objects.create(first_name=first_name, last_name=last_name, username=username,
-                                           password=password)
+            user = User.objects.create(first_name=first_name, last_name=last_name, username=username)
+            user.set_password(password)
+            user.save()
             # mechanic or foreperson
             if role == '1' or role == '2':
                 Mechanic.objects.create(user=user, role=role, hourly_rate=hourly_rate)
@@ -1637,10 +1638,10 @@ def create_user(request):
 
 
 def edit_user(request, uuid):
-    try:
-        staff = get_object_or_404(Mechanic, uuid=uuid)
-    except ObjectDoesNotExist:
-        staff = get_object_or_404(StaffMember, uuid=uuid)
+    # try:
+    # staff = get_object_or_404(Mechanic, uuid=uuid)
+    # except ObjectDoesNotExist:
+    staff = get_object_or_404(StaffMember, uuid=uuid)
 
     if request.method == 'POST':
         form = UserForm(request.POST)
@@ -1657,9 +1658,10 @@ def edit_user(request, uuid):
             # TODO: specify permissions
             staff.user.first_name = first_name
             staff.user.last_name = last_name
-            staff.user.password = password
+            if password is not "":
+                staff.user.set_password(password)
             staff.user.username = username
-
+            staff.user.save()
             # mechanic or foreperson
             if staff.role == '1' or staff.role == '2':
                 if role == '1' or role == '2':
@@ -1696,12 +1698,41 @@ def edit_user(request, uuid):
     return render(request, 'nod/edit_user.html', context)
 
 def delete_user(request, uuid):
-    try:
-        staff = get_object_or_404(Mechanic, uuid=uuid)
-    except ObjectDoesNotExist:
-        staff = get_object_or_404(StaffMember, uuid=uuid)
+    # try:
+    #     staff = get_object_or_404(Mechanic, uuid=uuid)
+    # except ObjectDoesNotExist:
+    staff = get_object_or_404(StaffMember, uuid=uuid)
 
     staff.is_deleted = True
     staff.save()
 
     return HttpResponseRedirect('/deleted/')
+
+
+def price_control(request):
+    control = PriceControl.objects.get()
+
+    if request.method == 'POST':
+        form = PriceControlForm(request.POST)
+
+        if form.is_valid():
+            vat = form.cleaned_data['vat']
+            marked_up = form.cleaned_data['marked_up']
+
+            control.vat = vat
+            control.marked_up = marked_up
+            control.save()
+
+            return HttpResponseRedirect('/thanks/')
+
+    else:
+        data = {}
+        data['vat'] = control.vat
+        data['marked_up'] = control.marked_up
+        form = PriceControlForm(initial=data)
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'nod/price_control.html', context)

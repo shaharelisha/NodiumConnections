@@ -750,7 +750,7 @@ class UserForm(forms.Form):
         attrs={'placeholder': "Surname",'rows': '1'}))
     user_name = forms.CharField(max_length=30, widget=forms.TextInput(
         attrs={'placeholder': "Username",'rows': '1'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1'}))
+    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1'}))
     ROLES = [
         ("1", "Mechanic"),
         ("2", "Foreperson"),
@@ -783,6 +783,26 @@ class UserForm(forms.Form):
         self.fields['role'].label = "Role"
         self.fields['password'].label = "Password"
         self.fields['hourly_rate'].label = "Hourly Rate"
+
+
+class PriceControlForm(forms.Form):
+    vat = forms.FloatField(min_value=0, initial=0)
+    marked_up = forms.FloatField(min_value=0, initial=0)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'vat',
+            'marked_up',
+        )
+        super(PriceControlForm, self).__init__(*args, **kwargs)
+        self.fields['vat'].label = "VAT (%)"
+        self.fields['marked_up'].label = "Marked Up (%)"
 
 
 class ProfileForm(forms.Form):
