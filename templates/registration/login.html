@@ -1,27 +1,53 @@
+{#{% extends "nod/base.html" %}#}
+{#<!-- {% load staticfiles %} -->#}
+{##}
+{#{% block content %}#}
+{#    <link rel="stylesheet" href="{% static "nod/css/login.css" %}"/>#}
+{##}
+{#    {% if form.errors %}#}
+{#        <p>Your username and password didn't match. Please try again.</p>#}
+{#    {% endif %}#}
+{#    <form method="post" action="{% url 'django.contrib.auth.views.login' %}">#}
+{#        {% csrf_token %}#}
+{#        <div id="loginbox">#}
+{#        <table>#}
+{#            <tr>#}
+{#                <td>{{ form.username.label_tag }}</td>#}
+{#                <td>{{ form.username }}</td>#}
+{#            </tr>#}
+{#            <tr>#}
+{#                <td>{{ form.password.label_tag }}</td>#}
+{#                <td>{{ form.password }}</td>#}
+{#            </tr>#}
+{#        </table>#}
+{#        <input type="submit" class="btn btn-primary" value="login"/>#}
+{#        <input type="hidden" name="next" value="{{ next }}"/>#}
+{#        </div>#}
+{#    </form>#}
+{#{% endblock %}#}
+
+
 {% extends "nod/base.html" %}
 <!-- {% load staticfiles %} -->
 
 {% block content %}
     <link rel="stylesheet" href="{% static "nod/css/login.css" %}"/>
 
-    {% if form.errors %}
-        <p>Your username and password didn't match. Please try again.</p>
-    {% endif %}
-    <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
-        {% csrf_token %}
         <div id="loginbox">
-        <table>
-            <tr>
-                <td>{{ form.username.label_tag }}</td>
-                <td>{{ form.username }}</td>
-            </tr>
-            <tr>
-                <td>{{ form.password.label_tag }}</td>
-                <td>{{ form.password }}</td>
-            </tr>
-        </table>
-        <input type="submit" class="btn btn-primary" value="login"/>
-        <input type="hidden" name="next" value="{{ next }}"/>
+        	<div id="title">Welcome to GARITS!<br>Please login to continue:</div>
+	        {% if form.errors %}
+	            <div id="loginerror">Your username and password didn't match. Please try again.</div>
+	        {% endif %}
+	        <br><br>
+            <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+                {% csrf_token %}
+                {{ form.username.label_tag }} {{ form.username }}
+                <br><br>
+                {{ form.password.label_tag }} {{ form.password }}
+                <br><br><br>
+            <input type="submit" class="btn btn-primary" value="Login"/>
+            <input type="hidden" name="next" value="{{ next }}"/>
+            </form>
         </div>
-    </form>
+
 {% endblock %}
