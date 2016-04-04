@@ -667,13 +667,18 @@ def edit_account_holder(request, uuid):
 
     email_helper = EmailFormSetHelper()
     phone_helper = PhoneFormSetHelper()
+    print('1')
 
     if request.method == 'POST':
         form = AccountHolderForm(request.POST)
         email_formset = EmailFormSet(request.POST, prefix='fs1')
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+        print('2')
+
 
         if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            print('3')
+
             forename = form.cleaned_data['forename']
             surname = form.cleaned_data['surname']
             date = form.cleaned_data['date']
@@ -683,6 +688,8 @@ def edit_account_holder(request, uuid):
 
             try:
                 with transaction.atomic():
+                    print('4')
+
                     account_holder.forename = forename
                     account_holder.surname = surname
                     account_holder.date = date
@@ -749,16 +756,30 @@ def edit_account_holder(request, uuid):
             except IntegrityError:
                 #If the transaction failed
                 messages.error(request, 'There was an error saving your profile.')
+        else:
+            messages.error(request, 'There was an error saving your profile.')
+
     else:
         data = {}
+        data['customer_uuid'] = account_holder.uuid
         data['forename'] = account_holder.forename
         data['surname'] = account_holder.surname
         data['date'] = account_holder.date
         data['address'] = account_holder.address
         data['postcode'] = account_holder.postcode
-        data['discount_plan'] = account_holder.discount_plan
+        discount = account_holder.content_object
+        if discount == FixedDiscount.objects.get():
+            data['discount_plan'] = '1'
+        else:
+            if discount == FlexibleDiscount.objects.first():
+                data['discount_plan'] = '2'
+            else:
+                if discount == VariableDiscount.objects.get():
+                    data['discount_plan'] = '3'
+                else:
+                    data['discount_plan'] = ""
 
-        form = DropinForm(initial=data)
+        form = AccountHolderForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -999,6 +1020,7 @@ def edit_business_customer(request, uuid):
                 messages.error(request, 'There was an error saving your profile.')
     else:
         data = {}
+        data['customer_uuid'] = business_customer.uuid
         data['company_name'] = business_customer.company_name
         data['forename'] = business_customer.forename
         data['surname'] = business_customer.surname
@@ -1006,7 +1028,17 @@ def edit_business_customer(request, uuid):
         data['date'] = business_customer.date
         data['address'] = business_customer.address
         data['postcode'] = business_customer.postcode
-        data['discount_plan'] = business_customer.content_object
+        discount = business_customer.content_object
+        if discount == FixedDiscount.objects.get():
+            data['discount_plan'] = '1'
+        else:
+            if discount == FlexibleDiscount.objects.first():
+                data['discount_plan'] = '2'
+            else:
+                if discount == VariableDiscount.objects.get():
+                    data['discount_plan'] = '3'
+                else:
+                    data['discount_plan'] = ""
 
         form = BusinessCustomerForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')

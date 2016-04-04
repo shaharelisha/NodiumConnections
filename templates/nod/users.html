@@ -24,9 +24,9 @@
     </ul>
     <hr/>
 {% endif %}
-<a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a>
 
 <div id="main">
+<a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a>
     <h2>All Users</h2>
         {% render_table user_table %}
 </div>

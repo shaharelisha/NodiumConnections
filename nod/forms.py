@@ -478,6 +478,7 @@ class AccountHolderForm(CustomerForm):
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
         attrs={'placeholder': "Postcode",'rows': '1'}))
     PLAN = [
+        ('', 'Select Discount Plan'),
         ('1', 'Fixed'),
         ('2', 'Flexible'),
         ('3', 'Variable'),
