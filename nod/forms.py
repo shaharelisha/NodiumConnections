@@ -461,6 +461,7 @@ class DropinForm(CustomerForm):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            'customer_uuid',
             'forename',
             'surname',
             'date',
@@ -476,7 +477,12 @@ class AccountHolderForm(CustomerForm):
         attrs={'placeholder': "Address",'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
         attrs={'placeholder': "Postcode",'rows': '1'}))
-    discount_plan = forms.ModelChoiceField(queryset=DiscountPlan.objects.filter(is_deleted=False))
+    PLAN = [
+        ('1', 'Fixed'),
+        ('2', 'Flexible'),
+        ('3', 'Variable'),
+    ]
+    discount_plan = forms.ChoiceField(required=False, choices=PLAN)
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -486,6 +492,7 @@ class AccountHolderForm(CustomerForm):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            'customer_uuid',
             'forename',
             'surname',
             'date',
@@ -511,8 +518,13 @@ class BusinessCustomerForm(CustomerForm):
         attrs={'placeholder': "Address",'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
         attrs={'placeholder': "Postcode",'rows': '1'}))
-    discount_plan = forms.ModelChoiceField(queryset=DiscountPlan.objects.filter(is_deleted=False))
-
+    PLAN = [
+        ('', 'Select Discount Plan'),
+        ('1', 'Fixed'),
+        ('2', 'Flexible'),
+        ('3', 'Variable'),
+    ]
+    discount_plan = forms.ChoiceField(required=False, choices=PLAN)
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
@@ -521,6 +533,7 @@ class BusinessCustomerForm(CustomerForm):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            'customer_uuid',
             'company_name',
             'date',
             'forename',

@@ -85,15 +85,6 @@ class PriceControl(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     marked_up = models.FloatField()
 
 
-class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
-    PLAN = [
-        ('1', 'Fixed'),
-        ('2', 'Flexible'),
-        ('3', 'Variable'),
-    ]
-    type = models.CharField(choices=PLAN, max_length=1)
-
-
 class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     # part_number = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
@@ -150,6 +141,18 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     def __str__(self):
         return self.forename + " " + self.surname
 
+    def full_name(self):
+        return self.forename + " " + self.surname
+
+    def list_emails(self):
+        return "; ".join([s.address for s in self.emails.filter(is_deleted=False)])
+
+    def get_phones(self):
+        return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
+
+    def full_address(self):
+        return u"%s, %s" % (self.address, self.postcode)
+
 
 class Dropin(Customer):
     def __str__(self):
@@ -184,8 +187,14 @@ class Dropin(Customer):
 class AccountHolder(Customer):
     address = models.CharField(max_length=80, blank=True)
     postcode = models.CharField(max_length=8, blank=True)
-    discount_plan = models.ForeignKey(DiscountPlan, null=True)
     suspended = models.BooleanField(default=False)
+
+    limit = Q(app_label="nod", model="fixeddiscount") | \
+        Q(app_label="nod", model="flexiblediscount") | \
+        Q(app_label="nod", model="variablediscount")
+    content_type = models.ForeignKey(ContentType, limit_choices_to=limit, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
         return self.forename + ' ' + self.surname
@@ -198,6 +207,9 @@ class BusinessCustomer(AccountHolder):
     def __str__(self):
         return self.company_name
 
+    def rep(self):
+        return self.forename + ' ' + self.surname + ", " + self.rep_role
+
 
 class Supplier(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     company_name = models.CharField(max_length=100)
@@ -208,6 +220,50 @@ class Supplier(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
     def __str__(self):
         return self.company_name
+
+
+class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
+    PLAN = [
+        ('1', 'Fixed'),
+        ('2', 'Flexible'),
+        ('3', 'Variable'),
+    ]
+    type = models.CharField(choices=PLAN, max_length=1)
+    customer = GenericRelation(AccountHolder)
+
+
+    class Meta:
+        abstract = True
+
+# one object of this type
+class FixedDiscount(DiscountPlan):
+    discount = models.FloatField()
+
+    def __init__(self, *args, **kwargs):
+        super(FixedDiscount, self).__init__(*args, **kwargs)
+        self.type = '1'
+
+
+class FlexibleDiscount(DiscountPlan):
+    lower_range = models.FloatField()
+    upper_range = models.FloatField()
+    discount = models.FloatField()
+
+    def __init__(self, *args, **kwargs):
+        super(FlexibleDiscount, self).__init__(*args, **kwargs)
+        self.type = '2'
+
+
+# there will be one object of this type
+class VariableDiscount(DiscountPlan):
+    mot_discount = models.FloatField()
+    annual_discount = models.FloatField()
+    repair_discount = models.FloatField()
+    parts_discount = models.FloatField()
+
+    def __init__(self, *args, **kwargs):
+        super(VariableDiscount, self).__init__(*args, **kwargs)
+        self.type = '3'
 
 
 class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
@@ -225,6 +281,11 @@ class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
 
+    def full_name(self):
+        return self.user.first_name + ' ' + self.user.last_name
+
+    def user_name(self):
+        return self.user.username
 
 class Mechanic(StaffMember):
     hourly_pay = models.FloatField()

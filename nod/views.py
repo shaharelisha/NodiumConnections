@@ -17,6 +17,7 @@ from django.contrib.auth import logout
 
 from .forms import *
 from .models import *
+from .tables import *
 
 
 def index(request):
@@ -26,6 +27,41 @@ def index(request):
 def logout_view(request):
     logout(request)
     return render(request, 'registration/login.html')
+
+
+def user_table(request):
+    user_table = UserTable(StaffMember.objects.filter(is_deleted=False))
+    RequestConfig(request).configure(user_table)
+    return render(request, "nod/users.html", {'user_table': user_table})
+
+
+def customer_tables(request):
+    account_holders_table = AccountHolderTable(AccountHolder.objects.filter(is_deleted=False, businesscustomer=None).exclude(forename="",
+                                                                                                      surname="",
+                                                                                                      ))
+    RequestConfig(request).configure(account_holders_table)
+
+    # deletes account holders which were created (automatically when accessing the 'create' page)
+    # but then weren't submitted (left empty) for over 30 mintutes.
+    for a in AccountHolder.objects.filter(forename="", surname=""):
+        if a.updated < timezone.now() - timedelta(minutes=30):
+            a.delete()
+
+    business_customers_table = BusinessCustomerTable(BusinessCustomer.objects.filter(is_deleted=False).exclude(company_name=""))
+    RequestConfig(request).configure(business_customers_table)
+
+    # deletes business customers which were created (automatically when accessing the 'create' page)
+    # but then weren't submitted (left empty) for over 30 mintutes.
+    for b in BusinessCustomer.objects.filter(company_name=""):
+        if b.updated < timezone.now() - timedelta(minutes=30):
+            b.delete()
+
+    context = {
+        'account_holders_table': account_holders_table,
+        'business_customers_table': business_customers_table,
+    }
+    return render(request, "nod/customers.html", context)
+
 
 @login_required
 def create_job(request):
@@ -228,6 +264,8 @@ def edit_job(request, uuid):
                                 # )
                                 jobpart[0].save()
 
+                    job.save()
+
                     return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
@@ -318,7 +356,7 @@ def create_dropin(request):
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
         customer_uuid = form.data['customer_uuid']
-
+        print(customer_uuid)
         try:
             dropin = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
         except MultipleObjectsReturned:
@@ -368,6 +406,8 @@ def create_dropin(request):
                             dropin.phone_numbers.add(phone)
                             dropin.save()
 
+                    dropin.save()
+
                     return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
@@ -375,7 +415,9 @@ def create_dropin(request):
 
     else:
         dropin = Dropin.objects.create()
-        form = DropinForm()
+        data = {}
+        data['customer_uuid'] = dropin.uuid
+        form = DropinForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -464,6 +506,8 @@ def edit_dropin(request, uuid):
                             dropin.phone_numbers.add(phone)
                             dropin.save()
 
+                    dropin.save()
+
                     return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
@@ -473,7 +517,7 @@ def edit_dropin(request, uuid):
         data = {}
         data['forename'] = dropin.forename
         data['surname'] = dropin.surname
-        data['date'] = dropin.date.strftime('%d/%m/%Y')
+        data['date'] = dropin.date
 
         form = DropinForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
@@ -507,6 +551,7 @@ def create_account_holder(request):
         phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
         customer_uuid = form.data['customer_uuid']
+        print(customer_uuid)
 
         try:
             account_holder = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
@@ -516,6 +561,7 @@ def create_account_holder(request):
             pass
 
         if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            print('a)')
             forename = form.cleaned_data['forename']
             surname = form.cleaned_data['surname']
             date = form.cleaned_data['date']
@@ -529,14 +575,28 @@ def create_account_holder(request):
             #                                               discount_plan=discount_plan)
             try:
                 with transaction.atomic():
+                    print('b')
                     account_holder.forename = forename
                     account_holder.surname = surname
                     account_holder.date = date
                     account_holder.address = address
                     account_holder.postcode = postcode
-                    account_holder.discount_plan = discount_plan
 
-                    account_holder.save()
+                    if discount_plan is not '':
+                        # if fixed
+                        if discount_plan == '1':
+                            discount = FixedDiscount.objects.get()
+
+                        # flexible
+                        if discount_plan == '2':
+                            discount = FlexibleDiscount.objects.first()
+
+                        # variable
+                        if discount_plan == '3':
+                            discount = VariableDiscount.objects.get()
+
+                        account_holder.content_object = discount
+                        print('c')
 
                     for email_form in email_formset:
                         email_address = email_form.cleaned_data.get('email_address')
@@ -563,15 +623,19 @@ def create_account_holder(request):
                                 phone.save()
                             account_holder.phone_numbers.add(phone)
                             account_holder.save()
+                    print(request.POST)
+                    account_holder.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
         account_holder = AccountHolder.objects.create()
-        form = AccountHolderForm()
+        data = {}
+        data['customer_uuid'] = account_holder.uuid
+        form = AccountHolderForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -624,9 +688,21 @@ def edit_account_holder(request, uuid):
                     account_holder.date = date
                     account_holder.address = address
                     account_holder.postcode = postcode
-                    account_holder.discount_plan = discount_plan
 
-                    account_holder.save()
+                    if discount_plan is not '':
+                        # if fixed
+                        if discount_plan == '1':
+                            discount = FixedDiscount.objects.get()
+
+                        # flexible
+                        if discount_plan == '2':
+                            discount = FlexibleDiscount.objects.first()
+
+                        # variable
+                        if discount_plan == '3':
+                            discount = VariableDiscount.objects.get()
+
+                        account_holder.content_object = discount
 
                     old_emails = account_holder.emails.all()
                     print(old_emails)
@@ -666,7 +742,9 @@ def edit_account_holder(request, uuid):
                             account_holder.phone_numbers.add(phone)
                             account_holder.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    account_holder.save()
+
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -675,7 +753,7 @@ def edit_account_holder(request, uuid):
         data = {}
         data['forename'] = account_holder.forename
         data['surname'] = account_holder.surname
-        data['date'] = account_holder.date.strftime('%d/%m/%Y')
+        data['date'] = account_holder.date
         data['address'] = account_holder.address
         data['postcode'] = account_holder.postcode
         data['discount_plan'] = account_holder.discount_plan
@@ -744,7 +822,21 @@ def create_business_customer(request):
                     business_customer.date = date
                     business_customer.address = address
                     business_customer.postcode = postcode
-                    business_customer.discount_plan = discount_plan
+
+                    if discount_plan is not '':
+                        # if fixed
+                        if discount_plan == '1':
+                            discount = FixedDiscount.objects.get()
+
+                        # flexible
+                        if discount_plan == '2':
+                            discount = FlexibleDiscount.objects.first()
+
+                        # variable
+                        if discount_plan == '3':
+                            discount = VariableDiscount.objects.get()
+
+                        business_customer.content_object = discount
 
                     business_customer.save()
 
@@ -774,14 +866,18 @@ def create_business_customer(request):
                             business_customer.phone_numbers.add(phone)
                             business_customer.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    business_customer.save()
+
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
         business_customer = BusinessCustomer.objects.create()
-        form = BusinessCustomerForm()
+        data = {}
+        data['customer_uuid'] = business_customer.uuid
+        form = BusinessCustomerForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
         phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
@@ -838,7 +934,21 @@ def edit_business_customer(request, uuid):
                     business_customer.date = date
                     business_customer.address = address
                     business_customer.postcode = postcode
-                    business_customer.discount_plan = discount_plan
+
+                    if discount_plan is not '':
+                        # if fixed
+                        if discount_plan == '1':
+                            discount = FixedDiscount.objects.get()
+
+                        # flexible
+                        if discount_plan == '2':
+                            discount = FlexibleDiscount.objects.first()
+
+                        # variable
+                        if discount_plan == '3':
+                            discount = VariableDiscount.objects.get()
+
+                        business_customer.content_object = discount
 
                     business_customer.save()
 
@@ -880,7 +990,9 @@ def edit_business_customer(request, uuid):
                             business_customer.phone_numbers.add(phone)
                             business_customer.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    business_customer.save()
+
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -891,10 +1003,10 @@ def edit_business_customer(request, uuid):
         data['forename'] = business_customer.forename
         data['surname'] = business_customer.surname
         data['rep_role'] = business_customer.rep_role
-        data['date'] = business_customer.date.strftime('%d/%m/%Y')
+        data['date'] = business_customer.date
         data['address'] = business_customer.address
         data['postcode'] = business_customer.postcode
-        data['discount_plan'] = business_customer.discount_plan
+        data['discount_plan'] = business_customer.content_object
 
         form = BusinessCustomerForm(initial=data)
         email_formset = EmailFormSet(initial=email_data, prefix='fs1')
@@ -933,7 +1045,7 @@ def delete_customer(request, uuid):
     customer.is_deleted = True
     customer.save()
 
-    return HttpResponseRedirect('/deleted/')
+    return HttpResponseRedirect('/garits/customers/')
 
 
 def create_vehicle(request, customer_uuid):
@@ -1379,6 +1491,8 @@ def create_supplier(request):
                             supplier.phone_numbers.add(phone)
                             supplier.save()
 
+                    supplier.save()
+
                     return HttpResponseRedirect('/thanks/')
 
             except IntegrityError:
@@ -1470,6 +1584,8 @@ def edit_supplier(request, uuid):
                                 phone.save()
                             supplier.phone_numbers.add(phone)
                             supplier.save()
+
+                    supplier.save()
 
                     return HttpResponseRedirect('/thanks/')
 
@@ -1581,6 +1697,7 @@ def sell_parts(request, customer_uuid):
 
                     order = CustomerPartsOrder.objects.create(date=date, content_object=customer)
                     customer.part_orders.add(order)
+                    customer.save()
 
                     for part_form in part_formset:
                         part_name = part_form.cleaned_data['part_name']
@@ -1631,11 +1748,11 @@ def create_user(request):
             user.save()
             # mechanic or foreperson
             if role == '1' or role == '2':
-                Mechanic.objects.create(user=user, role=role, hourly_rate=hourly_rate)
+                Mechanic.objects.create(user=user, role=role, hourly_pay=hourly_rate)
             else:
                 StaffMember.objects.create(user=user, role=role)
 
-            return HttpResponseRedirect('/thanks/')
+            return HttpResponseRedirect('/garits/users/')
 
     else:
         form = UserForm()
@@ -1648,6 +1765,8 @@ def edit_user(request, uuid):
     # staff = get_object_or_404(Mechanic, uuid=uuid)
     # except ObjectDoesNotExist:
     staff = get_object_or_404(StaffMember, uuid=uuid)
+    if staff.role == '1' or staff.role == '2':
+        staff = get_object_or_404(Mechanic, uuid=uuid)
 
     if request.method == 'POST':
         form = UserForm(request.POST)
@@ -1670,29 +1789,32 @@ def edit_user(request, uuid):
             staff.user.save()
             # mechanic or foreperson
             if staff.role == '1' or staff.role == '2':
+                staff = get_object_or_404(Mechanic, uuid=uuid)
                 if role == '1' or role == '2':
                     staff.hourly_pay = hourly_rate
                     staff.role = role
                 else:
-                    staff.hourly_pay = None
+                    staff = staff.staffmember_ptr
             else:
                 if role == '1' or role == '2':
-                    staff.hourly_pay = hourly_rate
+                    if Mechanic.objects.get(staffmember_ptr_id=staff.id):
+                        Mechanic.objects.get(staffmember_ptr_id=staff.id).delete()
+                    staff = Mechanic.objects.get_or_create(staffmember_ptr_id=staff.id, hourly_pay=hourly_rate, user_id=staff.user_id,
+                                                    created=staff.created)
+                    staff = staff[0]
 
             staff.role = role
             staff.save()
 
-            return HttpResponseRedirect('/thanks/')
+            return HttpResponseRedirect('/garits/users/')
 
     else:
         data = {}
         data['first_name'] = staff.user.first_name
         data['last_name'] = staff.user.last_name
         data['user_name'] = staff.user.username
-        try:
-            data['hourly_rate'] = staff.hourly_rate
-        except AttributeError:
-            pass
+        if staff.role == '1' or staff.role == '2':
+            data['hourly_rate'] = staff.hourly_pay
         data['role'] = staff.role
         form = UserForm(initial=data)
 
@@ -1742,3 +1864,23 @@ def price_control(request):
     }
 
     return render(request, 'nod/price_control.html', context)
+
+
+def generate_invoice_for_job(request, job_uuid):
+    job = get_object_or_404(Job, uuid=job_uuid)
+
+    last_id = Invoice.objects.last().id
+    new_id = last_id + 1
+    invoice = Invoice.objects.create(invoice_number=new_id, job_done=job)
+
+    for p in job.jobpart_set.filter(is_deleted=False):
+        invoice.parts_for_job.add(p)
+
+    invoice.save()
+
+    context = {
+        'invoice': invoice,
+        'job': job,
+    }
+
+    return redirect('invoice')
