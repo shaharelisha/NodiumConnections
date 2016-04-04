@@ -24,29 +24,10 @@
     </ul>
     <hr/>
 {% endif %}
-<div id="pagename">Jobs</div>
-<div id="main">    
-    <h2>All jobs</h2>
-    <div id="listoptions">
-        <div id="create"><a class="btn btn-primary btn-block">Create new job</a></div>
-        <form action="#change_view" method="post">
-            <select class="form-control" name="sortoption">
-                <option value="da_az">Date added - Ascending (A-Z)</option>
-                <option value="da_za">Date added- Descending (Z-A)</option>
-                <option value="cust_az">Customer name - Ascending (A-Z)</option>
-                <option value="cust_za">Customer name - Descending (Z-A)</option>
-            </select>
-        </form>
-    </div>
-    <div class="tablelist">
-        {%  render_table jobs %}
-<!--
-        <table class="table">
-        <tr><th>Vehicle make/model</th><th>Registration Number</th><th>Customer</th><th>Date added</th><th>Options</th></tr>
-        <tr class="success"><td>Renault / Clio</td><td>IDK2 AU4</td><td>John Smith</td><td>15/02/2016</td><td><a href="#">Generate invoice</a> / <a href="#">Tasks</a> / <a href="#">Edit</a></td></tr>
-        <tr><td>Renault / Clio</td><td>IDK2 AU4</td><td>John Smith</td><td>15/02/2016</td><td><a href="#">Tasks</a> / <a href="#">Edit</a></td></tr>
-        </table>
--->
-    </div>
+
+<div id="main">
+<a href="{% url 'create-job' %}" class="btn btn-default">Create New Job</a>
+    <h2>Active Jobs</h2>
+        {% render_table job_table %}
 </div>
 {% endblock %}

@@ -84,4 +84,15 @@ class PartTable(tables.Table):
 # TODO: highlight jobs which are pending, started, complete
 class ActiveJobsTable(tables.Table):
     job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
-                                     verbose_name="Job")
+                                   verbose_name="Job")
+    type = tables.Column(verbose_name="Type", order_by="type")
+    bay = tables.Column(verbose_name="Bay", order_by="bay")
+    vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
+    get_customer = tables.Column(verbose_name="Customer", order_by="get_customer")
+    # get_customer = tables.LinkColumn('edit-customer', args=[A('get_customer.uuid')], verbose_name="Customer", order_by="get_customer")
+    booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
+    mechanic = tables.Column(verbose_name="Mechanic", order_by="mechanic")
+
+
+
+

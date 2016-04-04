@@ -41,6 +41,13 @@ def part_table(request):
     return render(request, "nod/parts.html", {'part_table': part_table})
 
 
+def active_jobs_table(request):
+    job_table = ActiveJobsTable(Job.objects.filter(is_deleted=False, status='2'))
+    RequestConfig(request).configure(job_table)
+    return render(request, "nod/jobs.html", {'job_table': job_table})
+
+
+
 def customer_tables(request):
     account_holders_table = AccountHolderTable(AccountHolder.objects.filter(is_deleted=False, businesscustomer=None).exclude(forename="",
                                                                                                       surname="",

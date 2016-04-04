@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^profile/edit/$', views.edit_profile, name='edit-profile'),
+    url(r'^jobs/$', views.active_jobs_table, name='active-jobs'),
     url(r'^jobs/create/$', views.create_job, name='create-job'),
     url(r'^jobs/(?P<uuid>\w+)/edit/$', views.edit_job, name='edit-job'),
     url(r'^jobs/(?P<job_uuid>\w+)/payment/$', views.create_payment, name='create-payment'),

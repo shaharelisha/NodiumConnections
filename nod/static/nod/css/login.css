@@ -1,9 +1,12 @@
 form{margin:0; padding:0;}
+#loginerror{margin:10px; width:auto; height:auto; padding:10px; background:#bd3f3b; color:#ffffff; font-family:'Raleway'; text-align:center;}
 #loginbox{margin:10% 35%; width:auto; height:auto; padding:10px; text-align:center; border:1px solid #cccccc;}
 #loginbox #logo{width:auto; height:auto; padding:10px;}
 #loginbox #logo img{width:100px; height:auto;}
 #loginbox #title{width:auto; height:auto; padding:20px 0px; color:#333333; font-family:'Raleway'; font-size:18px;}
-#loginbox .loginfield{width:200px; padding:10px; color:#333333; font-family:'Raleway'; font-size:15px;}
-#loginbox .submitbutton{width:150px; padding:5px; background:#0064b4; color:#ffffff; border:none; -webkit-transition:width 500ms ease; -moz-transition:width 500ms ease; -o-transition:width 500ms ease; transition:width 500ms ease;}
-#loginbox .submitbutton:hover{width:200px;}
-#loginbox .submitbutton:active{width:100px;}
+#loginbox label{width:60px;}
+#loginbox input[type=text]{width:200px; padding:10px; color:#333333; font-family:'Raleway'; font-size:15px; display:inline-block;}
+#loginbox input[type=password]{width:200px; padding:10px; color:#333333; font-family:'Raleway'; font-size:15px; display:inline-block;}
+#loginbox input[type=submit]{width:150px; padding:5px; background:#0064b4; color:#ffffff; border:none; -webkit-transition:width 500ms ease; -moz-transition:width 500ms ease; -o-transition:width 500ms ease; transition:width 500ms ease;}
+#loginbox input[type=submit]:hover{width:200px;}
+#loginbox input[type=submit]:active{width:100px;}

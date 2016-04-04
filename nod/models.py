@@ -327,6 +327,9 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     customer = models.ForeignKey(Customer)
     # bay = models.ForeignKey(Bay) #?????????
 
+    def __str__(self):
+        return self.reg_number
+
     def get_customer(self):
         return self.customer
 
