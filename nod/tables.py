@@ -14,6 +14,8 @@ import django_tables2 as tables
 from django_tables2.utils import A
 from .models import *
 
+
+# TODO: highlight suspended customers
 class AccountHolderTable(tables.Table):
     full_name = tables.LinkColumn('edit-account-holder', args=[A('uuid')], order_by="surname", verbose_name="Name")
     get_emails = tables.Column(verbose_name="Emails", orderable=False)
@@ -32,6 +34,7 @@ class AccountHolderTable(tables.Table):
         attrs = {"class": "table table-striped table-hover "}
 
 
+# TODO: highlight suspended customers
 class BusinessCustomerTable(tables.Table):
     company_name = tables.LinkColumn('edit-business-customer', args=[A('uuid')], order_by="company_name",
                                      verbose_name="Company Name")
@@ -60,3 +63,25 @@ class UserTable(tables.Table):
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}
+
+
+# TODO: highlight parts where quantities are below thresholds
+class PartTable(tables.Table):
+    name = tables.LinkColumn('edit-part', args=[A('uuid')], order_by="name",
+                                     verbose_name="Name")
+    code = tables.Column(verbose_name="Code", order_by="code")
+    manufacturer = tables.Column(verbose_name="Manufacturer", order_by="manufacturer")
+    vehicle_type = tables.Column(verbose_name="Vehicle Type", order_by="vehicle_type")
+    years = tables.Column(verbose_name="Year(s)", order_by="years")
+    price = tables.Column(verbose_name="Price (£)", order_by="price")
+    quantity = tables.Column(verbose_name="Quantity", order_by="quantity")
+    low_level_threshold = tables.Column(verbose_name="Low Level Threshold", order_by="low_level_threshold")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+# TODO: highlight jobs which are pending, started, complete
+class ActiveJobsTable(tables.Table):
+    job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
+                                     verbose_name="Job")

@@ -35,6 +35,12 @@ def user_table(request):
     return render(request, "nod/users.html", {'user_table': user_table})
 
 
+def part_table(request):
+    part_table = PartTable(Part.objects.filter(is_deleted=False))
+    RequestConfig(request).configure(part_table)
+    return render(request, "nod/parts.html", {'part_table': part_table})
+
+
 def customer_tables(request):
     account_holders_table = AccountHolderTable(AccountHolder.objects.filter(is_deleted=False, businesscustomer=None).exclude(forename="",
                                                                                                       surname="",
@@ -1263,7 +1269,7 @@ def create_part(request):
             Part.objects.create(name=name, manufacturer=manufacturer, vehicle_type=vehicle_type, years=years,
                                 code=code, quantity=quantity, price=price, low_level_threshold=low_level_threshold)
 
-            return HttpResponseRedirect('/thanks/')
+            return HttpResponseRedirect('/garits/parts/')
 
     else:
         form = CreatePartForm()
@@ -1288,7 +1294,7 @@ def edit_part(request, uuid):
 
             part.save()
 
-            return HttpResponseRedirect('/thanks/')
+            return HttpResponseRedirect('/garits/parts/')
 
     else:
         data = {}
@@ -1311,7 +1317,7 @@ def delete_part(request, uuid):
     part.is_deleted = True
     part.save()
 
-    return HttpResponseRedirect('/deleted/')
+    return HttpResponseRedirect('/garits/parts/')
 
 
 def get_vehicles_autocomplete(request):

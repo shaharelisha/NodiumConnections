@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^jobs/create/$', views.create_job, name='create-job'),
     url(r'^jobs/(?P<uuid>\w+)/edit/$', views.edit_job, name='edit-job'),
     url(r'^jobs/(?P<job_uuid>\w+)/payment/$', views.create_payment, name='create-payment'),
+    url(r'^parts/$', views.part_table, name='parts'),
     url(r'^parts/create/$', views.create_part, name='create-part'),
     url(r'^parts/(?P<uuid>\w+)/edit/$', views.edit_part, name='edit-part'),
     url(r'^customers/$', views.customer_tables, name='customers'),
