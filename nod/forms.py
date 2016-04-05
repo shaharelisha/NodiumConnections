@@ -722,7 +722,7 @@ class SupplierForm(forms.Form):
 
 
 class PaymentForm(forms.Form):
-    amount = forms.FloatField(min_value=0)
+    amount = forms.DecimalField(min_value=0, decimal_places=2)
     PAYMENT_TYPES = (
         ('1', 'Cash'),
         ('2', 'Card'),
@@ -763,8 +763,8 @@ class UserForm(forms.Form):
     last_name = forms.CharField(max_length=30, widget=forms.TextInput(
         attrs={'placeholder': "Surname",'rows': '1'}))
     user_name = forms.CharField(max_length=30, widget=forms.TextInput(
-        attrs={'placeholder': "Username",'rows': '1'}))
-    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1'}))
+        attrs={'placeholder': "Username", 'rows': '1'}))
+    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1',}))
     ROLES = [
         ("1", "Mechanic"),
         ("2", "Foreperson"),

@@ -17,13 +17,20 @@ from .models import *
 
 # TODO: highlight suspended customers
 class AccountHolderTable(tables.Table):
+    tr_class = tables.Column(visible=False, empty_values=())
     full_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="surname", verbose_name="Name")
     get_emails = tables.Column(verbose_name="Emails", orderable=False)
     get_phones = tables.Column(verbose_name="Phones", orderable=False)
     full_address = tables.Column(verbose_name="Address", orderable=False)
     # discount_plan = tables.Column(verbose_name="Discount Plan")
-    # suspended = tables.BooleanColumn(verbose_name="Suspended")
+    suspended = tables.BooleanColumn(visible=False, verbose_name="Suspended")
 
+    def render_tr_class(self):
+        for row in self.rows:
+            if row.suspended is True:
+                return "danger"
+        # if self.suspended is True:
+        #     return "danger"
     # def render_source(self, value):
     #     if value == 'some_value':
     #         return mark_safe("<span class='highlight_this_row'>%s</span>" % (escape(value)))
@@ -114,11 +121,13 @@ class VehicleTable(tables.Table):
 
 
 class UnpaidInvoiceTable(tables.Table):
-    invoice_number = tables.LinkColumn('view-invoice', args=[A('uuid')], order_by="invoice_number",
+    invoice_number = tables.LinkColumn('pay-invoice', args=[A('uuid')], order_by="invoice_number",
                                    verbose_name="Invoice No.")
+    # invoice_number = tables.Column(order_by="invoice_number", verbose_name="Invoice No.")
     issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")
     reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
     type = tables.Column(verbose_name="Type", order_by="type")
+    total_price = tables.Column(verbose_name="Total Price", order_by="total_price")
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}

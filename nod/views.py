@@ -12,11 +12,13 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist, Multiple
 import json
 from django.template import RequestContext, loader
 from django.contrib.auth import logout
+import datetime
+from dateutil.relativedelta import relativedelta
 
 # london_tz = pytz.timezone("Europe/London")
 
 from .forms import *
-from .models import *
+from nod.models import *
 from .tables import *
 
 
@@ -141,7 +143,7 @@ def create_job(request):
                                     code='insufficient_parts'
                                 )
 
-                    return HttpResponseRedirect('/thanks/')
+                    return HttpResponseRedirect('/garits/jobs/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
@@ -279,7 +281,7 @@ def edit_job(request, uuid):
 
                     job.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    return HttpResponseRedirect('/garits/jobs/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
@@ -421,7 +423,7 @@ def create_dropin(request):
 
                     dropin.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
@@ -521,7 +523,7 @@ def edit_dropin(request, uuid):
 
                     dropin.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    return HttpResponseRedirect('/garits/customers/')
 
             except IntegrityError:
                 #If the transaction failed
@@ -1113,6 +1115,13 @@ def view_customer(request, uuid):
     except MultipleObjectsReturned:
         pass
 
+    for invoice in customer.get_unpaid_invoices():
+        if invoice.reminder_phase == '4' or invoice.issue_date <= (datetime.date.today() - relativedelta(months=3, weeks=1)):
+            customer.suspended = True
+            break
+        else:
+            customer.suspended = False
+    customer.save()
     if customer.suspended is True:
         messages.error(request, "SUSPENDED")
 
@@ -1703,52 +1712,6 @@ def edit_supplier(request, uuid):
     return render(request, 'nod/edit_supplier.html', context)
 
 
-def create_payment(request, job_uuid):
-    job = get_object_or_404(Job, uuid=job_uuid)
-    if request.method == 'POST':
-        form = PaymentForm(request.POST)
-
-        if form.is_valid():
-            amount = form.cleaned_data['amount']
-            date = form.cleaned_data['date']
-            payment_type = form.cleaned_data['payment_type']
-            last_4_digits = form.cleaned_data['last_4_digits']
-            cvv = form.cleaned_data['cvv']
-
-            try:
-                with transaction.atomic():
-                    if payment_type == '2':
-                        if last_4_digits and cvv:
-                            Card.objects.create(amount=amount, date=date, payment_type=payment_type, last_4_digits=last_4_digits,
-                                                cvv=cvv, job=job)
-                        else:
-                            raise forms.ValidationError(
-                                'No card details filled.',
-                                code='card_details_missing'
-                            )
-                    else:
-                        Payment.objects.create(amount=amount, date=date, payment_type=payment_type, job=job)
-
-                    job.invoice.paid = True
-                    job.invoice.save()
-
-                    return HttpResponseRedirect('/thanks/')
-
-            except IntegrityError:
-                messages.error(request, "There was an error saving")
-
-    else:
-        data = {}
-        form = PaymentForm()
-
-    context = {
-        'form': form,
-        'job': job,
-    }
-
-    return render(request, 'nod/create_payment.html', context)
-
-
 def sell_parts(request, customer_uuid):
     # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
     # check for account holder, if still not found, check business customer.
@@ -1788,6 +1751,10 @@ def sell_parts(request, customer_uuid):
                     customer.part_orders.add(order)
                     customer.save()
 
+                    last_id = Invoice.objects.last().id
+                    new_id = last_id + 1
+                    invoice = Invoice.objects.create(part_order=order, invoice_number=new_id, issue_date=date)
+
                     for part_form in part_formset:
                         part_name = part_form.cleaned_data['part_name']
                         quantity = part_form.cleaned_data['quantity']
@@ -1795,18 +1762,24 @@ def sell_parts(request, customer_uuid):
                         if part_name and quantity:
                             part = get_object_or_404(Part, name=part_name)
                             part_sold = SellPart.objects.create(part=part, quantity=quantity, order=order)
+                            invoice.parts_sold.add(part_sold)
                             #TODO: don't allow to drop below 0. and raise error if drops below threshold.
                             part.quantity -= quantity
                             part.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    invoice.save()
+
+                    messages.success(request, "Parts sold! Invoice create!")
+                    return redirect('view-customer', uuid=customer.uuid)
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")
 
     else:
+        data = {}
+        data['date'] = timezone.datetime.now()
         part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
-        form = CustomerPartsOrderForm()
+        form = CustomerPartsOrderForm(initial=data)
 
     context = {
         'part_formset': part_formset,
@@ -1953,6 +1926,130 @@ def price_control(request):
     }
 
     return render(request, 'nod/price_control.html', context)
+
+
+def view_invoice(request, uuid):
+    invoice = get_object_or_404(Invoice, uuid=uuid)
+    job = invoice.job_done
+    customer = invoice.get_customer()
+    vehicle = invoice.job_done.vehicle
+
+    template = loader.get_template('nod/view_invoice.html')
+    context = RequestContext(request, {
+        'invoice': invoice,
+        'job': job,
+        'customer': customer,
+        'vehicle': vehicle,
+    })
+    return HttpResponse(template.render(context))
+
+
+def pay_invoice(request, uuid):
+    invoice = get_object_or_404(Invoice, uuid=uuid)
+    customer = invoice.get_customer()
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            date = form.cleaned_data['date']
+            payment_type = form.cleaned_data['payment_type']
+            last_4_digits = form.cleaned_data['last_4_digits']
+            cvv = form.cleaned_data['cvv']
+
+            try:
+                with transaction.atomic():
+                    if payment_type == '2':
+                        if last_4_digits and cvv:
+                            Card.objects.create(amount=amount, date=date, payment_type=payment_type, last_4_digits=last_4_digits,
+                                                cvv=cvv, invoice=invoice)
+                        else:
+                            raise forms.ValidationError(
+                                'No card details filled.',
+                                code='card_details_missing'
+                            )
+                    else:
+                        Payment.objects.create(amount=amount, date=date, payment_type=payment_type, invoice=invoice)
+
+                    invoice.paid = True
+                    try:
+                        if customer.suspended:
+                            for invoice in customer.get_unpaid_invoices():
+                                if invoice.reminder_phase == '4' or invoice.issue_date <= (datetime.date.today() - relativedelta(months=3, weeks=1)):
+                                    customer.suspended = True
+                                    break
+                                else:
+                                    customer.suspended = False
+                        customer.save()
+                    except AttributeError:
+                        pass
+
+                    invoice.save()
+                    messages.success(request, "Invoice No. " + str(invoice.invoice_number) + " was paid.")
+                    return HttpResponseRedirect("nod/print_invoice.html")
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        data = {}
+        data['amount'] = invoice.total_price()
+        form = PaymentForm(initial=data)
+
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'customer': customer,
+    }
+
+    return render(request, 'nod/pay_invoice.html', context)
+
+
+
+def create_payment(request, job_uuid):
+    job = get_object_or_404(Job, uuid=job_uuid)
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            date = form.cleaned_data['date']
+            payment_type = form.cleaned_data['payment_type']
+            last_4_digits = form.cleaned_data['last_4_digits']
+            cvv = form.cleaned_data['cvv']
+
+            try:
+                with transaction.atomic():
+                    if payment_type == '2':
+                        if last_4_digits and cvv:
+                            Card.objects.create(amount=amount, date=date, payment_type=payment_type, last_4_digits=last_4_digits,
+                                                cvv=cvv, job=job)
+                        else:
+                            raise forms.ValidationError(
+                                'No card details filled.',
+                                code='card_details_missing'
+                            )
+                    else:
+                        Payment.objects.create(amount=amount, date=date, payment_type=payment_type, job=job)
+
+                    job.invoice.paid = True
+                    job.invoice.save()
+
+                    return HttpResponseRedirect('/thanks/')
+
+            except IntegrityError:
+                messages.error(request, "There was an error saving")
+
+    else:
+        data = {}
+        form = PaymentForm()
+
+    context = {
+        'form': form,
+        'job': job,
+    }
+
+    return render(request, 'nod/create_payment.html', context)
 
 
 def generate_invoice_for_job(request, job_uuid):

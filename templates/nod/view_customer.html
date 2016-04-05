@@ -37,14 +37,28 @@
 {% endif %}
 
 <div id="main">
-    {% if customer.company_name %}
-        <h2>{{ customer.company_name }}</h2>
-        <div><a href="{% url 'edit-business-customer' customer.uuid %}" class="btn btn-default">Edit</a></div>
-
+    {% if customer.suspended %}
+        {% if customer.company_name %}
+            <h2>{{ customer.company_name }} <p class="text-danger">(SUSPENDED)</p></h2>
+        {% else %}
+            <h2>{{ customer.forename }} {{ customer.surname }} <p class="text-danger">(SUSPENDED)</p></h2></h2>
+        {% endif %}
     {% else %}
-        <h2>{{ customer.forename }} {{ customer.surname }}</h2>
-        <div><a href="{% url 'edit-account-holder' customer.uuid %}" class="btn btn-default">Edit</a></div>
+        {% if customer.company_name %}
+            <h2>{{ customer.company_name }}</h2>
+        {% else %}
+            <h2>{{ customer.forename }} {{ customer.surname }}</h2>
+        {% endif %}
     {% endif %}
+    <div><a href="{% url 'edit-account-holder' customer.uuid %}" class="btn btn-default">Edit</a>
+            {% if customer.suspended %}
+             <a href="{% url 'create-job' %}" class="btn btn-default disabled">Create New Job</a>
+             <a href="{% url 'sell-parts' customer.uuid %}" class="btn btn-default disabled">Sell Parts</a>
+            {% else %}
+             <a href="{% url 'create-job' %}" class="btn btn-default">Create New Job</a>
+             <a href="{% url 'sell-parts' customer.uuid %}" class="btn btn-default">Sell Parts</a>
+            {% endif %}
+    </div>
     <br/>
     <br/>
 

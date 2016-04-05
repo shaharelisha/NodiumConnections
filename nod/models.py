@@ -81,8 +81,8 @@ class PhoneModel(TimestampedModel, SoftDeleteModel):
 
 
 class PriceControl(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
-    vat = models.FloatField()
-    marked_up = models.FloatField()
+    vat = models.DecimalField(max_digits=4, decimal_places=2)
+    marked_up = models.DecimalField(max_digits=4, decimal_places=2)
 
 
 class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -91,7 +91,7 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     manufacturer = models.CharField(max_length=100)
     vehicle_type = models.CharField(max_length=100)
     years = models.CharField(max_length=9)
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=4, decimal_places=2)
     code = models.CharField(max_length=20, unique=True)
     quantity = models.PositiveIntegerField()
     low_level_threshold = models.PositiveIntegerField()
@@ -115,6 +115,11 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         self.quantity = quantity
         return quantity
 
+    def get_markedup_price(self):
+        markup = PriceControl.objects.get().marked_up/100
+        price = self.price + (self.price * markup)
+        return price
+
 
 class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     # generic relationship limited to the different types of customers
@@ -128,6 +133,16 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     parts = models.ManyToManyField(Part, through="SellPart")
 
+    def get_parts_price(self):
+        price = 0
+        for part in self.sellpart_set.all(): #not self.parts
+            unit_price = part.get_markedup_price()
+            quantity = part.quantity
+            price += unit_price*quantity
+        return price
+
+    def get_price(self):
+        return self.get_parts_price()
 
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
@@ -153,7 +168,7 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     def get_unpaid_invoices(self):
         invoices = []
         for v in self.vehicle_set.filter(is_deleted=False):
-            for j in v.job_set.filter(is_deleted=False):
+            for j in v.job_set.filter(is_deleted=False, status='1'):
                 if j.invoice.paid is False:
                     invoices.append(j.invoice)
         for o in self.part_orders.filter(is_deleted=False):
@@ -250,7 +265,7 @@ class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
 # one object of this type
 class FixedDiscount(DiscountPlan):
-    discount = models.FloatField()
+    discount = models.DecimalField(max_digits=4, decimal_places=2)
 
     def __init__(self, *args, **kwargs):
         super(FixedDiscount, self).__init__(*args, **kwargs)
@@ -258,9 +273,9 @@ class FixedDiscount(DiscountPlan):
 
 
 class FlexibleDiscount(DiscountPlan):
-    lower_range = models.FloatField()
-    upper_range = models.FloatField()
-    discount = models.FloatField()
+    lower_range = models.DecimalField(max_digits=4, decimal_places=2)
+    upper_range = models.DecimalField(max_digits=4, decimal_places=2)
+    discount = models.DecimalField(max_digits=4, decimal_places=2)
 
     def __init__(self, *args, **kwargs):
         super(FlexibleDiscount, self).__init__(*args, **kwargs)
@@ -269,10 +284,10 @@ class FlexibleDiscount(DiscountPlan):
 
 # there will be one object of this type
 class VariableDiscount(DiscountPlan):
-    mot_discount = models.FloatField()
-    annual_discount = models.FloatField()
-    repair_discount = models.FloatField()
-    parts_discount = models.FloatField()
+    mot_discount = models.DecimalField(max_digits=4, decimal_places=2)
+    annual_discount = models.DecimalField(max_digits=4, decimal_places=2)
+    repair_discount = models.DecimalField(max_digits=4, decimal_places=2)
+    parts_discount = models.DecimalField(max_digits=4, decimal_places=2)
 
     def __init__(self, *args, **kwargs):
         super(VariableDiscount, self).__init__(*args, **kwargs)
@@ -301,11 +316,11 @@ class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
         return self.user.username
 
 class Mechanic(StaffMember):
-    hourly_pay = models.FloatField()
+    hourly_pay = models.DecimalField(max_digits=4, decimal_places=2)
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
-
+# TODO:
     #TODO: generate report data methods
 
 
@@ -455,6 +470,11 @@ class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     quantity = models.PositiveIntegerField()
     sufficient_quantity = models.BooleanField(default=True)
 
+    def get_markedup_price(self):
+        markup = PriceControl.objects.get().marked_up/100
+        price = self.part.price + (self.part.price * markup)
+        return price
+
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     invoice_number = models.PositiveIntegerField(unique=True)
@@ -474,7 +494,14 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     paid = models.BooleanField(default=False)
 
     def get_price(self):
-        return self.job_done.get_price()
+        if self.job_done:
+            return self.job_done.get_price()
+        else:
+            if self.part_order:
+                return self.part_order.get_price()
+            else:
+                pass
+                # TODO: wtf
 
     def get_parts(self):
         parts = []
@@ -483,7 +510,14 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return parts
 
     def get_customer(self):
-        return self.job_done.get_customer()
+        if self.job_done:
+            return self.job_done.get_customer()
+        else:
+            if self.part_order:
+                return self.part_order.content_object
+            else:
+                pass
+                # TODO: wtf.
 
     def type(self):
         if self.job_done:
@@ -492,9 +526,18 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             if self.part_order:
                 return "Parts"
 
+    def get_VAT(self):
+        vat = PriceControl.objects.get().vat/100
+        total_vat = self.get_price() * vat
+        return total_vat
+
+    def total_price(self):
+        price = self.get_price() + self.get_VAT()
+        return price
+
 
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    amount = models.FloatField()
+    amount = models.DecimalField(max_digits=4, decimal_places=2)
     PAYMENT_TYPES = (
         ('1', 'Cash'),
         ('2', 'Card'),
@@ -503,7 +546,7 @@ class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     payment_type = models.CharField(max_length=1, choices=PAYMENT_TYPES)
     date = models.DateField(default=timezone.datetime.now)
     # customer = models.ForeignKey(Customer)
-    job = models.ForeignKey(Job)
+    invoice = models.ForeignKey(Invoice)
 
 
 class Card(Payment):

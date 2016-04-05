@@ -1,0 +1,51 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+    {% block extra_js%}
+        <script src="http://malsup.github.com/jquery.form.js"></script>
+{#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
+    {% endblock %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+
+<div id="main">
+    <div id="job_add_form">
+        <h3>Add Payment for Invoice No.{{ invoice.invoice_number }}</h3>
+
+        <form action='{% url 'pay-invoice' invoice.uuid %}' method="post">
+            {% csrf_token %}
+            {% crispy form form.helper 'bootstrap3' %}
+
+            <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                    <br/>
+                    <button type="reset" class="btn btn-default">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

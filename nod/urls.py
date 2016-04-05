@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^customers/(?P<customer_uuid>\w+)/vehicle/(?P<uuid>\w+)/edit/$', views.edit_vehicle, name='edit-vehicle'),
     url(r'^customers/(?P<customer_uuid>\w+)/sell_parts/$', views.sell_parts, name='sell-parts'),
     url(r'^customers/(?P<uuid>\w+)/$', views.view_customer, name='view-customer'),
+    url(r'^invoices/(?P<uuid>\w+)/$', views.pay_invoice, name='pay-invoice'),
     url(r'^api/get_vehicles/(?P<customer_uuid>\w+)/$', views.get_vehicles, name='get-vehicles'),
     url(r'^api/get_vehicles/', views.get_vehicles_autocomplete, name='get-vehicles-autocomplete'),
     url(r'^delete/job/(?P<uuid>\w+)/$', views.delete_job, name='delete-job'),
@@ -39,8 +40,6 @@ urlpatterns = [
     url(r'^users/create/$', views.create_user, name='create-user'),
     url(r'^users/(?P<uuid>\w+)/edit/$', views.edit_user, name='edit-user'),
     url(r'^price_control/$', views.price_control, name='price-control'),
-
-
 
 
 ]
