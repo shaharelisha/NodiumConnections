@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^customers/(?P<customer_uuid>\w+)/vehicle/create/$', views.create_vehicle, name='create-vehicle'),
     url(r'^customers/(?P<customer_uuid>\w+)/vehicle/(?P<uuid>\w+)/edit/$', views.edit_vehicle, name='edit-vehicle'),
     url(r'^customers/(?P<customer_uuid>\w+)/sell_parts/$', views.sell_parts, name='sell-parts'),
+    url(r'^customers/(?P<uuid>\w+)/$', views.view_customer, name='view-customer'),
     url(r'^api/get_vehicles/(?P<customer_uuid>\w+)/$', views.get_vehicles, name='get-vehicles'),
     url(r'^api/get_vehicles/', views.get_vehicles_autocomplete, name='get-vehicles-autocomplete'),
     url(r'^delete/job/(?P<uuid>\w+)/$', views.delete_job, name='delete-job'),

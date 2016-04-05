@@ -764,7 +764,8 @@ def edit_account_holder(request, uuid):
 
                     account_holder.save()
 
-                    return HttpResponseRedirect('/garits/customers/')
+                    messages.success(request, "Changes were saved successfully!")
+                    return redirect('view-customer', uuid=account_holder.uuid)
 
             except IntegrityError:
                 #If the transaction failed
@@ -1026,7 +1027,8 @@ def edit_business_customer(request, uuid):
 
                     business_customer.save()
 
-                    return HttpResponseRedirect('/garits/customers/')
+                    messages.success(request, "Changes were saved successfully!")
+                    return redirect('view-customer', uuid=business_customer.uuid)
 
             except IntegrityError:
                 #If the transaction failed
@@ -1091,6 +1093,42 @@ def delete_customer(request, uuid):
     customer.save()
 
     return HttpResponseRedirect('/garits/customers/')
+
+
+def view_customer(request, uuid):
+    try:
+        customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
+    except ObjectDoesNotExist:
+        try:
+            customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+        except ObjectDoesNotExist:
+            try:
+                customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
+            except ObjectDoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                pass # TODO: get last one?
+        except MultipleObjectsReturned:
+            pass
+    except MultipleObjectsReturned:
+        pass
+
+    if customer.suspended is True:
+        messages.error(request, "SUSPENDED")
+
+    vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
+    RequestConfig(request).configure(vehicle_table)
+
+    invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
+    RequestConfig(request).configure(invoice_table)
+
+    template = loader.get_template('nod/view_customer.html')
+    context = RequestContext(request, {
+        'customer': customer,
+        'vehicle_table': vehicle_table,
+        'invoice_table': invoice_table
+    })
+    return HttpResponse(template.render(context))
 
 
 def create_vehicle(request, customer_uuid):
@@ -1189,7 +1227,7 @@ def edit_vehicle(request, customer_uuid, uuid):
 
             vehicle.save()
 
-            return HttpResponseRedirect('/thanks/')
+            return redirect('view-customer', uuid=vehicle.get_customer().uuid)
         else:
             messages.error(request, "There was an error with the data input.")
 
@@ -1220,7 +1258,9 @@ def delete_vehicle(request, uuid):
     vehicle.is_deleted = True
     vehicle.save()
 
-    return HttpResponseRedirect('/deleted/')
+    # TODO: check that customer string is correct
+    messages.error(request, "Vehicle " + vehicle.reg_number + " was removed from " + vehicle.get_customer().__str__())
+    return redirect('view-customer', uuid=vehicle.get_customer().uuid)
 
 
 def get_vehicles(request, customer_uuid):
@@ -1301,6 +1341,8 @@ def edit_part(request, uuid):
 
             part.save()
 
+            message = part.name + " was successfully edited!"
+            messages.success(request, message)
             return HttpResponseRedirect('/garits/parts/')
 
     else:
@@ -1324,6 +1366,7 @@ def delete_part(request, uuid):
     part.is_deleted = True
     part.save()
 
+    messages.error(request, part.name + " was deleted.")
     return HttpResponseRedirect('/garits/parts/')
 
 
@@ -1378,7 +1421,8 @@ def replenish_stock(request):
                             part.quantity += quantity
                             part.save()
 
-                    return HttpResponseRedirect('/thanks/')
+                    messages.success(request, "Parts were successfully added to the stock!")
+                    return HttpResponseRedirect('/garits/parts/')
 
             except IntegrityError:
                 messages.error(request, "There was an error saving")

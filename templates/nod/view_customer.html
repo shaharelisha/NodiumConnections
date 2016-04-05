@@ -1,0 +1,79 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load render_table from django_tables2 %}
+{% load filters %}
+
+{%  block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+{#                <span class="label label-success">#}
+{#                    {{ message }}#}
+{#                </span>#}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+{#                <li class="error">#}
+{#                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>#}
+{#                </li>#}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+    {% if customer.company_name %}
+        <h2>{{ customer.company_name }}</h2>
+        <div><a href="{% url 'edit-business-customer' customer.uuid %}" class="btn btn-default">Edit</a></div>
+
+    {% else %}
+        <h2>{{ customer.forename }} {{ customer.surname }}</h2>
+        <div><a href="{% url 'edit-account-holder' customer.uuid %}" class="btn btn-default">Edit</a></div>
+    {% endif %}
+    <br/>
+    <br/>
+
+    <div id="view">
+        <h4>Date Joined: {{ customer.date }}</h4>
+        <h4>Address: {{ customer|address }}</h4>
+        {% if customer|phones %}
+            <h4>Phones: {{ customer|phones }}</h4>
+        {% else %}
+            <h4>Phones: --</h4>
+        {% endif %}
+        {% if customer|emails %}
+            <h4>Emails: {{ customer|emails }}</h4>
+        {% else %}
+            <h4>Emails: --</h4>
+        {% endif %}
+        {% if customer|is_business %}
+            <h4>Representative: {{ customer.forename }} {{ customer.surname }}, {{ customer.rep_role }}</h4>
+        {% endif %}
+        {% if customer.content_object %}
+            <h4>Discount Plan: {{ customer.content_object }}</h4>
+        {% else %}<h4>Discount Plan: --</h4>
+        {% endif %}
+        <h3>Vehicles</h3>
+        {% render_table vehicle_table %}
+
+        <h3>Unpaid Invoices</h3>
+        {% render_table invoice_table %}
+    </div>
+</div>
+
+{% endblock %}

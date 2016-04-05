@@ -150,8 +150,16 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     def get_phones(self):
         return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
 
-    def full_address(self):
-        return u"%s, %s" % (self.address, self.postcode)
+    def get_unpaid_invoices(self):
+        invoices = []
+        for v in self.vehicle_set.filter(is_deleted=False):
+            for j in v.job_set.filter(is_deleted=False):
+                if j.invoice.paid is False:
+                    invoices.append(j.invoice)
+        for o in self.part_orders.filter(is_deleted=False):
+            if o.invoice.paid is False:
+                invoices.append(o.invoice)
+        return invoices
 
 
 class Dropin(Customer):
@@ -199,6 +207,8 @@ class AccountHolder(Customer):
     def __str__(self):
         return self.forename + ' ' + self.surname
 
+    def full_address(self):
+        return u"%s, %s" % (self.address, self.postcode)
 
 class BusinessCustomer(AccountHolder):
     company_name = models.CharField(max_length=100, blank=True)
@@ -231,6 +241,9 @@ class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     type = models.CharField(choices=PLAN, max_length=1)
     customer = GenericRelation(AccountHolder)
 
+    def __str__(self):
+        type = next(name for value, name in DiscountPlan.PLAN if value==self.type)
+        return type
 
     class Meta:
         abstract = True
@@ -471,6 +484,13 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_customer(self):
         return self.job_done.get_customer()
+
+    def type(self):
+        if self.job_done:
+            return "Job"
+        else:
+            if self.part_order:
+                return "Parts"
 
 
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):

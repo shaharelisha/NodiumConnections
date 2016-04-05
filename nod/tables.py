@@ -17,7 +17,7 @@ from .models import *
 
 # TODO: highlight suspended customers
 class AccountHolderTable(tables.Table):
-    full_name = tables.LinkColumn('edit-account-holder', args=[A('uuid')], order_by="surname", verbose_name="Name")
+    full_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="surname", verbose_name="Name")
     get_emails = tables.Column(verbose_name="Emails", orderable=False)
     get_phones = tables.Column(verbose_name="Phones", orderable=False)
     full_address = tables.Column(verbose_name="Address", orderable=False)
@@ -36,7 +36,7 @@ class AccountHolderTable(tables.Table):
 
 # TODO: highlight suspended customers
 class BusinessCustomerTable(tables.Table):
-    company_name = tables.LinkColumn('edit-business-customer', args=[A('uuid')], order_by="company_name",
+    company_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="company_name",
                                      verbose_name="Company Name")
     rep = tables.Column(verbose_name="Representative")
     get_emails = tables.Column(verbose_name="Emails", orderable=False)
@@ -93,6 +93,32 @@ class ActiveJobsTable(tables.Table):
     booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
     mechanic = tables.Column(verbose_name="Mechanic", order_by="mechanic")
 
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
 
 
+class VehicleTable(tables.Table):
+    reg_number = tables.LinkColumn('edit-vehicle', args=[A('get_customer.uuid'), A('uuid')], order_by="reg_number",
+                                   verbose_name="Registration No.")
+    # reg_number = tables.Column(order_by="reg_number", verbose_name="Registration No.")
+    make = tables.Column(verbose_name="Make", order_by="make")
+    model = tables.Column(verbose_name="Model", order_by="model")
+    type = tables.Column(verbose_name="Type", order_by="type")
+    engine_serial = tables.Column(verbose_name="Engine Serial", order_by="engine_serial")
+    chassis_number = tables.Column(verbose_name="Chassis Number", order_by="chassis_number")
+    color = tables.Column(verbose_name="Colour", order_by="color")
+    mot_base_date = tables.Column(verbose_name="MoT Base Date", order_by="mot_base_date")
 
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class UnpaidInvoiceTable(tables.Table):
+    invoice_number = tables.LinkColumn('view-invoice', args=[A('uuid')], order_by="invoice_number",
+                                   verbose_name="Invoice No.")
+    issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")
+    reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
+    type = tables.Column(verbose_name="Type", order_by="type")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}

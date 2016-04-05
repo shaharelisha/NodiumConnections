@@ -31,14 +31,14 @@
 
 </head>
 <body>
-    <nav class="navbar navbar-inverse ">
+    <nav class="navbar navbar-default ">
       <div class="container-fluid">
         <div class="navbar-header">
-          <a class="navbar-brand" href="#">GARITS</a>
+          <a class="navbar-brand" href="{% url 'index' %}">GARITS</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li><a href="#">Home</a></li>
+            <li><a href="{% url 'index' %}">Home</a></li>
             <li><a href="{% url 'active-jobs' %}">Jobs</a></li>
             <li><a href="{% url 'parts' %}">Stock</a></li>
             <li><a href="{% url 'customers' %}">Customers</a></li>
