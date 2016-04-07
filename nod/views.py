@@ -3302,57 +3302,58 @@ def spare_parts_report_table(request):
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
-# @login_required
-# def generate_spart_parts_report(request):
-#     if request.method == 'POST':
-#         form = SparePartsReportGenerateForm(request.POST)
-#
-#         if form.is_valid():
-#             start_date = form.cleaned_data['start_date']
-#             end_date = form.cleaned_data['end_date']
-#             date = form.cleaned_data['date']
-#
-#             try:
-#                 with transaction.atomic():
-#                     SparePartsReport.objects.create(start_date=start_date, end_date=end_date, date=date)
-#
-#                     for part in Part.objects.filter(is_deleted=False):
-#                         quantity =
-#
-#                         else:
-#                             # raise forms.ValidationError(
-#                             #     'No card details filled.',
-#                             #     code='card_details_missing'
-#                             # )
-#                     else:
-#                         Payment.objects.create(amount=amount, date=date, payment_type=payment_type, job=job)
-#
-#                     job.invoice.paid = True
-#                     job.invoice.save()
-#
-#                     return HttpResponseRedirect('/thanks/')
-#
-#             except IntegrityError:
-#                 messages.error(request, "There was an error saving")
-#
-#     else:
-#         data = {}
-#         data['end_date'] = datetime.date.today()
-#         data['date'] = datetime.date.today()
-#         form = SparePartsReportGenerateForm(initial=data)
-#
-#     context = {
-#         'form': form,
-#     }
-#
-#     return render(request, 'nod/generate_spare_parts_report.html', context)
+
+@login_required
+def generate_spare_parts_report(request):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
+        month = datetime.date.today().month
+        year = datetime.date.today().year
+
+        date = datetime.date(year, month, 1)
+        today = datetime.date.today()
+        report = SparePartsReport.objects.create(start_date=date, end_date=today, date=today)
+
+        for part in Part.objects.filter(is_deleted=False):
+            spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
+            delivered = 0
+            for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
+                delivered += p.quantity
+            spare.delivery = delivered
+
+            used = 0
+            for p in JobPart.objects.filter(part=part, job__booking_date__gte=report.start_date):
+                used += p.quantity
+            for p in SellPart.objects.filter(part=part, order__date__gte=report.start_date):
+                used +=p.quantity
+            spare.used = used
+
+            spare.initial_stock_level = spare.new_stock_level + spare.used - spare.delivery
+            spare.save()
+
+        view_spare_parts_report(request, report.uuid)
+    #     template = loader.get_template('nod/view_spare_parts_report.html')
+    #     context = RequestContext(request, {
+    #         'report': report,
+    #     })
+    #
+    #     return HttpResponse(template.render(context))
+    # else:
+    #     messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+    #     return redirect('/garits/')
 
 
 @login_required
-def print_spare_parts_report(request, uuid):
+def view_spare_parts_report(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
-        pass
+        report = get_object_or_404(SparePartsReport, uuid=uuid)
+
+        template = loader.get_template('nod/view_spare_parts_report.html')
+        context = RequestContext(request, {
+            'report': report,
+        })
+        return HttpResponse(template.render(context))
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')

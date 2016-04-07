@@ -666,13 +666,13 @@ class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
     def get_total_initial_cost(self):
         cost = 0
-        for p in self.parts:
+        for p in self.parts.filter(is_deleted=False):
             cost += p.get_initial_cost()
         return cost
 
     def get_total_stock_cost(self):
         cost = 0
-        for p in self.parts:
+        for p in self.parts.filter(is_deleted=False):
             cost += p.get_stock_cost()
         return cost
 
@@ -683,9 +683,10 @@ class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 class SparePart(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     report = models.ForeignKey(SparePartsReport)
     part = models.ForeignKey(Part)
-    initial_stock_level = models.IntegerField()
-    used = models.IntegerField()
-    delivery = models.IntegerField()
+    initial_stock_level = models.IntegerField(default=0)
+    used = models.IntegerField(default=0)
+    delivery = models.IntegerField(default=0)
+    new_stock_level = models.IntegerField()
 
     def get_new_stock_level(self):
         return self.initial_stock_level - self.used + self.delivery

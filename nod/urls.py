@@ -51,7 +51,8 @@ urlpatterns = [
     url(r'^users/(?P<uuid>\w+)/edit/$', views.edit_user, name='edit-user'),
     url(r'^price_control/$', views.price_control, name='price-control'),
     url(r'^spare_parts_reports/$', views.spare_parts_report_table, name='spare-parts-report'),
-    url(r'^print_spare_parts_report/(?P<uuid>\w+)/$', views.print_spare_parts_report, name='print-spare-parts-report'),
+    url(r'^spare_parts_reports/(?P<uuid>\w+)/$', views.view_spare_parts_report, name='view-spare-parts-report'),
+    url(r'^spare_parts_reports/create/$', views.generate_spare_parts_report, name='generate-spare-parts-report'),
 
 
 ]

@@ -1,0 +1,102 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load filters %}
+
+{% block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+<a href="#" class="btn btn-default">Print</a>
+
+<div id="view">
+    <div id="invoice_rem">
+    <div class="row">
+        <div class="col-sm-6">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>
+            <h3><b>Spare Parts Report</b></h3>
+            <br>
+            <br>
+            Reporting Period: {{ report.start_date }}-{{ report.end_date }}
+        </div>
+    </div>
+
+    <br><br>
+    <div id="details">
+        <table style="margin:10px 15%; width:70%;" class="table">
+            <tr>
+                <th>Part Name</th>
+                <th>Code</th>
+                <th>Manufacturer</th>
+                <th>Vehicle Type</th>
+                <th>Year(s)</th>
+                <th>Price</th>
+                <th>Initial Stock Level</th>
+                <th>Initial Cost, (&pound;)</th>
+                <th>Used</th>
+                <th>Delivery</th>
+                <th>New Stock Level</th>
+                <th>Stock Cost, (&pound;)</th>
+                <th>Low Level Threshold</th>
+            </tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+
+            {% for part in report|parts %}
+            {% with part|actual_parts:report as p %}
+            <tr>
+                <td>{{ part.name }}</td>
+                <td>{{ part.code }}</td>
+                <td>{{ part.manufacturer }}</td>
+                <td>{{ part.vehicle_type }}</td>
+                <td>{{ part.years }}</td>
+                <td>{{ part.price }}</td>
+                <td>{{ p.initial_stock_level }}</td>
+                <td>{{ p|initial_cost }}</td>
+                <td>{{ p.used }}</td>
+                <td>{{ p.delivery }}</td>
+                <td>{{ part.quantity }}</td>
+                <td>{{ part|cost }}</td>
+                <td>{{ part.low_level_threshold }}</td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr>
+                <td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td>{{ report|total_initial_cost }}</td><td></td><td></td><td></td>
+                <td>{{ report|total_stock_cost }}</td><td></td>
+            </tr>
+
+        </table>
+    </div>
+    <br><br>
+        <br>Report Date: {{ report.date }}<br>
+        <br>Senior Storekeeper:<br>
+        <br>E. Kournikova<br>
+    </div>
+    </div>
+</div>
+{% endblock %}

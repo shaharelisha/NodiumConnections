@@ -127,16 +127,31 @@ def copy4_exists(invoice):
         return False
 
 
-# @register.filter(name='vehicle_reg_num')
-# def get_vehicle(invoice):
-#     return invoice.job_done.vehicle.reg_number
-#
-#
-# @register.filter(name='vehicle_make')
-# def get_vehicle(invoice):
-#     return invoice.job_done.vehicle.make
-#
-#
-# @register.filter(name='vehicle_model')
-# def get_vehicle(invoice):
-#     return invoice.job_done.vehicle.model
+@register.filter(name='parts')
+def get_parts(report):
+    return report.parts.filter(is_deleted=False)
+
+
+@register.filter(name="actual_parts")
+def actual_parts_for_report(part, report):
+    return SparePart.objects.get(part=part, report=report, is_deleted=False)
+
+
+@register.filter(name='cost')
+def get_stock_cost(part):
+    return part.quantity * part.price
+
+
+@register.filter(name='initial_cost')
+def get_stock_cost(part):
+    return part.initial_stock * part.part.price
+
+
+@register.filter(name='total_initial_cost')
+def get_total_initial_cost(report):
+    return report.get_total_initial_cost()
+
+
+@register.filter(name='total_stock_cost')
+def get_total_initial_cost(report):
+    return report.get_total_stock_cost()
