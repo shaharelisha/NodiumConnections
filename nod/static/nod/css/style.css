@@ -208,6 +208,8 @@ body select{-webkit-appearance:none;}
 #view #vehicles{margin:10px 15%; text-align:center;}
 #view #vehicles td{text-align: center; border:1px solid #cccccc;}
 #view #garageaddress{width:auto; height:auto; padding:10px; font-size:15px; text-align:left;}
+#view #customeraddress{width:auto; height:auto; padding:10px; font-size:15px; text-align:right;}
+
 
 .vcenter{display:inline-block; vertical-align:middle; float:none;}
 .navbar .btn{padding-top:5px; padding-bottom:5px;}

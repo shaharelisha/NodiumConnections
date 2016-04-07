@@ -1,0 +1,76 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load filters %}
+
+{% block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+<div id="view">
+    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br><br>{{ invoice.issue_date }}</div>
+
+    <div id="garageaddress">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
+
+        <h3>Dear Mr/Ms. {{ customer.surname }}</h3><br>
+        <br><br>
+        <h3><b>Invoice No.: {{ invoice.invoice_number }}</b></h3>
+        <h5>Vehicle Registration No.: {{ vehicle.reg_num }}</h5>
+        <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
+        <br>
+        <div class="linespace"></div>
+        <h3>Description of work:</h3>
+        </br>
+        {% for task in invoice|job_tasks %}
+        <h5>{{ forloop.counter }}) {{ task.description }}</h5>
+        {% endfor %}
+        <br>
+        <div class="linespace"></div>
+        <table style="margin:10px 15%; width:70%;" class="table">
+            <tr><th>Item</th><th>Part code</th><th>Unit cost (&pound;)</th><th>Quantity</th><th>Subtotal(&pound;)</th></tr>
+            {% for part in invoice|job_parts %}
+            <tr><td>{{ part.part.name }}</td><td>{{ part.part.code }}</td><td>{{ part.part|price }}</td><td>{{ part.quantity }}</td><td>{{ part|total_cost }}</td></tr>
+            {% endfor %}
+            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Labour</td><td></td><td>{{ mechanic.hourly_pay }}</td><td>{{ job|labour_duration }}</td><td>{{ job|labour_price }}</td></tr>
+            <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
+            <tr><td></td><td></td><td>Total</td><td></td><td>{{ job|total }}</td></tr>
+            <tr><td></td><td></td><td>VAT</td><td></td><td>{{ job|vat }}</td></tr>
+            <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
+            <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ job|grand_total }}</td></tr>
+        </table>
+        </div>
+        <br><br>
+        <br>
+        <pre>
+            Thank you for your valued custom. We look forward to receiving your payment in due course.<br>
+            <br>Yours sincerely,
+            <br>G. Lancaster<br>
+        </pre>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load filters %}
+
+{% block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+<div id="view">
+    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br><br>{{ invoice.issue_date }}</div>
+
+    <div id="garageaddress">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
+
+        <h3>Dear Mr/Ms. {{ customer.surname }}</h3><br>
+        <br><br>
+        <h3><b>REMINDER - Invoice No.: {{ invoice.invoice_number }}</b></h3>
+        <h5>Vehicle Registration No.: {{ vehicle.reg_num }}</h5>&emsp;<h5>Total Amount: (&pound;){{ job|grand_total }}</h5>
+        <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
+        <br>
+
+        <br><br>
+        <pre>
+            According to our records, it appears that we have not yet received payment of the above invoice, which was posted<br>
+            to you on the {{ invoice.issue_date }}, for work done on the vehicle(s) listed above.<br>
+            <br>We would appreciate payment at your earliest convenience.<br>
+            <br>If you have already sent a payment to us recently, please accept our apologies.<br>
+            <br><br>
+            <br>Yours sincerely,<br>
+            <br><br>
+            <br>G. Lancaster<br>
+        </pre>
+    </div>
+</div>
+{% endblock %}

@@ -369,6 +369,7 @@ class Mechanic(StaffMember):
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
+
 # TODO:
     #TODO: generate report data methods
 
@@ -474,6 +475,14 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_price(self):
         return self.get_labour_price() + self.get_parts_price()
 
+    def get_vat(self):
+        vat = PriceControl.objects.get().vat/100
+        total_vat = self.get_price() * vat
+        return total_vat
+
+    def get_grand_total(self):
+        return self.get_price() + self.get_vat()
+
     # generates invoice assigned to the given job object
     def create_invoice(self):
         return Invoice.objects.create(job=self)
@@ -512,6 +521,8 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     quantity = models.PositiveIntegerField()
     sufficient_quantity = models.BooleanField(default=True)
 
+    def get_cost(self):
+        return self.part.get_markedup_price() * self.quantity
 
 class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     part = models.ForeignKey(Part)
