@@ -4,6 +4,8 @@ import uuid
 
 from django.utils import timezone
 from datetime import timedelta
+import datetime
+from dateutil.relativedelta import relativedelta
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -119,6 +121,44 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         markup = PriceControl.objects.get().marked_up/100
         price = self.price + (self.price * markup)
         return price
+
+    def delivered_parts(self, start_date, end_date):
+        quantity = 0
+        for p in self.partorder_set.filter(is_deleted=False, order__date__lte=end_date, order__date__gte=start_date):
+            quantity += p.quantity
+
+        return quantity
+
+    # def sold_parts(self, start_date, end_date):
+    #     quantity = 0
+    #     for order in self.customerpartsorder_set.filter(is_deleted=False, date__lte=end_date, date__gte=start_date):
+    #         for p in order.parts.all():
+    #             if p.part == self:
+    #                 quantity += p.quantity
+    #
+    #
+    #     return quantity
+
+    def sold_parts(self, start_date, end_date):
+        quantity = 0
+        for part in self.sellpart_set.filter(is_deleted=False, order__date__lte=end_date, order__date__gte=start_date):
+            quantity += part.quantity
+            print(part.quantity)
+
+        return quantity
+
+    def used_parts(self, start_date, end_date):
+        quantity = 0
+        for p in self.jobpart_set.filter(is_deleted=False, job__booking_date__lte=end_date, job__booking_date__gte=start_date):
+            quantity += p.quantity
+
+        return quantity
+
+    def total_used_parts(self, start_date, end_date):
+        quantity = self.used_parts(start_date=start_date, end_date=end_date) + \
+                   self.sold_parts(start_date=start_date, end_date=end_date)
+
+        return quantity
 
 
 class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -245,6 +285,15 @@ class Supplier(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
     def __str__(self):
         return self.company_name
+
+    def full_address(self):
+        return u"%s, %s" % (self.address, self.postcode)
+
+    def get_emails(self):
+        return "; ".join([s.address for s in self.emails.filter(is_deleted=False)])
+
+    def get_phones(self):
+        return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
 
 
 class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
@@ -560,7 +609,8 @@ class Card(Payment):
 
 class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     parts = models.ManyToManyField(Part, through="SparePart")
-    reporting_period = models.IntegerField(default=timezone.now().month)
+    start_date = models.DateField()
+    end_date = models.DateField()
     date = models.DateTimeField(default=timezone.datetime.now)
 
     def get_total_initial_cost(self):
@@ -574,6 +624,9 @@ class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         for p in self.parts:
             cost += p.get_stock_cost()
         return cost
+
+    def reporting_period(self):
+        return str(self.start_date.strftime('%d/%m/%Y')) + "-" + str(self.end_date.strftime('%d/%m/%Y'))
 
 
 class SparePart(TimestampedModel, RandomUUIDModel, SoftDeleteModel):

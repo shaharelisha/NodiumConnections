@@ -19,7 +19,7 @@ from .models import *
 class AccountHolderTable(tables.Table):
     tr_class = tables.Column(visible=False, empty_values=())
     full_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="surname", verbose_name="Name")
-    get_emails = tables.Column(verbose_name="Emails", orderable=False)
+    list_emails = tables.Column(verbose_name="Emails", orderable=False)
     get_phones = tables.Column(verbose_name="Phones", orderable=False)
     full_address = tables.Column(verbose_name="Address", orderable=False)
     # discount_plan = tables.Column(verbose_name="Discount Plan")
@@ -46,7 +46,7 @@ class BusinessCustomerTable(tables.Table):
     company_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="company_name",
                                      verbose_name="Company Name")
     rep = tables.Column(verbose_name="Representative")
-    get_emails = tables.Column(verbose_name="Emails", orderable=False)
+    list_emails = tables.Column(verbose_name="Emails", orderable=False)
     get_phones = tables.Column(verbose_name="Phones", orderable=False)
     full_address = tables.Column(verbose_name="Address", orderable=False)
     # discount_plan = tables.Column(verbose_name="Discount Plan")
@@ -95,10 +95,24 @@ class ActiveJobsTable(tables.Table):
     type = tables.Column(verbose_name="Type", order_by="type")
     bay = tables.Column(verbose_name="Bay", order_by="bay")
     vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
-    get_customer = tables.Column(verbose_name="Customer", order_by="get_customer")
-    # get_customer = tables.LinkColumn('edit-customer', args=[A('get_customer.uuid')], verbose_name="Customer", order_by="get_customer")
+    # get_customer = tables.Column(verbose_name="Customer", order_by="get_customer")
+    get_customer = tables.LinkColumn('view-customer', args=[A('get_customer.uuid')], verbose_name="Customer", order_by="get_customer")
     booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
     mechanic = tables.Column(verbose_name="Mechanic", order_by="mechanic")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class UntakenJobsTable(tables.Table):
+    job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
+                                   verbose_name="Job")
+    type = tables.Column(verbose_name="Type", order_by="type")
+    bay = tables.Column(verbose_name="Bay", order_by="bay")
+    vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
+    # get_customer = tables.Column(verbose_name="Customer", order_by="get_customer")
+    get_customer = tables.LinkColumn('view-customer', args=[A('get_customer.uuid')], verbose_name="Customer", order_by="get_customer")
+    booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}
@@ -128,6 +142,24 @@ class UnpaidInvoiceTable(tables.Table):
     reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
     type = tables.Column(verbose_name="Type", order_by="type")
     total_price = tables.Column(verbose_name="Total Price", order_by="total_price")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class SparePartsReportTable(tables.Table):
+    reporting_period = tables.LinkColumn('print-spare-parts-report', args=[A('uuid')], verbose_name='Reporting Period', order_by='reporting_period')
+    date = tables.Column(verbose_name='Date', order_by='date')
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class SupplierTable(tables.Table):
+    company_name = tables.LinkColumn('edit-supplier', args=[A('uuid')], verbose_name='Company Name', order_by='company_name')
+    list_emails = tables.Column(verbose_name="Emails", orderable=False)
+    get_phones = tables.Column(verbose_name="Phones", orderable=False)
+    full_address = tables.Column(verbose_name="Address", orderable=False)
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}

@@ -1,66 +1,49 @@
-<html>
-<head>
-<title>Nodium Connections - Overview</title>
-<link href='http://fonts.googleapis.com/css?family=Alegreya+Sans:100,200,300,400|Open+Sans:100,200,300,400|Roboto:100,200,300,400,500,1000|Lato:100,200,300,400|Tauri|Raleway|Arimo|Oswald:100,200,300,400' rel='stylesheet' type='text/css'>
-<link href="css/bootstrap.css" rel="stylesheet" type="text/css">
-<link href="css/style.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script src="js/bootstrap.js"></script>
-<script src="js/page.js"></script>
-<style>
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
 
-</style>
-</head>
-<body>
-<div id="topbar">
-    <div id="logo">
-        <img src="img/logo.png"/>
-    </div><div id="menu">
-        <ul class="nav navbar-nav navbar-left">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Jobs</a></li>
-            <li><a href="#">Stock</a></li>
-            <li><a href="#">Customers</a></li>
-            <li><a href="#">Users</a></li>
-        </ul><ul class="nav navbar-nav navbar-right">
-            <li id="search">
-                <form class="navbar-form navbar-left" role="search" action="#search" method="post">
-                    <select class="form-control">
-                        <option value="customer">Search Customers</option>
-                        <option value="jobs">Search Jobs</option>
-                        <option value="vehicles">Search Vehicles</option>
-                        <option value="users">Search Users</option>
-                    </select>
-                    <input type="text" class="form-control" placeholder="Search for...">
-                    <button type="submit" class="btn btn-default">
-                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                    </button>
-                </form>
-            </li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="#">Edit profile</a></li>
-                <li><a href="#">Logout</a></li>
-              </ul>
-            </li>
-          </ul>
-    </div>
-</div>
+{% block content %}
+
+    {% block extra_js%}
+        <script src="http://malsup.github.com/jquery.form.js"></script>
+{#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
+    {% endblock %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+
+<div id="pagename">Home</div>
 <div id="main">
     <div id="reports">
         <h2>Reports</h2>
         <table class="table">
+            <tr class="success"><td><a href="/averagepricereport">Average price per job (overall/per given mechanic</a></td></tr>
+            <tr class="success"><td><a href="/stocklevelreport">Stock level</a></td></tr>
+        <!--    
             <tr class="success"><td><a href="#report1">Number of vehicles booked monthly (overall/per service/type of customer)</a></td></tr>
             <tr class="success"><td><a href="#report2">Average time to service vehicle (overall/per service/repairs requested/mechanic</a></td></tr>
-            <tr class="success"><td><a href="#report3">Average price per job (overall/per given mechanic</a></td></tr>
-            <tr class="success"><td><a href="#report4">Stock level</a></td></tr>
             <tr class="success"><td><a href="#report5">Customer response rate for MOT and service reminders</a></td></tr>
+        -->
         </table>
     </div>
 </div>
 </body>
 </html>
+{% endblock %}

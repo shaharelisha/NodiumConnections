@@ -24,21 +24,13 @@
     </ul>
     <hr/>
 {% endif %}
-
+{#<div id="pagename">Customers</div>#}
 <div id="main">
-<a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a>
-    <h2>Users</h2>
-        {% render_table user_table %}
-</div>
+        <a href="{% url 'create-business-customer' %}" class="btn btn-default">Create New Business Customer</a>
 
-{#<div id="main">#}
-{#    <div class="container-fluid">#}
-{#    <div class="row">#}
-{#        <div class="col-sm-2 vcenter"><h2>Users</h2></div>#}
-{#        <div class="col-sm-2 vcenter"><a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a></div>#}
-{#    </div>#}
-{#    </div>#}
-{#        {% render_table user_table %}#}
-{##}
-{#</div>#}
+        <h2>Business Customers</h2>
+
+            {% render_table business_customers_table %}
+
+</div>
 {% endblock %}

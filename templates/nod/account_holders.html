@@ -26,21 +26,10 @@
 {% endif %}
 {#<div id="pagename">Customers</div>#}
 <div id="main">
-    <div class="row">
-        <div class="col-md-1"><h2>Customers</h2></div>
-        <div class="col-md-9"><h2></h2></div>
-        <div class="col-md-2"><a href="{% url 'create-account-holder' %}" class="btn btn-default">Create New Account Holder</a></div>
-    </div>
+    <a href="{% url 'create-account-holder' %}" class="btn btn-default">Create New Account Holder</a>
+    <h2>Account Holders</h2>
 
-        <h4>Account Holders</h4>
         {% render_table account_holders_table %}
-
-    <div class="linespace"></div>
-    <br/>
-    <a href="{% url 'create-business-customer' %}" class="btn btn-default">Create New Business Customer</a>
-
-        <h4>Business Customers</h4>
-        {% render_table business_customers_table %}
 
 </div>
 {% endblock %}

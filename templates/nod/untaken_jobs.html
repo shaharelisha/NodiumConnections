@@ -26,19 +26,8 @@
 {% endif %}
 
 <div id="main">
-<a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a>
-    <h2>Users</h2>
-        {% render_table user_table %}
+<a href="{% url 'create-job' %}" class="btn btn-default">Create New Job</a>
+    <h2>Pending Jobs</h2>
+        {% render_table untaken_job_table %}
 </div>
-
-{#<div id="main">#}
-{#    <div class="container-fluid">#}
-{#    <div class="row">#}
-{#        <div class="col-sm-2 vcenter"><h2>Users</h2></div>#}
-{#        <div class="col-sm-2 vcenter"><a href="{% url 'create-user' %}" class="btn btn-default">Create New User</a></div>#}
-{#    </div>#}
-{#    </div>#}
-{#        {% render_table user_table %}#}
-{##}
-{#</div>#}
 {% endblock %}

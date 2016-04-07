@@ -348,6 +348,21 @@ class PartFormSetHelper(FormHelper):
         )
         self.render_required_fields = True
 
+class MechanicJobForm(forms.Form):
+    mechanic = forms.ModelChoiceField(queryset=Mechanic.objects.filter(is_deleted=False))
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-5'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'mechanic',
+        )
+        super(MechanicJobForm, self).__init__(*args, **kwargs)
+        self.fields['mechanic'].label = "Assign Mechanic"
+
 
 class JobCreateForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
@@ -817,6 +832,33 @@ class PriceControlForm(forms.Form):
         super(PriceControlForm, self).__init__(*args, **kwargs)
         self.fields['vat'].label = "VAT (%)"
         self.fields['marked_up'].label = "Marked Up (%)"
+
+
+class SparePartsReportGenerateForm(forms.Form):
+    start_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'],
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+    today = timezone.now().date()
+    end_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+    date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
+                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            'start_date',
+            'end_date',
+            'date',
+        )
+        super(SparePartsReportGenerateForm, self).__init__(*args, **kwargs)
+        self.fields['start_date'].label = "Start Date"
+        self.fields['end_date'].label = "End Date"
+        self.fields['date'].label = "Report Date"
 
 
 class ProfileForm(forms.Form):

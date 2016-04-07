@@ -10,6 +10,12 @@ from nod.models import *
 register = template.Library()
 
 
+@register.filter(name="role")
+def get_role(user):
+    role_name = next(name for value, name in StaffMember.ROLES if value==user.staffmember.role)
+    return role_name
+
+
 @register.filter(name='address')
 def get_full_address(customer):
     return customer.full_address()
