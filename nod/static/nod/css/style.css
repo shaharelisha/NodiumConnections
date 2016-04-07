@@ -94,6 +94,9 @@ body select{-webkit-appearance:none;}
 #invoice_doc #details{text-align:center;}
 #invoice_doc #work{padding:10px 15%; border-top:1px solid #cccccc; border-bottom :1px solid #cccccc;}
 
+/* Invoice reminders */
+#invoice_rem #details{text-align:center;}
+
 .vcenter{display:inline-block; vertical-align:middle; float:none;}
 .navbar .btn{padding-top:5px; padding-bottom:5px;}
 

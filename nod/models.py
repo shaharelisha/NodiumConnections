@@ -11,6 +11,8 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+
 
 class RandomUUIDModel(models.Model):
     uuid = models.CharField(max_length=32, editable=False, blank=True, null=False, default='')
@@ -183,6 +185,15 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_price(self):
         return self.get_parts_price()
+
+    def get_vat(self):
+        vat = float(PriceControl.objects.get().vat/100)
+        total_vat = float(self.get_price()) * vat
+        return total_vat
+
+    def get_grand_total(self):
+        return float(self.get_price()) + self.get_vat()
+
 
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #check ID string length
@@ -456,7 +467,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_duration(self):
         time = 0
         for t in self.jobtask_set.all(): #not self.tasks?
-            time += t.duration.seconds // 3600
+            time += t.duration.seconds / 3600
         # time = float(time)
         # time / 3600
         return time
@@ -464,7 +475,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_labour_price(self):
         time = self.get_duration()
         rate = self.mechanic.hourly_pay
-        return time*rate
+        return float(time)*float(rate)
 
     def get_parts_price(self):
         price = 0
@@ -475,11 +486,11 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return price
 
     def get_price(self):
-        return self.get_labour_price() + self.get_parts_price()
+        return float(self.get_labour_price()) + float(self.get_parts_price())
 
     def get_vat(self):
-        vat = PriceControl.objects.get().vat/100
-        total_vat = self.get_price() * vat
+        vat = float(PriceControl.objects.get().vat/100)
+        total_vat = float(self.get_price()) * vat
         return total_vat
 
     def get_grand_total(self):
@@ -526,6 +537,7 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_cost(self):
         return self.part.get_markedup_price() * self.quantity
 
+
 class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     part = models.ForeignKey(Part)
     order = models.ForeignKey(CustomerPartsOrder)
@@ -536,6 +548,9 @@ class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         markup = PriceControl.objects.get().marked_up/100
         price = self.part.price + (self.part.price * markup)
         return price
+
+    def get_cost(self):
+        return self.part.get_markedup_price() * self.quantity
 
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -557,10 +572,10 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_price(self):
         if self.job_done:
-            return self.job_done.get_price()
+            return self.job_done.get_grand_total()
         else:
             if self.part_order:
-                return self.part_order.get_price()
+                return self.part_order.get_grand_total()
             else:
                 pass
                 # TODO: wtf
@@ -573,7 +588,16 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_customer(self):
         if self.job_done:
-            return self.job_done.get_customer()
+            customer = self.job_done.get_customer()
+            uuid = customer.uuid
+            try:
+                customer = BusinessCustomer.objects.get(uuid=uuid)
+            except ObjectDoesNotExist:
+                try:
+                    customer = AccountHolder.objects.get(uuid=uuid)
+                except ObjectDoesNotExist:
+                    pass
+            return customer
         else:
             if self.part_order:
                 return self.part_order.content_object
@@ -588,14 +612,14 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             if self.part_order:
                 return "Parts"
 
-    def get_VAT(self):
-        vat = PriceControl.objects.get().vat/100
-        total_vat = self.get_price() * vat
-        return total_vat
+    # def get_VAT(self):
+    #     vat = PriceControl.objects.get().vat/100
+    #     total_vat = self.get_price() * vat
+    #     return total_vat
 
-    def total_price(self):
-        price = self.get_price() + self.get_VAT()
-        return price
+    # def total_price(self):
+    #     price = self.get_price() + self.get_VAT()
+    #     return price
 
 
 class InvoiceReminder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):

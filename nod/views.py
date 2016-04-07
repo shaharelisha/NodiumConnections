@@ -2056,13 +2056,14 @@ def view_customer(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
         request.user.staffmember.role == '2':
         try:
-            customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
+            customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+
         except ObjectDoesNotExist:
             try:
-                customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+                customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
             except ObjectDoesNotExist:
                 try:
-                    customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
+                    customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
@@ -2764,13 +2765,13 @@ def sell_parts(request, customer_uuid):
         # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
         # check for account holder, if still not found, check business customer.
         try:
-            customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+            customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
         except ObjectDoesNotExist:
             try:
                 customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
             except ObjectDoesNotExist:
                 try:
-                    customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+                    customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
@@ -3003,28 +3004,49 @@ def view_invoice(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
-        job = invoice.job_done
-        customer = invoice.get_customer()
-        vehicle = invoice.job_done.vehicle
-        mechanic = invoice.job_done.mechanic
-        if invoice.reminder_phase == '1':
-            template = loader.get_template('nod/view_invoice.html')
-        else:
-            if invoice.reminder_phase == '2':
-                template = loader.get_template('nod/view_invoice_reminder_1.html')
+        if invoice.job_done:
+            job = invoice.job_done
+            customer = invoice.get_customer()
+            vehicle = invoice.job_done.vehicle
+            mechanic = invoice.job_done.mechanic
+            if invoice.reminder_phase == '1':
+                template = loader.get_template('nod/view_invoice.html')
             else:
-                if invoice.reminder_phase == '3':
-                    template = loader.get_template('nod/view_invoice_reminder_2.html')
+                if invoice.reminder_phase == '2':
+                    template = loader.get_template('nod/view_invoice_reminder_1.html')
                 else:
-                    template = loader.get_template('nod/view_invoice_reminder_final.html')
-        context = RequestContext(request, {
-            'invoice': invoice,
-            'job': job,
-            'customer': customer,
-            'vehicle': vehicle,
-            'mechanic': mechanic,
-        })
-        return HttpResponse(template.render(context))
+                    if invoice.reminder_phase == '3':
+                        template = loader.get_template('nod/view_invoice_reminder_2.html')
+                    else:
+                        template = loader.get_template('nod/view_invoice_reminder_final.html')
+            context = RequestContext(request, {
+                'invoice': invoice,
+                'job': job,
+                'customer': customer,
+                'vehicle': vehicle,
+                'mechanic': mechanic,
+            })
+            return HttpResponse(template.render(context))
+        else:
+            if invoice.part_order:
+                order = invoice.part_order
+                customer = invoice.get_customer()
+                if invoice.reminder_phase == '1':
+                    template = loader.get_template('nod/view_invoice_parts.html')
+                else:
+                    if invoice.reminder_phase == '2':
+                        template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
+                    else:
+                        if invoice.reminder_phase == '3':
+                            template = loader.get_template('nod/view_invoice_reminder_2_parts.html')
+                        else:
+                            template = loader.get_template('nod/view_invoice_reminder_final_parts.html')
+                context = RequestContext(request, {
+                    'invoice': invoice,
+                    'order': order,
+                    'customer': customer,
+                })
+                return HttpResponse(template.render(context))
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')

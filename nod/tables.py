@@ -152,7 +152,7 @@ class UnpaidInvoiceTable(tables.Table):
     issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")
     reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
     type = tables.Column(verbose_name="Type", order_by="type")
-    total_price = tables.Column(verbose_name="Total Price", order_by="total_price")
+    get_price = tables.Column(verbose_name="Total Price", order_by="total_price")
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}

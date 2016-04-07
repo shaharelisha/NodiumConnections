@@ -48,13 +48,11 @@
     <br><br>
     <div id="details">
         <h3><b>SECOND REMINDER - Invoice No.: {{ invoice.invoice_number }}</b></h3>
-        <h5>Vehicle Registration No.: {{ vehicle.reg_number }}</h5>
-        <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
         <h5>Total Amount: (&pound;){{ job|grand_total }}</h5>
     </div>
     <br>
     <br><br>
-    It appears that we still have not yet received payment of the above invoice, which was posted to you on {{ invoice.issue_date }}, for work done on the vehicle(s) listed above, despite a reminder letter posted to you 1 month later.<br>
+    It appears that we still have not yet received payment of the above invoice, which was posted to you on {{ invoice.issue_date }}, for parts sold, despite a reminder letter posted to you 1 month later.<br>
         <br>We would appreciate it if you would settle this invoice in full by return.<br><br>
         <br>If you have already sent a payment to us recently, please accept our apologies.<br><br>
         <br>Yours sincerely,

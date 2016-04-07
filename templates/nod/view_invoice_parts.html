@@ -34,7 +34,7 @@
 <a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-default">Pay Invoice</a>
 {#<button onclick="exportpdf('#invoice_doc')">View as PDF</button>#}
 {#<a href="{% url 'print' %}" class="btn btn-default">Print</a>#}
-<a href="#" class="btn btn-default">Print</a>
+<a href="#" class="btn btn-primary">Print</a>
 {% if invoice|copy2 == True %}
     <a href="{% url 'view-invoice-reminder1' invoice.uuid %}" class="btn btn-warning">Reminder 1</a>
 {% else %}
@@ -58,7 +58,8 @@
             {% if customer.company_name %}
                 {{ customer.company_name }}<br>
             {% endif %}
-            {{ customer.address }}<br>{{ customer.postcode }}</div>
+            {{ customer.address }}<br>{{ customer.postcode }}
+        </div>
         <div class="col-sm-6" style="text-align:right;">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
     </div>
 
@@ -69,33 +70,22 @@
         <br><br>
         <div id="details">
             <h3><b>Invoice No.: {{ invoice.invoice_number }}</b></h3>
-            <h5>Vehicle Registration No.: {{ vehicle.reg_number }}</h5>
-            <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
         </div>
         <br>
-        <div id="work">
-            <h3>Description of work:</h3>
-            </br>
-            {% for task in invoice|job_tasks %}
-            <h5>{{ forloop.counter }}) {{ task.description }}</h5>
-            {% endfor %}
-            <br>
-        </div>
         <br><br>
         <table style="margin:10px 15%; width:70%;" class="table">
             <tr><th>Item</th><th>Part code</th><th>Unit cost (&pound;)</th><th>Quantity</th><th>Subtotal(&pound;)</th></tr>
-            {% for part in invoice|job_parts %}
-            {% with part|actual_job_part:job as p %}
+            {% for part in invoice|parts_sold %}
+            {% with part|actual_parts_sold:order as p %}
             <tr><td>{{ part.name }}</td><td>{{ part.code }}</td><td>{{ part|unit_price }}</td><td>{{ p.quantity }}</td><td>{{ p|total_cost }}</td></tr>
             {% endwith %}
             {% endfor %}
             <tr><td></td><td></td><td></td><td></td><td></td></tr>
-            <tr><td>Labour</td><td></td><td>{{ mechanic.hourly_pay }}</td><td>{{ job|labour_duration }}</td><td>{{ job|labour_price }}</td></tr>
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
-            <tr><td></td><td></td><td>Total</td><td></td><td>{{ job|total }}</td></tr>
-            <tr><td></td><td></td><td>VAT</td><td></td><td>{{ job|vat }}</td></tr>
+            <tr><td></td><td></td><td>Total</td><td></td><td>{{ order|total }}</td></tr>
+            <tr><td></td><td></td><td>VAT</td><td></td><td>{{ order|vat }}</td></tr>
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
-            <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ job|grand_total }}</td></tr>
+            <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ order|grand_total }}</td></tr>
         </table>
 
     </div>

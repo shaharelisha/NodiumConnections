@@ -72,12 +72,10 @@
     <br><br>
     <div id="details">
         <h3><b>REMINDER - Invoice No.: {{ invoice.invoice_number }}</b></h3>
-        <h5>Vehicle Registration No.: {{ vehicle.reg_number }}</h5>
-        <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
         <h5>Total Amount: (&pound;){{ job|grand_total }}</h5>
     </div>
     <br><br>
-    According to our records, it appears that we have not yet received payment of the above invoice, which was posted to you on {{ invoice.issue_date }}, for work done on the vehicle(s) listed above.
+    According to our records, it appears that we have not yet received payment of the above invoice, which was posted to you on {{ invoice.issue_date }}, for parts sold.
         <br>We would appreciate payment at your earliest convenience.<br>
         <br>If you have already sent a payment to us recently, please accept our apologies.<br><br>
         <br>Yours sincerely,
