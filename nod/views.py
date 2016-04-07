@@ -47,6 +47,9 @@ def index(request):
         return redirect('/accounts/login/')
 
 
+def automated_checks():
+    pass
+
 @login_required
 def logout_view(request):
     logout(request)
@@ -2564,6 +2567,96 @@ def view_invoice(request, uuid):
             'customer': customer,
             'vehicle': vehicle,
             'mechanic': mechanic,
+        })
+        return HttpResponse(template.render(context))
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_invoice_reminder1(request, uuid):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
+        invoice = get_object_or_404(Invoice, uuid=uuid)
+        invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='2')
+        job = invoice.job_done
+        customer = invoice.get_customer()
+        vehicle = invoice.job_done.vehicle
+
+        if invoice_reminder.reminder_phase == '2':
+            pass
+        else:
+            messages.error(request, "reminder doesn't exist")
+            return redirect('/garits/')
+
+        template = loader.get_template('nod/view_invoice_reminder_1.html')
+
+        context = RequestContext(request, {
+            'invoice': invoice,
+            'reminder': invoice_reminder,
+            'job': job,
+            'customer': customer,
+            'vehicle': vehicle,
+        })
+        return HttpResponse(template.render(context))
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_invoice_reminder2(request, uuid):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
+        invoice = get_object_or_404(Invoice, uuid=uuid)
+        invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='3')
+        job = invoice.job_done
+        customer = invoice.get_customer()
+        vehicle = invoice.job_done.vehicle
+        if invoice_reminder.reminder_phase == '3':
+            pass
+        else:
+            messages.error(request, "reminder doesn't exist")
+
+        template = loader.get_template('nod/view_invoice_reminder_2.html')
+
+        context = RequestContext(request, {
+            'invoice': invoice,
+            'reminder': invoice_reminder,
+            'job': job,
+            'customer': customer,
+            'vehicle': vehicle,
+        })
+        return HttpResponse(template.render(context))
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_invoice_reminder3(request, uuid):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
+        invoice = get_object_or_404(Invoice, uuid=uuid)
+        invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='4')
+        job = invoice.job_done
+        customer = invoice.get_customer()
+        vehicle = invoice.job_done.vehicle
+        if invoice_reminder.reminder_phase == '4':
+            pass
+        else:
+            messages.error(request, "reminder doesn't exist")
+            return redirect('/garits/')
+
+        template = loader.get_template('nod/view_invoice_reminder3.html')
+
+        context = RequestContext(request, {
+            'invoice': invoice,
+            'reminder': invoice_reminder,
+            'job': job,
+            'customer': customer,
+            'vehicle': vehicle,
         })
         return HttpResponse(template.render(context))
     else:

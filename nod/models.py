@@ -598,6 +598,20 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return price
 
 
+class InvoiceReminder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
+    invoice = models.ForeignKey(Invoice)
+    INVOICE_STATUS = [
+        ('1', 'Invoice Sent'),
+        ('2', 'Reminder 1 Sent'),
+        ('3', 'Reminder 2 Sent'),
+        ('4', 'Reminder 3 Sent + Warning'),
+
+    ]
+    reminder_phase = models.CharField(choices=INVOICE_STATUS, max_length=1, default='1')
+    issue_date = models.DateField(default=timezone.datetime.now)
+
+
+
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     amount = models.DecimalField(max_digits=4, decimal_places=2)
     PAYMENT_TYPES = (

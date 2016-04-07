@@ -31,8 +31,20 @@
 {% endif %}
 
 <div id="main">
-<a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-default">Pay Invoice</a>
+<a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-primary">Pay Invoice</a>
 {#<a href="{% url 'print' %}" class="btn btn-default">Print</a>#}
+<a href="#" class="btn btn-default">Print</a>
+{% if invoice|copy2 == True %}
+    <a href="{% url 'view-invoice-reminder1' invoice.uuid %}" class="btn btn-warning">Reminder 1</a>
+{% else %}
+    <a href="{% url 'view-invoice-reminder1' invoice.uuid %}" class="btn btn-warning disabled">Reminder 1</a>
+{% endif %}
+{% if invoice|copy3 == True %}
+    <a href="{% url 'view-invoice-reminder2' invoice.uuid %}" class="btn btn-warning">Reminder 2</a>
+{% endif %}
+{% if invoice|copy4 == True %}
+    <a href="{% url 'view-invoice-reminder3' invoice.uuid %}" class="btn btn-danger">Reminder 3</a>
+{% endif %}
 
 {#<div id="view">#}
     <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br>

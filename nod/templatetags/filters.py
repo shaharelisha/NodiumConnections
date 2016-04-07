@@ -87,6 +87,31 @@ def get_vat(job):
 def get_grand_total(job):
     return job.get_grand_total()
 
+
+@register.filter(name='copy2')
+def copy2_exists(invoice):
+    if InvoiceReminder.objects.get(invoice=invoice, reminder_phase='2'):
+        return True
+    else:
+        return False
+
+
+@register.filter(name='copy3')
+def copy3_exists(invoice):
+    if InvoiceReminder.objects.get(invoice=invoice, reminder_phase='3'):
+        return True
+    else:
+        return False
+
+
+@register.filter(name='copy4')
+def copy4_exists(invoice):
+    if InvoiceReminder.objects.get(invoice=invoice, reminder_phase='4'):
+        return True
+    else:
+        return False
+
+
 # @register.filter(name='vehicle_reg_num')
 # def get_vehicle(invoice):
 #     return invoice.job_done.vehicle.reg_number
