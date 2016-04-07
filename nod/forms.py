@@ -486,12 +486,7 @@ class DropinForm(CustomerForm):
         self.fields['surname'].label = "Surname"
         self.fields['date'].label = "Date Arrived"
 
-
-class AccountHolderForm(CustomerForm):
-    address = forms.CharField(max_length=80, widget=forms.Textarea(
-        attrs={'placeholder': "Address",'rows': '1'}))
-    postcode = forms.CharField(max_length=8, widget=forms.TextInput(
-        attrs={'placeholder': "Postcode",'rows': '1'}))
+class DiscountPlanForm(forms.Form):
     PLAN = [
         ('', 'Select Discount Plan'),
         ('1', 'Fixed'),
@@ -508,13 +503,32 @@ class AccountHolderForm(CustomerForm):
         # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            'discount_plan',
+        )
+        super(DiscountPlanForm, self).__init__(*args, **kwargs)
+        self.fields['discount_plan'].label = "Discount Plan"
+
+
+class AccountHolderForm(CustomerForm):
+    address = forms.CharField(max_length=80, widget=forms.Textarea(
+        attrs={'placeholder': "Address",'rows': '1'}))
+    postcode = forms.CharField(max_length=8, widget=forms.TextInput(
+        attrs={'placeholder': "Postcode",'rows': '1'}))
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_action = 'POST'
+        self.helper.form_class = 'form-horizontal'
+        # self.helper.label_class = 'col-lg-8'
+        # self.helper.field_class = 'col-lg-8'
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
             'customer_uuid',
             'forename',
             'surname',
             'date',
             'address',
             'postcode',
-            'discount_plan',
         )
         super(AccountHolderForm, self).__init__(*args, **kwargs)
         self.fields['forename'].label = "Forename"
@@ -522,7 +536,6 @@ class AccountHolderForm(CustomerForm):
         self.fields['date'].label = "Date Joined"
         self.fields['address'].label = "Address"
         self.fields['postcode'].label = "Postcode"
-        self.fields['discount_plan'].label = "Discount Plan"
 
 
 class BusinessCustomerForm(CustomerForm):
@@ -534,13 +547,7 @@ class BusinessCustomerForm(CustomerForm):
         attrs={'placeholder': "Address",'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
         attrs={'placeholder': "Postcode",'rows': '1'}))
-    PLAN = [
-        ('', 'Select Discount Plan'),
-        ('1', 'Fixed'),
-        ('2', 'Flexible'),
-        ('3', 'Variable'),
-    ]
-    discount_plan = forms.ChoiceField(required=False, choices=PLAN)
+
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
@@ -557,7 +564,6 @@ class BusinessCustomerForm(CustomerForm):
             'rep_role',
             'address',
             'postcode',
-            'discount_plan',
         )
         super(BusinessCustomerForm, self).__init__(*args, **kwargs)
         self.fields['forename'].label = "Representative Forename"
@@ -565,10 +571,8 @@ class BusinessCustomerForm(CustomerForm):
         self.fields['date'].label = "Date Joined"
         self.fields['address'].label = "Address"
         self.fields['postcode'].label = "Postcode"
-        self.fields['discount_plan'].label = "Discount Plan"
         self.fields['company_name'].label = "Company Name"
         self.fields['rep_role'].label = "Representative Role"
-        self.fields['discount_plan'].label = "Discount Plan"
 
 
 class VehicleForm(forms.Form):

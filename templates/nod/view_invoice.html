@@ -31,7 +31,8 @@
 {% endif %}
 
 <div id="main">
-<a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-primary">Pay Invoice</a>
+<a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-default">Pay Invoice</a>
+{#<button onclick="exportpdf('#invoice_doc')">View as PDF</button>#}
 {#<a href="{% url 'print' %}" class="btn btn-default">Print</a>#}
 <a href="#" class="btn btn-default">Print</a>
 {% if invoice|copy2 == True %}
@@ -45,24 +46,34 @@
 {% if invoice|copy4 == True %}
     <a href="{% url 'view-invoice-reminder3' invoice.uuid %}" class="btn btn-danger">Reminder 3</a>
 {% endif %}
-
+<br><br>
 {#<div id="view">#}
-    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br>
+<div id="invoice_doc">
+    <div class="row">
+        <div class="col-sm-6">{{ customer.address }}<br>{{ customer.postcode }}</div>
+        <div class="col-sm-6" style="text-align:right;">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
+    </div>
 
-    <div id="garageaddress">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
 
-        <h3>Dear Mr/Ms. {{ customer.surname }}</h3><br>
+    <div id="garageaddress"></div>
         <br><br>
-        <h3><b>Invoice No.: {{ invoice.invoice_number }}</b></h3>
-        <h5>Vehicle Registration No.: {{ vehicle.reg_num }}</h5>
-        <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
+        Dear {{ customer.forename }} {{ customer.surname }},
+        <br><br>
+        <div id="details">
+            <h3><b>Invoice No.: {{ invoice.invoice_number }}</b></h3>
+            <h5>Vehicle Registration No.: {{ vehicle.reg_number }}</h5>
+            <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
+        </div>
         <br>
-        <h3>Description of work:</h3>
-        </br>
-        {% for task in invoice|job_tasks %}
-        <h5>{{ forloop.counter }}) {{ task.description }}</h5>
-        {% endfor %}
-        <br>
+        <div id="work">
+            <h3>Description of work:</h3>
+            </br>
+            {% for task in invoice|job_tasks %}
+            <h5>{{ forloop.counter }}) {{ task.description }}</h5>
+            {% endfor %}
+            <br>
+        </div>
+        <br><br>
         <table style="margin:10px 15%; width:70%;" class="table">
             <tr><th>Item</th><th>Part code</th><th>Unit cost (&pound;)</th><th>Quantity</th><th>Subtotal(&pound;)</th></tr>
             {% for part in invoice|job_parts %}
@@ -78,13 +89,11 @@
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
             <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ job|grand_total }}</td></tr>
         </table>
-        </div>
+
+    </div>
         <br><br>
-        <br>
-        <pre>Thank you for your valued custom. We look forward to receiving your payment in due course.<br>
-            <br>Yours sincerely,
-            <br>G. Lancaster<br>
-        </pre>
+        <br>Thank you for your valued custom. We look forward to receiving your payment in due course.<br><br>Yours sincerely,<br>G. Lancaster<br>
+</div>
 {#    </div>#}
 </div>
 {% endblock %}

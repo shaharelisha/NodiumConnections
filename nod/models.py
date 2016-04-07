@@ -456,7 +456,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_duration(self):
         time = 0
         for t in self.jobtask_set.all(): #not self.tasks?
-            time += t.duration.seconds % 3600
+            time += t.duration.seconds // 3600
         # time = float(time)
         # time / 3600
         return time

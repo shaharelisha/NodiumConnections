@@ -42,6 +42,10 @@
             {% csrf_token %}
             {% crispy form form.helper 'bootstrap3' %}
 
+            {% if request.user|role == 'Franchisee' %}
+                {% crispy discount_form discount_form.helper 'bootstrap3' %}
+            {% endif %}
+
             <p>Click <a data-toggle="modal" data-target="#modal" href="{% url 'create-vehicle' account_holder.uuid %}">here</a> to add a Vehicle</p>
             <div class="modal fade" id="modal"></div>
             <div id="vehicles"></div>

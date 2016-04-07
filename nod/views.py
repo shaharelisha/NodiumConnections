@@ -32,12 +32,15 @@ def index(request):
         # return render(request, "nod/index-mechanic.html")
     # Foreperson
     if request.user.staffmember.role == '2':
+        automated_invoice_checks()
         return render(request, "nod/index-foreperson.html")
     # Franchisee
     if request.user.staffmember.role == '3':
+        automated_invoice_checks()
         return render(request, "nod/index-franchisee.html")
     # Receptionist
     if request.user.staffmember.role == '4':
+        automated_invoice_checks()
         return render(request, "nod/index-receptionist.html")
     # Admin
     if request.user.staffmember.role == '5':
@@ -47,8 +50,23 @@ def index(request):
         return redirect('/accounts/login/')
 
 
-def automated_checks():
-    pass
+def automated_invoice_checks():
+    for c in AccountHolder.objects.filter(is_deleted=False):
+        for invoice in c.get_unpaid_invoices():
+            if invoice.issue_date <= datetime.date.today() - relativedelta(month=1):
+                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='2')
+                invoice.reminder_phase = '2'
+                invoice.save()
+            if invoice.issue_date <= datetime.date.today() - relativedelta(month=2):
+                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='3')
+                invoice.reminder_phase = '3'
+                invoice.save()
+            if invoice.issue_date <= datetime.date.today() - relativedelta(month=3):
+                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='4')
+                invoice.reminder_phase = '4'
+                invoice.save()
+    return None
+
 
 @login_required
 def logout_view(request):
@@ -1024,8 +1042,7 @@ def edit_dropin(request, uuid):
 
 @login_required
 def create_account_holder(request):
-    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+    if request.user.staffmember.role == '3':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -1036,6 +1053,7 @@ def create_account_holder(request):
 
         if request.method == 'POST':
             form = AccountHolderForm(request.POST)
+            discount_form = DiscountPlanForm(request.POST)
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
@@ -1056,7 +1074,7 @@ def create_account_holder(request):
                 date = form.cleaned_data['date']
                 address = form.cleaned_data['address']
                 postcode = form.cleaned_data['postcode']
-                discount_plan = form.cleaned_data['discount_plan']
+                discount_plan = discount_form.cleaned_data['discount_plan']
 
                 # create Account Holder Customer object using input data
                 # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
@@ -1125,11 +1143,13 @@ def create_account_holder(request):
             data = {}
             data['customer_uuid'] = account_holder.uuid
             form = AccountHolderForm(initial=data)
+            discount_form = DiscountPlanForm()
             email_formset = EmailFormSet(initial=email_data, prefix='fs1')
             phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
         context = {
             'form': form,
+            'discount_form': discount_form,
             'email_formset': email_formset,
             'phone_formset': phone_formset,
             'email_helper': email_helper,
@@ -1139,14 +1159,110 @@ def create_account_holder(request):
 
         return render(request, 'nod/create_account_holder.html', context)
     else:
-        messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
-        return redirect('/garits/')
+        if request.user.staffmember.role == '4' or request.user.staffmember.role == '2':
+            EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+            email_data = []
+            PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+            phone_data = []
+
+            email_helper = EmailFormSetHelper()
+            phone_helper = PhoneFormSetHelper()
+
+            if request.method == 'POST':
+                form = AccountHolderForm(request.POST)
+                email_formset = EmailFormSet(request.POST, prefix='fs1')
+                phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+                customer_uuid = form.data['customer_uuid']
+                print(customer_uuid)
+
+                try:
+                    account_holder = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
+                except MultipleObjectsReturned:
+                    pass
+                except ObjectDoesNotExist:
+                    pass
+
+                if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+                    print('a)')
+                    forename = form.cleaned_data['forename']
+                    surname = form.cleaned_data['surname']
+                    date = form.cleaned_data['date']
+                    address = form.cleaned_data['address']
+                    postcode = form.cleaned_data['postcode']
+
+                    # create Account Holder Customer object using input data
+                    # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
+                    #                                               address=address, postcode=postcode,
+                    #                                               discount_plan=discount_plan)
+                    try:
+                        with transaction.atomic():
+                            print('b')
+                            account_holder.forename = forename
+                            account_holder.surname = surname
+                            account_holder.date = date
+                            account_holder.address = address
+                            account_holder.postcode = postcode
+
+                            for email_form in email_formset:
+                                email_address = email_form.cleaned_data.get('email_address')
+                                email_type = email_form.cleaned_data.get('email_type')
+
+                                if email_address and email_type:
+                                    email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                                    email = email[0]
+                                    if email.is_deleted is True:
+                                        email.is_deleted = False
+                                        email.save()
+                                    account_holder.emails.add(email)
+                                    account_holder.save()
+
+                            for phone_form in phone_formset:
+                                phone_number = phone_form.cleaned_data.get('phone_number')
+                                phone_type = phone_form.cleaned_data.get('phone_type')
+
+                                if phone_number and phone_type:
+                                    phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                                    phone = phone[0]
+                                    if phone.is_deleted is True:
+                                        phone.is_deleted = False
+                                        phone.save()
+                                    account_holder.phone_numbers.add(phone)
+                                    account_holder.save()
+                            print(request.POST)
+                            account_holder.save()
+
+                            return HttpResponseRedirect('/garits/customers/')
+
+                    except IntegrityError:
+                        messages.error(request, "There was an error saving")
+
+            else:
+                account_holder = AccountHolder.objects.create()
+                data = {}
+                data['customer_uuid'] = account_holder.uuid
+                form = AccountHolderForm(initial=data)
+                email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+                phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+            context = {
+                'form': form,
+                'email_formset': email_formset,
+                'phone_formset': phone_formset,
+                'email_helper': email_helper,
+                'phone_helper': phone_helper,
+                'account_holder': account_holder,
+            }
+
+            return render(request, 'nod/create_account_holder.html', context)
+        else:
+            messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
+            return redirect('/garits/')
 
 
 @login_required
 def edit_account_holder(request, uuid):
-    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
-                    request.user.staffmember.role == '2':
+    if request.user.staffmember.role == '3':
         account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -1165,6 +1281,7 @@ def edit_account_holder(request, uuid):
 
         if request.method == 'POST':
             form = AccountHolderForm(request.POST)
+            discount_form = DiscountPlanForm(request.POST)
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
             print('2')
@@ -1178,7 +1295,7 @@ def edit_account_holder(request, uuid):
                 date = form.cleaned_data['date']
                 address = form.cleaned_data['address']
                 postcode = form.cleaned_data['postcode']
-                discount_plan = form.cleaned_data['discount_plan']
+                discount_plan = discount_form.cleaned_data['discount_plan']
 
                 try:
                     with transaction.atomic():
@@ -1262,24 +1379,27 @@ def edit_account_holder(request, uuid):
             data['date'] = account_holder.date
             data['address'] = account_holder.address
             data['postcode'] = account_holder.postcode
+            data2 = {}
             discount = account_holder.content_object
             if discount == FixedDiscount.objects.get():
-                data['discount_plan'] = '1'
+                data2['discount_plan'] = '1'
             else:
                 if discount == FlexibleDiscount.objects.first():
-                    data['discount_plan'] = '2'
+                    data2['discount_plan'] = '2'
                 else:
                     if discount == VariableDiscount.objects.get():
-                        data['discount_plan'] = '3'
+                        data2['discount_plan'] = '3'
                     else:
-                        data['discount_plan'] = ""
+                        data2['discount_plan'] = ""
 
             form = AccountHolderForm(initial=data)
+            discount_form = DiscountPlanForm(initial=data2)
             email_formset = EmailFormSet(initial=email_data, prefix='fs1')
             phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
         context = {
             'form': form,
+            'discount_form': discount_form,
             'email_formset': email_formset,
             'phone_formset': phone_formset,
             'account_holder': account_holder,
@@ -1289,14 +1409,129 @@ def edit_account_holder(request, uuid):
 
         return render(request, 'nod/edit_account_holder.html', context)
     else:
-        messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
-        return redirect('/garits/')
+        if request.user.staffmember.role == '4' or request.user.staffmember.role == '2':
+            account_holder = get_object_or_404(AccountHolder, uuid=uuid)
+
+            EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+            user_emails = account_holder.emails.filter(is_deleted=False)
+            email_data = [{'email_address': e.address, 'email_type': e.type}
+                          for e in user_emails]
+
+            PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+            user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
+            phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                          for p in user_phone_numbers]
+
+            email_helper = EmailFormSetHelper()
+            phone_helper = PhoneFormSetHelper()
+            print('1')
+
+            if request.method == 'POST':
+                form = AccountHolderForm(request.POST)
+                email_formset = EmailFormSet(request.POST, prefix='fs1')
+                phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+                print('2')
+
+
+                if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+                    print('3')
+
+                    forename = form.cleaned_data['forename']
+                    surname = form.cleaned_data['surname']
+                    date = form.cleaned_data['date']
+                    address = form.cleaned_data['address']
+                    postcode = form.cleaned_data['postcode']
+
+                    try:
+                        with transaction.atomic():
+                            print('4')
+
+                            account_holder.forename = forename
+                            account_holder.surname = surname
+                            account_holder.date = date
+                            account_holder.address = address
+                            account_holder.postcode = postcode
+
+                            old_emails = account_holder.emails.all()
+                            print(old_emails)
+                            for e in old_emails:
+                                e.is_deleted = True
+                                e.save()
+
+                            for email_form in email_formset:
+                                email_address = email_form.cleaned_data.get('email_address')
+                                email_type = email_form.cleaned_data.get('email_type')
+
+                                if email_address and email_type:
+                                    # updates = {'is_deleted':'True'}
+                                    email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                                    email = email[0]
+                                    if email.is_deleted is True:
+                                        email.is_deleted = False
+                                        email.save()
+                                    account_holder.emails.add(email)
+                                    account_holder.save()
+
+                            old_phones = account_holder.phone_numbers.all()
+                            for p in old_phones:
+                                p.is_deleted = True
+                                p.save()
+
+                            for phone_form in phone_formset:
+                                phone_number = phone_form.cleaned_data.get('phone_number')
+                                phone_type = phone_form.cleaned_data.get('phone_type')
+
+                                if phone_number and phone_type:
+                                    phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                                    phone = phone[0]
+                                    if phone.is_deleted is True:
+                                        phone.is_deleted = False
+                                        phone.save()
+                                    account_holder.phone_numbers.add(phone)
+                                    account_holder.save()
+
+                            account_holder.save()
+
+                            messages.success(request, "Changes were saved successfully!")
+                            return redirect('view-customer', uuid=account_holder.uuid)
+
+                    except IntegrityError:
+                        #If the transaction failed
+                        messages.error(request, 'There was an error saving your profile.')
+                else:
+                    messages.error(request, 'There was an error saving your profile.')
+
+            else:
+                data = {}
+                data['customer_uuid'] = account_holder.uuid
+                data['forename'] = account_holder.forename
+                data['surname'] = account_holder.surname
+                data['date'] = account_holder.date
+                data['address'] = account_holder.address
+                data['postcode'] = account_holder.postcode
+
+                form = AccountHolderForm(initial=data)
+                email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+                phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+            context = {
+                'form': form,
+                'email_formset': email_formset,
+                'phone_formset': phone_formset,
+                'account_holder': account_holder,
+                'email_helper': email_helper,
+                'phone_helper': phone_helper,
+            }
+
+            return render(request, 'nod/edit_account_holder.html', context)
+        else:
+            messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
+            return redirect('/garits/')
 
 
 @login_required
 def create_business_customer(request):
-    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+    if request.user.staffmember.role == '3':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -1307,6 +1542,7 @@ def create_business_customer(request):
 
         if request.method == 'POST':
             form = BusinessCustomerForm(request.POST)
+            discount_form = DiscountPlanForm(request.POST)
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
@@ -1327,7 +1563,7 @@ def create_business_customer(request):
                 date = form.cleaned_data['date']
                 address = form.cleaned_data['address']
                 postcode = form.cleaned_data['postcode']
-                discount_plan = form.cleaned_data['discount_plan']
+                discount_plan = discount_form.cleaned_data['discount_plan']
 
                 # create Business Company Customer object using input data
                 # business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
@@ -1399,11 +1635,13 @@ def create_business_customer(request):
             data = {}
             data['customer_uuid'] = business_customer.uuid
             form = BusinessCustomerForm(initial=data)
+            discount_form = DiscountPlanForm()
             email_formset = EmailFormSet(initial=email_data, prefix='fs1')
             phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
         context = {
             'form': form,
+            'discount_form': discount_form,
             'email_formset': email_formset,
             'phone_formset': phone_formset,
             'email_helper': email_helper,
@@ -1413,14 +1651,114 @@ def create_business_customer(request):
 
         return render(request, 'nod/create_business_customer.html', context)
     else:
-        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
-        return redirect('/garits/')
+        if request.user.staffmember.role == '4' or request.user.staffmember.role == '2':
+            EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
+            email_data = []
+            PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
+            phone_data = []
+
+            email_helper = EmailFormSetHelper()
+            phone_helper = PhoneFormSetHelper()
+
+            if request.method == 'POST':
+                form = BusinessCustomerForm(request.POST)
+                email_formset = EmailFormSet(request.POST, prefix='fs1')
+                phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+                customer_uuid = form.data['customer_uuid']
+
+                try:
+                    business_customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+                except MultipleObjectsReturned:
+                    pass
+                except ObjectDoesNotExist:
+                    pass
+
+                if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+                    company_name = form.cleaned_data['company_name']
+                    forename = form.cleaned_data['forename']
+                    surname = form.cleaned_data['surname']
+                    rep_role = form.cleaned_data['rep_role']
+                    date = form.cleaned_data['date']
+                    address = form.cleaned_data['address']
+                    postcode = form.cleaned_data['postcode']
+
+                    # create Business Company Customer object using input data
+                    # business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
+                    #                                                     address=address, postcode=postcode,
+                    #                                                     discount_plan=discount_plan, company_name=company_name,
+                    #                                                     rep_role=rep_role)
+                    try:
+                        with transaction.atomic():
+                            business_customer.company_name = company_name
+                            business_customer.forename = forename
+                            business_customer.surname = surname
+                            business_customer.rep_role = rep_role
+                            business_customer.date = date
+                            business_customer.address = address
+                            business_customer.postcode = postcode
+
+                            business_customer.save()
+
+                            for email_form in email_formset:
+                                email_address = email_form.cleaned_data.get('email_address')
+                                email_type = email_form.cleaned_data.get('email_type')
+
+                                if email_address and email_type:
+                                    email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                                    email = email[0]
+                                    if email.is_deleted is True:
+                                        email.is_deleted = False
+                                        email.save()
+                                    business_customer.emails.add(email)
+                                    business_customer.save()
+
+                            for phone_form in phone_formset:
+                                phone_number = phone_form.cleaned_data.get('phone_number')
+                                phone_type = phone_form.cleaned_data.get('phone_type')
+
+                                if phone_number and phone_type:
+                                    phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                                    phone = phone[0]
+                                    if phone.is_deleted is True:
+                                        phone.is_deleted = False
+                                        phone.save()
+                                    business_customer.phone_numbers.add(phone)
+                                    business_customer.save()
+
+                            business_customer.save()
+
+                            return HttpResponseRedirect('/garits/customers/')
+
+                    except IntegrityError:
+                        messages.error(request, "There was an error saving")
+
+            else:
+                business_customer = BusinessCustomer.objects.create()
+                data = {}
+                data['customer_uuid'] = business_customer.uuid
+                form = BusinessCustomerForm(initial=data)
+                email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+                phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+            context = {
+                'form': form,
+                'email_formset': email_formset,
+                'phone_formset': phone_formset,
+                'email_helper': email_helper,
+                'phone_helper': phone_helper,
+                'business_customer': business_customer
+            }
+
+            return render(request, 'nod/create_business_customer.html', context)
+        else:
+            messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
+            return redirect('/garits/')
 
 
 @login_required
 def edit_business_customer(request, uuid):
-    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
-            or request.user.staffmember.role == '2':
+    if request.user.staffmember.role == '3':
         business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -1438,6 +1776,7 @@ def edit_business_customer(request, uuid):
 
         if request.method == 'POST':
             form = BusinessCustomerForm(request.POST)
+            discount_form = DiscountPlanForm(request.POST)
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
@@ -1449,7 +1788,7 @@ def edit_business_customer(request, uuid):
                 date = form.cleaned_data['date']
                 address = form.cleaned_data['address']
                 postcode = form.cleaned_data['postcode']
-                discount_plan = form.cleaned_data['discount_plan']
+                discount_plan = discount_form.cleaned_data['discount_plan']
 
                 try:
                     with transaction.atomic():
@@ -1534,24 +1873,27 @@ def edit_business_customer(request, uuid):
             data['date'] = business_customer.date
             data['address'] = business_customer.address
             data['postcode'] = business_customer.postcode
+            data2 = {}
             discount = business_customer.content_object
             if discount == FixedDiscount.objects.get():
-                data['discount_plan'] = '1'
+                data2['discount_plan'] = '1'
             else:
                 if discount == FlexibleDiscount.objects.first():
-                    data['discount_plan'] = '2'
+                    data2['discount_plan'] = '2'
                 else:
                     if discount == VariableDiscount.objects.get():
-                        data['discount_plan'] = '3'
+                        data2['discount_plan'] = '3'
                     else:
-                        data['discount_plan'] = ""
+                        data2['discount_plan'] = ""
 
             form = BusinessCustomerForm(initial=data)
+            discount_form = DiscountPlanForm(initial=data2)
             email_formset = EmailFormSet(initial=email_data, prefix='fs1')
             phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
 
         context = {
             'form': form,
+            'discount_form': discount_form,
             'email_formset': email_formset,
             'phone_formset': phone_formset,
             'email_helper': email_helper,
@@ -1561,8 +1903,122 @@ def edit_business_customer(request, uuid):
 
         return render(request, 'nod/edit_business_customer.html', context)
     else:
-        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
-        return redirect('/garits/')
+        if request.user.staffmember.role == '4' or request.user.staffmember.role == '2':
+            business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
+
+            EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+            user_emails = business_customer.emails.filter(is_deleted=False)
+            email_data = [{'email_address': e.address, 'email_type': e.type}
+                          for e in user_emails]
+
+            PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+            user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
+            phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
+                          for p in user_phone_numbers]
+
+            email_helper = EmailFormSetHelper()
+            phone_helper = PhoneFormSetHelper()
+
+            if request.method == 'POST':
+                form = BusinessCustomerForm(request.POST)
+                email_formset = EmailFormSet(request.POST, prefix='fs1')
+                phone_formset = PhoneFormSet(request.POST, prefix='fs2')
+
+                if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+                    company_name = form.cleaned_data['company_name']
+                    forename = form.cleaned_data['forename']
+                    surname = form.cleaned_data['surname']
+                    rep_role = form.cleaned_data['rep_role']
+                    date = form.cleaned_data['date']
+                    address = form.cleaned_data['address']
+                    postcode = form.cleaned_data['postcode']
+
+                    try:
+                        with transaction.atomic():
+                            business_customer.company_name = company_name
+                            business_customer.forename = forename
+                            business_customer.surname = surname
+                            business_customer.rep_role = rep_role
+                            business_customer.date = date
+                            business_customer.address = address
+                            business_customer.postcode = postcode
+
+                            business_customer.save()
+
+                            old_emails = business_customer.emails.all()
+                            print(old_emails)
+                            for e in old_emails:
+                                e.is_deleted = True
+                                e.save()
+
+                            for email_form in email_formset:
+                                email_address = email_form.cleaned_data.get('email_address')
+                                email_type = email_form.cleaned_data.get('email_type')
+
+                                if email_address and email_type:
+                                    # updates = {'is_deleted':'True'}
+                                    email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
+                                    email = email[0]
+                                    if email.is_deleted is True:
+                                        email.is_deleted = False
+                                        email.save()
+                                    business_customer.emails.add(email)
+                                    business_customer.save()
+
+                            old_phones = business_customer.phone_numbers.all()
+                            for p in old_phones:
+                                p.is_deleted = True
+                                p.save()
+
+                            for phone_form in phone_formset:
+                                phone_number = phone_form.cleaned_data.get('phone_number')
+                                phone_type = phone_form.cleaned_data.get('phone_type')
+
+                                if phone_number and phone_type:
+                                    phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
+                                    phone = phone[0]
+                                    if phone.is_deleted is True:
+                                        phone.is_deleted = False
+                                        phone.save()
+                                    business_customer.phone_numbers.add(phone)
+                                    business_customer.save()
+
+                            business_customer.save()
+
+                            messages.success(request, "Changes were saved successfully!")
+                            return redirect('view-customer', uuid=business_customer.uuid)
+
+                    except IntegrityError:
+                        #If the transaction failed
+                        messages.error(request, 'There was an error saving your profile.')
+            else:
+                data = {}
+                data['customer_uuid'] = business_customer.uuid
+                data['company_name'] = business_customer.company_name
+                data['forename'] = business_customer.forename
+                data['surname'] = business_customer.surname
+                data['rep_role'] = business_customer.rep_role
+                data['date'] = business_customer.date
+                data['address'] = business_customer.address
+                data['postcode'] = business_customer.postcode
+
+                form = BusinessCustomerForm(initial=data)
+                email_formset = EmailFormSet(initial=email_data, prefix='fs1')
+                phone_formset = PhoneFormSet(initial=phone_data, prefix='fs2')
+
+            context = {
+                'form': form,
+                'email_formset': email_formset,
+                'phone_formset': phone_formset,
+                'email_helper': email_helper,
+                'phone_helper': phone_helper,
+                'business_customer': business_customer,
+            }
+
+            return render(request, 'nod/edit_business_customer.html', context)
+        else:
+            messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
+            return redirect('/garits/')
 
 
 @login_required
