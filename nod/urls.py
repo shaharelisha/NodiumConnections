@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^jobs/create/$', views.create_job, name='create-job'),
     url(r'^jobs/(?P<uuid>\w+)/edit/$', views.edit_job, name='edit-job'),
     # TODO: make only available to foreperson
-    url(r'^jobs/(?P<uuid>\w+)/edit/assign/$', views.assign_mechanic_job, name='assign-mechanic-job'),
+    # url(r'^jobs/(?P<uuid>\w+)/edit/assign/$', views.assign_mechanic_job, name='assign-mechanic-job'),
     url(r'^jobs/(?P<job_uuid>\w+)/payment/$', views.create_payment, name='create-payment'),
     url(r'^parts/$', views.part_table, name='parts'),
     url(r'^parts/create/$', views.create_part, name='create-part'),

@@ -91,7 +91,7 @@ class PartTable(tables.Table):
 # TODO: highlight jobs which are pending, started, complete
 class ActiveJobsTable(tables.Table):
     job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
-                                   verbose_name="Job")
+                                   verbose_name="Job No.")
     type = tables.Column(verbose_name="Type", order_by="type")
     bay = tables.Column(verbose_name="Bay", order_by="bay")
     vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
@@ -106,12 +106,23 @@ class ActiveJobsTable(tables.Table):
 
 class UntakenJobsTable(tables.Table):
     job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
-                                   verbose_name="Job")
+                                   verbose_name="Job No.")
     type = tables.Column(verbose_name="Type", order_by="type")
     bay = tables.Column(verbose_name="Bay", order_by="bay")
     vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
-    # get_customer = tables.Column(verbose_name="Customer", order_by="get_customer")
     get_customer = tables.LinkColumn('view-customer', args=[A('get_customer.uuid')], verbose_name="Customer", order_by="get_customer")
+    booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class MyJobsTable(tables.Table):
+    job_number = tables.LinkColumn('edit-job', args=[A('uuid')], order_by="job_number",
+                                   verbose_name="Job No.")
+    type = tables.Column(verbose_name="Type", order_by="type")
+    bay = tables.Column(verbose_name="Bay", order_by="bay")
+    vehicle = tables.Column(verbose_name="Vehicle", order_by="vehicle")
     booking_date = tables.Column(verbose_name="Booking Date", order_by="booking_date")
 
     class Meta:

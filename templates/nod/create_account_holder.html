@@ -10,24 +10,29 @@
 
 {#<link rel="stylesheet" href="{% static "database/css/jquery-ui-1.10.0.custom.css" %}"/>#}
 {% if messages %}
-    <ul class="messages">
+{#    <ul class="messages">#}
         {% for message in messages %}
             {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
                 {#          Data saved successfully #}
-                <li class="success">
-                    {{ message }}
-                </li>
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
             {% endif %}
             {#        Data not saved. Validation errors#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                <li class="error">
-                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
-                </li>
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
             {% endif %}
         {% endfor %}
-    </ul>
-    <hr/>
+{#    </ul>#}
+{#    <hr/>#}
 {% endif %}
 
 <div id="main">

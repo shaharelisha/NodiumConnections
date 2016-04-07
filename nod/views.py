@@ -25,7 +25,11 @@ from .tables import *
 def index(request):
     # Mechanic
     if request.user.staffmember.role == '1':
-        return render(request, "nod/index-mechanic.html")
+        uuid = request.user.staffmember.uuid
+        my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
+        RequestConfig(request).configure(my_jobs_table)
+        return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
+        # return render(request, "nod/index-mechanic.html")
     # Foreperson
     if request.user.staffmember.role == '2':
         return render(request, "nod/index-foreperson.html")
@@ -41,6 +45,7 @@ def index(request):
     else:
         messages.error(request, "You must be logged in to view this page.")
         return redirect('/accounts/login/')
+
 
 @login_required
 def logout_view(request):
@@ -61,63 +66,68 @@ def user_table(request):
 
 @login_required
 def part_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' \
+            or request.user.staffmember.role == '2':
         part_table = PartTable(Part.objects.filter(is_deleted=False))
         RequestConfig(request).configure(part_table)
         return render(request, "nod/parts.html", {'part_table': part_table})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def active_jobs_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         job_table = ActiveJobsTable(Job.objects.filter(is_deleted=False, status='2'))
         RequestConfig(request).configure(job_table)
         return render(request, "nod/jobs.html", {'job_table': job_table})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def untaken_jobs_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '1' or\
+                    request.user.staffmember.role == '2' or request.user.staffmember.role == '4':
         untaken_job_table = UntakenJobsTable(Job.objects.filter(is_deleted=False, mechanic=None))
         RequestConfig(request).configure(untaken_job_table)
         return render(request, "nod/untaken_jobs.html", {'untaken_job_table': untaken_job_table})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/mechanic/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
-@login_required
-def my_jobs_table(request):
-    if request.user.staffmember.role == '1' or request.user.staffmember.role == '2':
-        uuid = request.user.staffmember.uuid
-        untaken_job_table = UntakenJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
-        RequestConfig(request).configure(untaken_job_table)
-        return render(request, "nod/untaken_jobs.html", {'untaken_job_table': untaken_job_table})
-    else:
-        messages.error(request, "You must be a mechanic/foreperson in order to view this page.")
-        return redirect('/garits/')
+# @login_required
+# def my_jobs_table(request):
+#     if request.user.staffmember.role == '1' or request.user.staffmember.role == '2':
+#         uuid = request.user.staffmember.uuid
+#         my_jobs_table = UntakenJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
+#         RequestConfig(request).configure(my_jobs_table)
+#         return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
+#     else:
+#         messages.error(request, "You must be a mechanic/foreperson in order to view this page.")
+#         return redirect('/garits/')
 
 
 @login_required
 def supplier_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         supplier_table = SupplierTable(Supplier.objects.filter(is_deleted=False))
         RequestConfig(request).configure(supplier_table)
         return render(request, "nod/suppliers.html", {'supplier_table': supplier_table})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def account_holder_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         account_holders_table = AccountHolderTable(AccountHolder.objects.filter(is_deleted=False,
                                                                                 businesscustomer=None).exclude(forename="",
                                                                                                           surname=""))
@@ -136,13 +146,14 @@ def account_holder_table(request):
         }
         return render(request, "nod/account_holders.html", context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def business_customers_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         business_customers_table = BusinessCustomerTable(BusinessCustomer.objects.filter(is_deleted=False).exclude(company_name=""))
         RequestConfig(request).configure(business_customers_table)
 
@@ -159,31 +170,32 @@ def business_customers_table(request):
         }
         return render(request, "nod/business_customers.html", context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def create_job(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         TaskCreateFormSet = formset_factory(JobCreateTaskForm, formset=BaseJobTaskCreateForm)
         tasks_data = []
 
-        PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
-        parts_data = []
+        # PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
+        # parts_data = []
 
         task_helper = TaskFormSetHelper()
-        part_helper = PartFormSetHelper()
-        print("a")
+        # part_helper = PartFormSetHelper()
 
         if request.method == 'POST':
             print("b")
             form = JobCreateForm(request.POST)
             task_formset = TaskCreateFormSet(request.POST, prefix='fs1')
-            part_formset = PartCreateFormSet(request.POST, prefix='fs2')
+            # part_formset = PartCreateFormSet(request.POST, prefix='fs2')
 
-            if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
-                print("c")
+            if form.is_valid() and task_formset.is_valid():
+                    # and part_formset.is_valid():
+
                 job_number = form.cleaned_data['job_number']
                 vehicle = form.cleaned_data['vehicle']
                 booking_date = form.cleaned_data['booking_date']
@@ -208,26 +220,26 @@ def create_job(request):
                                 jobtask.save()
 
 
-                        for part_form in part_formset:
-                            part_name = part_form.cleaned_data['part_name']
-                            quantity = part_form.cleaned_data['quantity']
-
-                            if part_name and quantity:
-                                part = get_object_or_404(Part, name=part_name)
-
-                                # checks that the quantity required is not more than the total quantity in stock.
-                                # if it is, it removes the quantity used for a job from the total quantity and,
-                                # creates a job part object, otherwise, it throws an error.
-                                # TODO: do something to warn if drops below threshold
-                                if part.quantity >= quantity:
-                                    part.quantity -= quantity
-                                    JobPart.objects.create(part=part, job=job, quantity=quantity)
-
-                                else:
-                                    raise forms.ValidationError(
-                                        'Not enough parts in stock.',
-                                        code='insufficient_parts'
-                                    )
+                        # for part_form in part_formset:
+                        #     part_name = part_form.cleaned_data['part_name']
+                        #     quantity = part_form.cleaned_data['quantity']
+                        #
+                        #     if part_name and quantity:
+                        #         part = get_object_or_404(Part, name=part_name)
+                        #
+                        #         # checks that the quantity required is not more than the total quantity in stock.
+                        #         # if it is, it removes the quantity used for a job from the total quantity and,
+                        #         # creates a job part object, otherwise, it throws an error.
+                        #         # TODO: do something to warn if drops below threshold
+                        #         if part.quantity >= quantity:
+                        #             part.quantity -= quantity
+                        #             JobPart.objects.create(part=part, job=job, quantity=quantity)
+                        #
+                        #         else:
+                        #             raise forms.ValidationError(
+                        #                 'Not enough parts in stock.',
+                        #                 code='insufficient_parts'
+                        #             )
 
                         return HttpResponseRedirect('/garits/jobs/')
 
@@ -235,32 +247,32 @@ def create_job(request):
                     messages.error(request, "There was an error saving")
 
         else:
-            print("d")
             data = {}
             last_id = Job.objects.last().id
             new_id = last_id + 1
             data['job_number'] = new_id
             form = JobCreateForm(initial=data)
             task_formset = TaskCreateFormSet(initial=tasks_data, prefix='fs1')
-            part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
+            # part_formset = PartCreateFormSet(initial=parts_data, prefix='fs2')
 
         context = {
             'form': form,
             'task_formset': task_formset,
-            'part_formset': part_formset,
+            # 'part_formset': part_formset,
             'task_helper': task_helper,
-            'part_helper': part_helper,
+            # 'part_helper': part_helper,
         }
 
         return render(request, 'nod/create_jobsheet.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_job(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '1' or \
+                    request.user.staffmember.role == '4':
         job = get_object_or_404(Job, uuid=uuid)
 
         TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
@@ -401,167 +413,316 @@ def edit_job(request, uuid):
 
         return render(request, 'nod/edit_jobsheet.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
-        return redirect('/garits/')
+        if request.user.staffmember.role == '2':
+            job = get_object_or_404(Job, uuid=uuid)
+
+            TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
+            task_set = job.jobtask_set.all()
+            tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
+                          for t in task_set]
+
+            PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
+            part_set = job.jobpart_set.all()
+            parts_data = [{'part_name': p.part, 'quantity': p.quantity}
+                          for p in part_set]
+
+            task_helper = TaskFormSetHelper()
+            part_helper = PartFormSetHelper()
+
+            if request.method == 'POST':
+                form = JobEditForm(request.POST)
+                mechanic_form = MechanicJobForm(request.POST)
+                task_formset = TaskFormSet(request.POST, prefix='fs1')
+                part_formset = PartFormSet(request.POST, prefix='fs2')
+
+                if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
+                    # job_number = form.cleaned_data['job_number']
+                    vehicle = form.cleaned_data['vehicle']
+                    booking_date = form.cleaned_data['booking_date']
+                    bay = form.cleaned_data['bay']
+                    mechanic = mechanic_form.cleaned_data['mechanic']
+
+                    vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
+
+                    # bay = get_object_or_404(Bay, bay_type=bay)
+
+                    # job.job_number = job.id?
+                    try:
+                        with transaction.atomic():
+                            job.booking_date = booking_date
+                            job.bay = bay
+                            job.mechanic = mechanic
+
+                            old_jobtasks = job.jobtask_set.all()
+                            for jt in old_jobtasks:
+                                jt.is_deleted = True
+                                jt.save()
+
+                            for task_form in task_formset:
+                                task_name = task_form.cleaned_data.get('task_name')
+                                status = task_form.cleaned_data.get('status')
+                                duration = task_form.cleaned_data.get('duration')
+
+                                if task_name:
+                                    task = get_object_or_404(Task, description=task_name)
+                                    # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
+                                    jobtask = job.jobtask_set.get_or_create(task=task)
+
+                                    # get_or_create returns tuple {object returned, whether it was created or just retrieved}
+                                    if jobtask[0].is_deleted is True:
+                                        jobtask[0].is_deleted = False
+                                        jobtask[0].save()
+                                    if jobtask[1] is True:
+                                        job.jobtask_set.add(jobtask[0])
+
+                                    jobtask = jobtask[0]
+                                    if status:
+                                        jobtask.status = status
+                                    else:
+                                        jobtask.status = '3'
+                                    if duration:
+                                        jobtask.duration = duration
+                                    else:
+                                        jobtask.duration = task.estimated_time
+                                    jobtask.save()
+
+                            old_jobparts = job.jobpart_set.all()
+                            for jp in old_jobparts:
+                                jp.is_deleted = True
+                                jp.save()
+
+                            for part_form in part_formset:
+                                part_name = part_form.cleaned_data.get('part_name')
+                                quantity = part_form.cleaned_data.get('quantity')
+
+                                if part_name and quantity:
+                                    part = get_object_or_404(Part, name=part_name)
+                                    # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
+                                    jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
+
+                                    if jobpart[0].is_deleted is True:
+                                        jobpart[0].is_deleted = False
+                                        jobpart[0].save()
+                                    if jobpart[1] is True:
+                                        job.jobpart_set.add(jobpart[0])
+
+                                    # jobpart[0].quantity = quantity
 
 
-@login_required
-def assign_mechanic_job(request, uuid):
-    if request.user.staffmember.role == '2':
-        job = get_object_or_404(Job, uuid=uuid)
+                                    # checks that the quantity required is not more than the total quantity in stock.
+                                    # if it is, it removes the quantity used for a job from the total quantity and assigns,
+                                    # the quantity to the job part object, otherwise, it throws an error.
+                                    # TODO: do something if q drops below threshold
+                                    if part.quantity >= quantity:
+                                        part.quantity -= quantity
+                                        part.save()
+                                    else:
+                                        # TODO: when changed back to TRUE, must subtract ^
+                                        jobpart[0].sufficient_quantity = False
+                                        # raise forms.ValidationError(
+                                        #     'Not enough parts in stock.',
+                                        #     code='insufficient_parts'
+                                        # )
+                                        jobpart[0].save()
 
-        TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
-        task_set = job.jobtask_set.all()
-        tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
-                      for t in task_set]
+                            job.save()
 
-        PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
-        part_set = job.jobpart_set.all()
-        parts_data = [{'part_name': p.part, 'quantity': p.quantity}
-                      for p in part_set]
+                            return HttpResponseRedirect('/garits/jobs/active/')
 
-        task_helper = TaskFormSetHelper()
-        part_helper = PartFormSetHelper()
+                    except IntegrityError:
+                        messages.error(request, "There was an error saving")
 
-        if request.method == 'POST':
-            form = JobEditForm(request.POST)
-            mechanic_form = MechanicJobForm(request.POST)
-            task_formset = TaskFormSet(request.POST, prefix='fs1')
-            part_formset = PartFormSet(request.POST, prefix='fs2')
+            else:
+                data = {}
+                data2 = {}
+                data['job_number'] = job.job_number
+                data['vehicle'] = job.vehicle.reg_number
+                data['type'] = job.type
+                data['bay'] = job.bay
+                data['status'] = job.status
+                data['booking_date'] = job.booking_date
+                data['work_carried_out'] = job.work_carried_out
+                data2['mechanic'] = job.mechanic
 
-            if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
-                # job_number = form.cleaned_data['job_number']
-                vehicle = form.cleaned_data['vehicle']
-                booking_date = form.cleaned_data['booking_date']
-                bay = form.cleaned_data['bay']
-                mechanic = mechanic_form.cleaned_data['mechanic']
+                form = JobEditForm(initial=data)
+                mechanic_form = MechanicJobForm(initial=data2)
+                task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
+                part_formset = PartFormSet(initial=parts_data, prefix='fs2')
 
-                vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
+            context = {
+                'form': form,
+                'mechanic_form': mechanic_form,
+                'task_formset': task_formset,
+                'part_formset': part_formset,
+                'task_helper': task_helper,
+                'part_helper': part_helper,
+                'job': job,
+            }
 
-                # bay = get_object_or_404(Bay, bay_type=bay)
-
-                # job.job_number = job.id?
-                try:
-                    with transaction.atomic():
-                        job.booking_date = booking_date
-                        job.bay = bay
-                        job.mechanic = mechanic
-
-                        old_jobtasks = job.jobtask_set.all()
-                        for jt in old_jobtasks:
-                            jt.is_deleted = True
-                            jt.save()
-
-                        for task_form in task_formset:
-                            task_name = task_form.cleaned_data.get('task_name')
-                            status = task_form.cleaned_data.get('status')
-                            duration = task_form.cleaned_data.get('duration')
-
-                            if task_name:
-                                task = get_object_or_404(Task, description=task_name)
-                                # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-                                jobtask = job.jobtask_set.get_or_create(task=task)
-
-                                # get_or_create returns tuple {object returned, whether it was created or just retrieved}
-                                if jobtask[0].is_deleted is True:
-                                    jobtask[0].is_deleted = False
-                                    jobtask[0].save()
-                                if jobtask[1] is True:
-                                    job.jobtask_set.add(jobtask[0])
-
-                                jobtask = jobtask[0]
-                                if status:
-                                    jobtask.status = status
-                                else:
-                                    jobtask.status = '3'
-                                if duration:
-                                    jobtask.duration = duration
-                                else:
-                                    jobtask.duration = task.estimated_time
-                                jobtask.save()
-
-                        old_jobparts = job.jobpart_set.all()
-                        for jp in old_jobparts:
-                            jp.is_deleted = True
-                            jp.save()
-
-                        for part_form in part_formset:
-                            part_name = part_form.cleaned_data.get('part_name')
-                            quantity = part_form.cleaned_data.get('quantity')
-
-                            if part_name and quantity:
-                                part = get_object_or_404(Part, name=part_name)
-                                # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
-                                jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
-
-                                if jobpart[0].is_deleted is True:
-                                    jobpart[0].is_deleted = False
-                                    jobpart[0].save()
-                                if jobpart[1] is True:
-                                    job.jobpart_set.add(jobpart[0])
-
-                                # jobpart[0].quantity = quantity
-
-
-                                # checks that the quantity required is not more than the total quantity in stock.
-                                # if it is, it removes the quantity used for a job from the total quantity and assigns,
-                                # the quantity to the job part object, otherwise, it throws an error.
-                                # TODO: do something if q drops below threshold
-                                if part.quantity >= quantity:
-                                    part.quantity -= quantity
-                                    part.save()
-                                else:
-                                    # TODO: when changed back to TRUE, must subtract ^
-                                    jobpart[0].sufficient_quantity = False
-                                    # raise forms.ValidationError(
-                                    #     'Not enough parts in stock.',
-                                    #     code='insufficient_parts'
-                                    # )
-                                    jobpart[0].save()
-
-                        job.save()
-
-                        return HttpResponseRedirect('/garits/jobs/active/')
-
-                except IntegrityError:
-                    messages.error(request, "There was an error saving")
-
+            return render(request, 'nod/assign_jobsheet.html', context)
         else:
-            data = {}
-            data2 = {}
-            data['job_number'] = job.job_number
-            data['vehicle'] = job.vehicle.reg_number
-            data['type'] = job.type
-            data['bay'] = job.bay
-            data['status'] = job.status
-            data['booking_date'] = job.booking_date
-            data['work_carried_out'] = job.work_carried_out
-            data2['mechanic'] = job.mechanic
+            messages.error(request, "You must be a franchisee/mechanic/foreperson/receptionist in order to view this page.")
+            return redirect('/garits/')
 
-            form = JobEditForm(initial=data)
-            mechanic_form = MechanicJobForm(initial=data2)
-            task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
-            part_formset = PartFormSet(initial=parts_data, prefix='fs2')
 
-        context = {
-            'form': form,
-            'mechanic_form': mechanic_form,
-            'task_formset': task_formset,
-            'part_formset': part_formset,
-            'task_helper': task_helper,
-            'part_helper': part_helper,
-            'job': job,
-        }
-
-        return render(request, 'nod/assign_jobsheet.html', context)
-    else:
-        messages.error(request, "You must be a foreperson in order to view this page.")
-        return redirect('/garits/')
+# @login_required
+# def assign_mechanic_job(request, uuid):
+#     if request.user.staffmember.role == '2':
+#         job = get_object_or_404(Job, uuid=uuid)
+#
+#         TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
+#         task_set = job.jobtask_set.all()
+#         tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
+#                       for t in task_set]
+#
+#         PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
+#         part_set = job.jobpart_set.all()
+#         parts_data = [{'part_name': p.part, 'quantity': p.quantity}
+#                       for p in part_set]
+#
+#         task_helper = TaskFormSetHelper()
+#         part_helper = PartFormSetHelper()
+#
+#         if request.method == 'POST':
+#             form = JobEditForm(request.POST)
+#             mechanic_form = MechanicJobForm(request.POST)
+#             task_formset = TaskFormSet(request.POST, prefix='fs1')
+#             part_formset = PartFormSet(request.POST, prefix='fs2')
+#
+#             if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
+#                 # job_number = form.cleaned_data['job_number']
+#                 vehicle = form.cleaned_data['vehicle']
+#                 booking_date = form.cleaned_data['booking_date']
+#                 bay = form.cleaned_data['bay']
+#                 mechanic = mechanic_form.cleaned_data['mechanic']
+#
+#                 vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
+#
+#                 # bay = get_object_or_404(Bay, bay_type=bay)
+#
+#                 # job.job_number = job.id?
+#                 try:
+#                     with transaction.atomic():
+#                         job.booking_date = booking_date
+#                         job.bay = bay
+#                         job.mechanic = mechanic
+#
+#                         old_jobtasks = job.jobtask_set.all()
+#                         for jt in old_jobtasks:
+#                             jt.is_deleted = True
+#                             jt.save()
+#
+#                         for task_form in task_formset:
+#                             task_name = task_form.cleaned_data.get('task_name')
+#                             status = task_form.cleaned_data.get('status')
+#                             duration = task_form.cleaned_data.get('duration')
+#
+#                             if task_name:
+#                                 task = get_object_or_404(Task, description=task_name)
+#                                 # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
+#                                 jobtask = job.jobtask_set.get_or_create(task=task)
+#
+#                                 # get_or_create returns tuple {object returned, whether it was created or just retrieved}
+#                                 if jobtask[0].is_deleted is True:
+#                                     jobtask[0].is_deleted = False
+#                                     jobtask[0].save()
+#                                 if jobtask[1] is True:
+#                                     job.jobtask_set.add(jobtask[0])
+#
+#                                 jobtask = jobtask[0]
+#                                 if status:
+#                                     jobtask.status = status
+#                                 else:
+#                                     jobtask.status = '3'
+#                                 if duration:
+#                                     jobtask.duration = duration
+#                                 else:
+#                                     jobtask.duration = task.estimated_time
+#                                 jobtask.save()
+#
+#                         old_jobparts = job.jobpart_set.all()
+#                         for jp in old_jobparts:
+#                             jp.is_deleted = True
+#                             jp.save()
+#
+#                         for part_form in part_formset:
+#                             part_name = part_form.cleaned_data.get('part_name')
+#                             quantity = part_form.cleaned_data.get('quantity')
+#
+#                             if part_name and quantity:
+#                                 part = get_object_or_404(Part, name=part_name)
+#                                 # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
+#                                 jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
+#
+#                                 if jobpart[0].is_deleted is True:
+#                                     jobpart[0].is_deleted = False
+#                                     jobpart[0].save()
+#                                 if jobpart[1] is True:
+#                                     job.jobpart_set.add(jobpart[0])
+#
+#                                 # jobpart[0].quantity = quantity
+#
+#
+#                                 # checks that the quantity required is not more than the total quantity in stock.
+#                                 # if it is, it removes the quantity used for a job from the total quantity and assigns,
+#                                 # the quantity to the job part object, otherwise, it throws an error.
+#                                 # TODO: do something if q drops below threshold
+#                                 if part.quantity >= quantity:
+#                                     part.quantity -= quantity
+#                                     part.save()
+#                                 else:
+#                                     # TODO: when changed back to TRUE, must subtract ^
+#                                     jobpart[0].sufficient_quantity = False
+#                                     # raise forms.ValidationError(
+#                                     #     'Not enough parts in stock.',
+#                                     #     code='insufficient_parts'
+#                                     # )
+#                                     jobpart[0].save()
+#
+#                         job.save()
+#
+#                         return HttpResponseRedirect('/garits/jobs/active/')
+#
+#                 except IntegrityError:
+#                     messages.error(request, "There was an error saving")
+#
+#         else:
+#             data = {}
+#             data2 = {}
+#             data['job_number'] = job.job_number
+#             data['vehicle'] = job.vehicle.reg_number
+#             data['type'] = job.type
+#             data['bay'] = job.bay
+#             data['status'] = job.status
+#             data['booking_date'] = job.booking_date
+#             data['work_carried_out'] = job.work_carried_out
+#             data2['mechanic'] = job.mechanic
+#
+#             form = JobEditForm(initial=data)
+#             mechanic_form = MechanicJobForm(initial=data2)
+#             task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
+#             part_formset = PartFormSet(initial=parts_data, prefix='fs2')
+#
+#         context = {
+#             'form': form,
+#             'mechanic_form': mechanic_form,
+#             'task_formset': task_formset,
+#             'part_formset': part_formset,
+#             'task_helper': task_helper,
+#             'part_helper': part_helper,
+#             'job': job,
+#         }
+#
+#         return render(request, 'nod/assign_jobsheet.html', context)
+#     else:
+#         messages.error(request, "You must be a foreperson in order to view this page.")
+#         return redirect('/garits/')
 
 
 @login_required
 def delete_job(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         job = get_object_or_404(Job, uuid=uuid)
 
         job.is_deleted = True
@@ -570,7 +731,7 @@ def delete_job(request, uuid):
         messages.error(request, "Job No." + job.job_number + " deleted.")
         return HttpResponseRedirect('/garits/jobs/active/')
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
@@ -609,7 +770,8 @@ def edit_profile(request):
 
 @login_required
 def create_dropin(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
+                    request.user.staffmember.role == '2':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -700,13 +862,14 @@ def create_dropin(request):
 
         return render(request, 'nod/create_dropin.html', context)
     else:
-        messages.error(request, "You must be a foreperson in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_dropin(request, uuid):
-    if request.user.staffmember.role == '5':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         dropin = get_object_or_404(Dropin, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -806,13 +969,14 @@ def edit_dropin(request, uuid):
 
         return render(request, 'nod/edit_dropin.html', context)
     else:
-        messages.error(request, "You must be a foreperson in order to view this page.")
+        messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def create_account_holder(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -926,13 +1090,14 @@ def create_account_holder(request):
 
         return render(request, 'nod/create_account_holder.html', context)
     else:
-        messages.error(request, "You must be a foreperson in order to view this page.")
+        messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_account_holder(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
+                    request.user.staffmember.role == '2':
         account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -1075,13 +1240,14 @@ def edit_account_holder(request, uuid):
 
         return render(request, 'nod/edit_account_holder.html', context)
     else:
-        messages.error(request, "You must be a foreperson in order to view this page.")
+        messages.error(request, "You must be a foreperson/franchisee/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def create_business_customer(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -1198,13 +1364,14 @@ def create_business_customer(request):
 
         return render(request, 'nod/create_business_customer.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_business_customer(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
         business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -1345,13 +1512,14 @@ def edit_business_customer(request, uuid):
 
         return render(request, 'nod/edit_business_customer.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def delete_customer(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         try:
             customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
         except ObjectDoesNotExist:
@@ -1374,13 +1542,14 @@ def delete_customer(request, uuid):
 
         return HttpResponseRedirect('/garits/customers/')
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def view_customer(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+        request.user.staffmember.role == '2':
         try:
             customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
         except ObjectDoesNotExist:
@@ -1427,13 +1596,14 @@ def view_customer(request, uuid):
         })
         return HttpResponse(template.render(context))
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def create_vehicle(request, customer_uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
 
         # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
         # check for account holder, if still not found, check business customer.
@@ -1482,13 +1652,14 @@ def create_vehicle(request, customer_uuid):
         }
         return render(request, 'nod/create_vehicle.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_vehicle(request, customer_uuid, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
 
         # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
         # check for account holder, if still not found, check business customer.
@@ -1560,13 +1731,14 @@ def edit_vehicle(request, customer_uuid, uuid):
         }
         return render(request, 'nod/edit_vehicle.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def delete_vehicle(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         vehicle = get_object_or_404(Vehicle, uuid=uuid)
 
         vehicle.is_deleted = True
@@ -1576,7 +1748,7 @@ def delete_vehicle(request, uuid):
         messages.error(request, "Vehicle " + vehicle.reg_number + " was removed from " + vehicle.get_customer().__str__())
         return redirect('view-customer', uuid=vehicle.get_customer().uuid)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
@@ -1618,7 +1790,8 @@ def get_vehicles(request, customer_uuid):
 
 @login_required
 def create_part(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         if request.method == 'POST':
             form = CreatePartForm(request.POST)
 
@@ -1642,13 +1815,14 @@ def create_part(request):
 
         return render(request, 'nod/create_part.html', {'form': form})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_part(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         part = get_object_or_404(Part, uuid=uuid)
 
         if request.method == 'POST':
@@ -1683,13 +1857,14 @@ def edit_part(request, uuid):
         }
         return render(request, 'nod/edit_part.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def delete_part(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
+                    request.user.staffmember.role == '2':
         part = get_object_or_404(Part, uuid=uuid)
 
         part.is_deleted = True
@@ -1698,7 +1873,7 @@ def delete_part(request, uuid):
         messages.error(request, part.name + " was deleted.")
         return HttpResponseRedirect('/garits/parts/')
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
@@ -1722,7 +1897,8 @@ def get_vehicles_autocomplete(request):
 
 @login_required
 def replenish_stock(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm)
         parts_data = []
 
@@ -1773,13 +1949,14 @@ def replenish_stock(request):
 
         return render(request, 'nod/replenish_order.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_replenish_stock(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         order = get_object_or_404(PartOrder, uuid=uuid)
         PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
         part_set = order.orderpartrelationship_set.all()
@@ -1848,7 +2025,7 @@ def edit_replenish_stock(request, uuid):
         }
         return render(request, 'nod/edit_replenish_order.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
@@ -1872,7 +2049,8 @@ def get_suppliers_autocomplete(request):
 
 @login_required
 def create_supplier(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet)
         email_data = []
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet)
@@ -1945,13 +2123,14 @@ def create_supplier(request):
 
         return render(request, 'nod/create_supplier.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def edit_supplier(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         supplier = get_object_or_404(Supplier, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
@@ -2050,13 +2229,14 @@ def edit_supplier(request, uuid):
 
         return render(request, 'nod/edit_supplier.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def delete_supplier(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         # try:
         #     staff = get_object_or_404(Mechanic, uuid=uuid)
         # except ObjectDoesNotExist:
@@ -2068,13 +2248,14 @@ def delete_supplier(request, uuid):
         messages.error(request, "Supplier " + supplier.company_name + " was deleted.")
         return HttpResponseRedirect('/garits/suppliers/')
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def sell_parts(request, customer_uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
+                    request.user.staffmember.role == '2':
         # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
         # check for account holder, if still not found, check business customer.
         try:
@@ -2152,7 +2333,7 @@ def sell_parts(request, customer_uuid):
 
         return render(request, 'nod/sell_parts.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
@@ -2314,7 +2495,8 @@ def price_control(request):
 
 @login_required
 def view_invoice(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         job = invoice.job_done
         customer = invoice.get_customer()
@@ -2329,13 +2511,14 @@ def view_invoice(request, uuid):
         })
         return HttpResponse(template.render(context))
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def pay_invoice(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         customer = invoice.get_customer()
         if request.method == 'POST':
@@ -2399,13 +2582,14 @@ def pay_invoice(request, uuid):
 
         return render(request, 'nod/pay_invoice.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def create_payment(request, job_uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
+                    request.user.staffmember.role == '2':
         job = get_object_or_404(Job, uuid=job_uuid)
         if request.method == 'POST':
             form = PaymentForm(request.POST)
@@ -2450,13 +2634,14 @@ def create_payment(request, job_uuid):
 
         return render(request, 'nod/create_payment.html', context)
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def generate_invoice_for_job(request, job_uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         job = get_object_or_404(Job, uuid=job_uuid)
 
         last_id = Invoice.objects.last().id
@@ -2475,18 +2660,19 @@ def generate_invoice_for_job(request, job_uuid):
 
         return redirect('invoice')
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
 @login_required
 def spare_parts_report_table(request):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         spare_parts_report_table = SparePartsReportTable(SparePartsReport.objects.filter(is_deleted=False))
         RequestConfig(request).configure(spare_parts_report_table)
         return render(request, "nod/spare_parts_reports.html", {'reports_table': spare_parts_report_table})
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 # @login_required
@@ -2537,8 +2723,9 @@ def spare_parts_report_table(request):
 
 @login_required
 def print_spare_parts_report(request, uuid):
-    if request.user.staffmember.role == '3':
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
         pass
     else:
-        messages.error(request, "You must be a franchisee in order to view this page.")
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')

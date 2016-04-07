@@ -29,17 +29,24 @@
     </ul>
     <hr/>
 {% endif %}
-<div id="pagename">Home</div>
+{#<div id="pagename">Home</div>#}
 <div id="main">
-    <div id="jobs">
-        <a class="btn btn-primary btn-lg btn-block" href="/jobs/all">View jobs</a>
-    </div><div id="spareparts">
-        <a class="btn btn-default btn-lg btn-block" href="/parts/all">View spare parts</a>
-    </div>
-    <div class="tablelist">
-        <h3>My outstanding jobs</h3>
-        {{ render_table jobs }}
-    </div>
+    {% if request.user.first_name %}
+        <h2>Hello, {{ request.user.first_name }}!</h2>
+    {% else %}
+        <h2>Hello!</h2>
+    {% endif %}
+
+    </br>
+{#    <div id="jobs">#}
+{#        <a class="btn btn-primary btn-lg btn-block" href="/jobs/all">View jobs</a>#}
+{#    </div><div id="spareparts">#}
+{#        <a class="btn btn-default btn-lg btn-block" href="/parts/all">View spare parts</a>#}
+{#    </div>#}
+{#    <div class="tablelist">#}
+        <h3>My Outstanding Jobs</h3>
+        {%  render_table my_jobs_table %}
+{#    </div>#}
 </div>
 </body>
 </html>

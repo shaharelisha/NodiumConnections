@@ -45,15 +45,15 @@
                 </div>
             {% endfor %}
 
-            <br/>
-            <h4>Parts</h4>
-            {{ part_formset.management_form|crispy }}
-            {% for form in part_formset %}
-                <div class="part-formset">
-                 {% crispy form part_helper 'bootstrap3' %}
-                <br/>
-                </div>
-            {% endfor %}
+{#            <br/>#}
+{#            <h4>Parts</h4>#}
+{#            {{ part_formset.management_form|crispy }}#}
+{#            {% for form in part_formset %}#}
+{#                <div class="part-formset">#}
+{#                 {% crispy form part_helper 'bootstrap3' %}#}
+{#                <br/>#}
+{#                </div>#}
+{#            {% endfor %}#}
 
 
             <div class="form-group">
@@ -78,13 +78,13 @@
 {#        deleteCssClass: 'task-formset'#}
     });
 
-    $(".part-formset").formset({
-        addText: 'add part',
-        deleteText: 'remove',
-        prefix: '{{ part_formset.prefix }}',
-        formCssClass: 'part-formset',
+{#    $(".part-formset").formset({#}
+{#        addText: 'add part',#}
+{#        deleteText: 'remove',#}
+{#        prefix: '{{ part_formset.prefix }}',#}
+{#        formCssClass: 'part-formset',#}
 {#        deleteCssClass: 'part-formset'#}
-    });
+{#    });#}
 
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js" type="text/javascript"></script>

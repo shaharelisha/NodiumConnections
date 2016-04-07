@@ -26,6 +26,9 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
             <li><a href="{% url 'index' %}">Home</a></li>
+
+            {% if request.user|role == 'Receptionist' or request.user|role == 'Foreperson' or request.user|role == 'Franchisee' %}
+
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Jobs<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
@@ -33,6 +36,13 @@
                 <li><a href="{% url 'untaken-jobs' %}">Pending Jobs</a></li>
               </ul>
             </li>
+            {% endif %}
+
+            {% if request.user|role == 'Mechanic' %}
+                <li><a href="{% url 'untaken-jobs' %}">Pending Jobs</a></li>
+            {% endif %}
+
+            {% if request.user|role == 'Receptionist' or request.user|role == 'Foreperson' or request.user|role == 'Franchisee' %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Stock<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
@@ -41,6 +51,9 @@
                 <li><a href="#">Orders</a></li>
               </ul>
             </li>
+            {% endif %}
+
+            {% if request.user|role == 'Receptionist' or request.user|role == 'Foreperson' or request.user|role == 'Franchisee' %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Customers<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
@@ -49,9 +62,20 @@
                 <li><a href="#">Drop Ins</a></li>
               </ul>
             </li>
-            <li><a href="{% url 'users' %}">Users</a></li>
+            {% endif %}
+
+            {% if request.user|role == 'Admin' %}
+                <li><a href="{% url 'price-control' %}">Price Control</a></li>
+            {% endif %}
+
+            {% if request.user|role == 'Admin' %}
+                <li><a href="{% url 'users' %}">Users</a></li>
+            {% endif %}
+
           </ul>
+
           <ul class="nav navbar-nav navbar-right">
+
 			<li class="dropdown">
 				<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
 				<ul class="dropdown-menu">
@@ -59,7 +83,9 @@
 					<li><a href="{% url 'logout' %}">Logout</a></li>
 				</ul>
 			</li>
+
           </ul>
+
           <form class="navbar-form navbar-right" role="search">
             <div class="form-group ui-widget">
       				<select class="form-control">
@@ -79,8 +105,6 @@
       {% block content %}
       {% endblock %}
     </div><br><br>
-
-    {{request.user|role }}
     <footer>
       <div class="container">
         <p class="text-muted credit footer-text">&copy; Nodium Connections LTD 2016</p>

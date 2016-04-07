@@ -56,8 +56,9 @@
         <h2>Reminders</h2>
         <table class="table">
             <tr><th>Customer name</th><th>Send reminder</th></tr>
-                {{ for reminder in MOTReminder }}
-                <tr><td>    {{ reminder.vehicle.get_customer }} </td><td><a href="#id">Print letter</td></tr>
+                {% for reminder in MOTReminder %}
+                <tr><td>    {{ reminder.vehicle.get_customer }} </td><td><a href="#id">Print letter</a></td></tr>
+                {% endfor %}
         </table>
     </div><div id="alerts">
         <h2>Alerts</h2>
