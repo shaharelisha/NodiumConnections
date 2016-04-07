@@ -241,7 +241,8 @@ def create_job(request):
                         #                 code='insufficient_parts'
                         #             )
 
-                        return HttpResponseRedirect('/garits/jobs/')
+                        messages.success(request, "Job No." + job.reg_num + " was successfully created.")
+                        return HttpResponseRedirect('/garits/jobs/pending/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -381,9 +382,31 @@ def edit_job(request, uuid):
                                     # )
                                     jobpart[0].save()
 
-                        job.save()
+                        for t in job.jobtask_set.filter(is_deleted=False):
+                            if t.status == '1':
+                                complete = True
+                                job.status = '1'
+                            else:
+                                complete = False
+                                break
 
-                        return HttpResponseRedirect('/garits/jobs/')
+
+                        if complete is False:
+                            for t in job.jobtask_set.filter(is_deleted=False):
+                                if t.status == '2':
+                                    job.status = '2'
+                                    break
+                                else:
+                                    job.status = '3'
+
+                        job.save()
+                        if complete is True:
+                            last_id = Invoice.objects.last().id
+                            new_id = last_id + 1
+                            invoice = Invoice.objects.create(job_done=job, invoice_number=new_id, issue_date=datetime.date.today())
+
+                        messages.success(request, "Your changes to Job No." + str(job.job_number) + " were saved.")
+                        return HttpResponseRedirect('/garits/jobs/pending/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -435,7 +458,7 @@ def edit_job(request, uuid):
                 task_formset = TaskFormSet(request.POST, prefix='fs1')
                 part_formset = PartFormSet(request.POST, prefix='fs2')
 
-                if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
+                if form.is_valid() and task_formset.is_valid() and part_formset.is_valid() and mechanic_form.is_valid():
                     # job_number = form.cleaned_data['job_number']
                     vehicle = form.cleaned_data['vehicle']
                     booking_date = form.cleaned_data['booking_date']
@@ -525,8 +548,31 @@ def edit_job(request, uuid):
                                         # )
                                         jobpart[0].save()
 
-                            job.save()
 
+                            for t in job.jobtask_set.filter(is_deleted=False):
+                                if t.status == '1':
+                                    complete = True
+                                    job.status = '1'
+                                else:
+                                    complete = False
+                                    break
+
+
+                            if complete is False:
+                                for t in job.jobtask_set.filter(is_deleted=False):
+                                    if t.status == '2':
+                                        job.status = '2'
+                                        break
+                                    else:
+                                        job.status = '3'
+
+                            job.save()
+                            if complete is True:
+                                last_id = Invoice.objects.last().id
+                                new_id = last_id + 1
+                                invoice = Invoice.objects.create(job_done=job, invoice_number=new_id, issue_date=datetime.date.today())
+
+                            messages.success(request, "Your changes to Job No." + str(job.job_number) + " were saved.")
                             return HttpResponseRedirect('/garits/jobs/active/')
 
                     except IntegrityError:
@@ -2501,13 +2547,23 @@ def view_invoice(request, uuid):
         job = invoice.job_done
         customer = invoice.get_customer()
         vehicle = invoice.job_done.vehicle
-
-        template = loader.get_template('nod/view_invoice.html')
+        mechanic = invoice.job_done.mechanic
+        if invoice.reminder_phase == '1':
+            template = loader.get_template('nod/view_invoice.html')
+        else:
+            if invoice.reminder_phase == '2':
+                template = loader.get_template('nod/view_invoice_reminder_1.html')
+            else:
+                if invoice.reminder_phase == '3':
+                    template = loader.get_template('nod/view_invoice_reminder_2.html')
+                else:
+                    template = loader.get_template('nod/view_invoice_reminder_final.html')
         context = RequestContext(request, {
             'invoice': invoice,
             'job': job,
             'customer': customer,
             'vehicle': vehicle,
+            'mechanic': mechanic,
         })
         return HttpResponse(template.render(context))
     else:

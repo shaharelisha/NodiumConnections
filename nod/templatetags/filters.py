@@ -49,14 +49,18 @@ def get_job_parts(invoice):
     return invoice.job_done.parts.filter(is_deleted=False)
 
 
-@register.filter(name='price')
-def get_markedup_price(part):
-    return part.get_markedup_price()
+@register.filter(name="actual_job_part")
+def actual_job_parts(part, job):
+    return JobPart.objects.get(part=part, job=job, is_deleted=False)
+
+# @register.filter(name='price')
+# def get_markedup_price(part):
+#     return part.get_markedup_price()
 
 
 @register.filter(name='total_cost')
 def get_cost(part):
-    return part.part.get_markedup_price() * part.quantity
+    return part.get_cost()
 
 
 @register.filter(name='labour_duration')

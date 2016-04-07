@@ -146,7 +146,7 @@ class VehicleTable(tables.Table):
 
 
 class UnpaidInvoiceTable(tables.Table):
-    invoice_number = tables.LinkColumn('pay-invoice', args=[A('uuid')], order_by="invoice_number",
+    invoice_number = tables.LinkColumn('view-invoice', args=[A('uuid')], order_by="invoice_number",
                                    verbose_name="Invoice No.")
     # invoice_number = tables.Column(order_by="invoice_number", verbose_name="Invoice No.")
     issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")

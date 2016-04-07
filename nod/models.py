@@ -455,8 +455,10 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_duration(self):
         time = 0
-        for t in self.jobtask_set: #not self.tasks?
-            time += t.duration
+        for t in self.jobtask_set.all(): #not self.tasks?
+            time += t.duration.seconds % 3600
+        # time = float(time)
+        # time / 3600
         return time
 
     def get_labour_price(self):
@@ -466,7 +468,7 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
     def get_parts_price(self):
         price = 0
-        for part in self.jobpart_set: #not self.parts
+        for part in self.jobpart_set.all(): #not self.parts
             unit_price = part.part.price
             quantity = part.quantity
             price += unit_price*quantity

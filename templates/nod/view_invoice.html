@@ -31,8 +31,11 @@
 {% endif %}
 
 <div id="main">
-<div id="view">
-    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br><br>{{ invoice.issue_date }}</div>
+<a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-default">Pay Invoice</a>
+{#<a href="{% url 'print' %}" class="btn btn-default">Print</a>#}
+
+{#<div id="view">#}
+    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br>
 
     <div id="garageaddress">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ invoice.issue_date }}</div>
 
@@ -42,18 +45,18 @@
         <h5>Vehicle Registration No.: {{ vehicle.reg_num }}</h5>
         <h5>Make/Model: {{ vehicle.make }}/{{ vehicle.model }}</h5>
         <br>
-        <div class="linespace"></div>
         <h3>Description of work:</h3>
         </br>
         {% for task in invoice|job_tasks %}
         <h5>{{ forloop.counter }}) {{ task.description }}</h5>
         {% endfor %}
         <br>
-        <div class="linespace"></div>
         <table style="margin:10px 15%; width:70%;" class="table">
             <tr><th>Item</th><th>Part code</th><th>Unit cost (&pound;)</th><th>Quantity</th><th>Subtotal(&pound;)</th></tr>
             {% for part in invoice|job_parts %}
-            <tr><td>{{ part.part.name }}</td><td>{{ part.part.code }}</td><td>{{ part.part|price }}</td><td>{{ part.quantity }}</td><td>{{ part|total_cost }}</td></tr>
+            {% with part|actual_job_part:job as p %}
+            <tr><td>{{ part.name }}</td><td>{{ part.code }}</td><td>{{ part.price }}</td><td>{{ p.quantity }}</td><td>{{ p|total_cost }}</td></tr>
+            {% endwith %}
             {% endfor %}
             <tr><td></td><td></td><td></td><td></td><td></td></tr>
             <tr><td>Labour</td><td></td><td>{{ mechanic.hourly_pay }}</td><td>{{ job|labour_duration }}</td><td>{{ job|labour_price }}</td></tr>
@@ -66,11 +69,10 @@
         </div>
         <br><br>
         <br>
-        <pre>
-            Thank you for your valued custom. We look forward to receiving your payment in due course.<br>
+        <pre>Thank you for your valued custom. We look forward to receiving your payment in due course.<br>
             <br>Yours sincerely,
             <br>G. Lancaster<br>
         </pre>
-    </div>
+{#    </div>#}
 </div>
 {% endblock %}
