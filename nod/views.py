@@ -8,6 +8,7 @@ from django.contrib import messages
 from django_tables2 import RequestConfig
 from django.forms.formsets import formset_factory
 from django.contrib.auth import update_session_auth_hash
+import calendar
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 import json
 from django.template import RequestContext, loader
@@ -65,6 +66,36 @@ def automated_invoice_checks():
                 InvoiceReminder.objects.create(invoice=invoice, reminder_phase='4')
                 invoice.reminder_phase = '4'
                 invoice.save()
+
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    # returns (week number of first day of given month/year, number of days in given month/year),
+    # so [1] gets the number of days in the current month.
+    # Then checks if today is the last day of the month
+    if datetime.date.today().day == calendar.monthrange(year, month)[1]:
+        date = datetime.date(year, month, 1)
+        today = datetime.date.today()
+        report = SparePartsReport.objects.create(start_date=date, end_date=today, date=today)
+
+        for part in Part.objects.filter(is_deleted=False):
+            spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
+            delivered = 0
+            for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
+                delivered += p.quantity
+            spare.delivery = delivered
+
+            used = 0
+            for p in JobPart.objects.filter(part=part, job__booking_date__gte=report.start_date):
+                used += p.quantity
+            for p in SellPart.objects.filter(part=part, order__date__gte=report.start_date):
+                used +=p.quantity
+            spare.used = used
+
+            spare.initial_stock_level = spare.new_stock_level + spare.used - spare.delivery
+            spare.save()
+            report.sparepart_set.add(spare)
+        report.save()
+
     return None
 
 
@@ -3031,16 +3062,16 @@ def view_invoice(request, uuid):
             if invoice.part_order:
                 order = invoice.part_order
                 customer = invoice.get_customer()
-                if invoice.reminder_phase == '1':
-                    template = loader.get_template('nod/view_invoice_parts.html')
-                else:
-                    if invoice.reminder_phase == '2':
-                        template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
-                    else:
-                        if invoice.reminder_phase == '3':
-                            template = loader.get_template('nod/view_invoice_reminder_2_parts.html')
-                        else:
-                            template = loader.get_template('nod/view_invoice_reminder_final_parts.html')
+                # if invoice.reminder_phase == '1':
+                template = loader.get_template('nod/view_invoice_parts.html')
+                # else:
+                #     if invoice.reminder_phase == '2':
+                #         template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
+                #     else:
+                #         if invoice.reminder_phase == '3':
+                #             template = loader.get_template('nod/view_invoice_reminder_2_parts.html')
+                #         else:
+                #             template = loader.get_template('nod/view_invoice_reminder_final_parts.html')
                 context = RequestContext(request, {
                     'invoice': invoice,
                     'order': order,
@@ -3305,6 +3336,7 @@ def spare_parts_report_table(request):
 
 @login_required
 def generate_spare_parts_report(request):
+    print('z')
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         month = datetime.date.today().month
@@ -3313,7 +3345,7 @@ def generate_spare_parts_report(request):
         date = datetime.date(year, month, 1)
         today = datetime.date.today()
         report = SparePartsReport.objects.create(start_date=date, end_date=today, date=today)
-
+        print('b')
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
             delivered = 0
@@ -3330,17 +3362,20 @@ def generate_spare_parts_report(request):
 
             spare.initial_stock_level = spare.new_stock_level + spare.used - spare.delivery
             spare.save()
-
-        view_spare_parts_report(request, report.uuid)
+            report.sparepart_set.add(spare)
+        report.save()
+        print('a')
+        # return redirect('/garits/spare_parts_reports/')
+        return view_spare_parts_report(request, report.uuid)
     #     template = loader.get_template('nod/view_spare_parts_report.html')
     #     context = RequestContext(request, {
     #         'report': report,
     #     })
-    #
+    # #
     #     return HttpResponse(template.render(context))
-    # else:
-    #     messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
-    #     return redirect('/garits/')
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
 
 
 @login_required
@@ -3348,7 +3383,7 @@ def view_spare_parts_report(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         report = get_object_or_404(SparePartsReport, uuid=uuid)
-
+        print('c')
         template = loader.get_template('nod/view_spare_parts_report.html')
         context = RequestContext(request, {
             'report': report,

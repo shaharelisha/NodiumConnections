@@ -666,13 +666,13 @@ class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
     def get_total_initial_cost(self):
         cost = 0
-        for p in self.parts.filter(is_deleted=False):
+        for p in SparePart.objects.filter(report=self, is_deleted=False):
             cost += p.get_initial_cost()
         return cost
 
     def get_total_stock_cost(self):
         cost = 0
-        for p in self.parts.filter(is_deleted=False):
+        for p in SparePart.objects.filter(report=self, is_deleted=False):
             cost += p.get_stock_cost()
         return cost
 

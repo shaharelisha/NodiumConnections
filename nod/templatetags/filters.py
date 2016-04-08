@@ -144,7 +144,7 @@ def get_stock_cost(part):
 
 @register.filter(name='initial_cost')
 def get_stock_cost(part):
-    return part.initial_stock * part.part.price
+    return part.initial_stock_level * part.part.price
 
 
 @register.filter(name='total_initial_cost')
