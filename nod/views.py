@@ -51,7 +51,29 @@ def index(request):
     # Franchisee
     if request.user.staffmember.role == '3':
         automated_invoice_checks()
-        return render(request, "nod/index-franchisee.html")
+
+        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+        RequestConfig(request).configure(invoices_to_print_table)
+        today = datetime.date.today()
+        mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
+                                                                           renewal_test_date__gte=today,
+                                                                           issue_date__lte=today))
+        RequestConfig(request).configure(mot_reminders_table)
+
+        parts = []
+        for p in Part.objects.filter(is_deleted=False):
+            if p.quantity <= p.low_level_threshold:
+                parts.append(p)
+
+        low_parts = LowStockTable(parts)
+        RequestConfig(request).configure(low_parts)
+
+        context = {
+            'invoices_to_print_table': invoices_to_print_table,
+            'mot_reminders_table': mot_reminders_table,
+            'low_parts': low_parts,
+        }
+        return render(request, "nod/index-franchisee.html", context)
     # Receptionist
     if request.user.staffmember.role == '4':
         automated_invoice_checks()
@@ -62,9 +84,19 @@ def index(request):
                                                                            renewal_test_date__gte=today,
                                                                            issue_date__lte=today))
         RequestConfig(request).configure(mot_reminders_table)
+
+        parts = []
+        for p in Part.objects.filter(is_deleted=False):
+            if p.quantity <= p.low_level_threshold:
+                parts.append(p)
+
+        low_parts = LowStockTable(parts)
+        RequestConfig(request).configure(low_parts)
+
         context = {
             'invoices_to_print_table': invoices_to_print_table,
             'mot_reminders_table': mot_reminders_table,
+            'low_parts': low_parts,
         }
         return render(request, "nod/index-receptionist.html", context)
     # Admin
@@ -175,6 +207,24 @@ def active_jobs_table(request):
 
 
 @login_required
+def paused_jobs_table(request):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
+
+        jobs = []
+        for job in Job.objects.filter(is_deleted=False):
+            if not job.sufficient_quantity():
+                jobs.append(job)
+
+        job_table = ActiveJobsTable(jobs)
+        RequestConfig(request).configure(job_table)
+        return render(request, "nod/paused_jobs.html", {'job_table': job_table})
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
 def untaken_jobs_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '1' or\
                     request.user.staffmember.role == '2' or request.user.staffmember.role == '4':
@@ -231,6 +281,31 @@ def account_holder_table(request):
             'account_holders_table': account_holders_table,
         }
         return render(request, "nod/account_holders.html", context)
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def dropin_table(request):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
+            or request.user.staffmember.role == '2':
+        dropin_table = DropInTable(Dropin.objects.filter(is_deleted=False).exclude(forename="",
+                                                                                                          surname=""))
+        RequestConfig(request).configure(dropin_table)
+
+        # deletes account holders which were created (automatically when accessing the 'create' page)
+        # but then weren't submitted (left empty) for over 30 mintutes.
+        for a in Customer.objects.filter(forename="", surname=""):
+            if a.updated < timezone.now() - timedelta(minutes=30):
+                for v in a.vehicle_set.all():
+                    v.delete()
+                a.delete()
+
+        context = {
+            'dropin_table': dropin_table,
+        }
+        return render(request, "nod/dropins.html", context)
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
@@ -458,6 +533,7 @@ def edit_job(request, uuid):
                                 # TODO: do something if q drops below threshold
                                 if part.quantity >= quantity:
                                     part.quantity -= quantity
+                                    jobpart[0].sufficient_quantity = True
                                     part.save()
                                 else:
                                     # TODO: when changed back to TRUE, must subtract ^
@@ -466,7 +542,7 @@ def edit_job(request, uuid):
                                     #     'Not enough parts in stock.',
                                     #     code='insufficient_parts'
                                     # )
-                                    jobpart[0].save()
+                                jobpart[0].save()
 
                         for t in job.jobtask_set.filter(is_deleted=False):
                             if t.status == '1':
@@ -624,6 +700,7 @@ def edit_job(request, uuid):
                                     # TODO: do something if q drops below threshold
                                     if part.quantity >= quantity:
                                         part.quantity -= quantity
+                                        jobpart[0].sufficient_quantity = True
                                         part.save()
                                     else:
                                         # TODO: when changed back to TRUE, must subtract ^
@@ -632,7 +709,7 @@ def edit_job(request, uuid):
                                         #     'Not enough parts in stock.',
                                         #     code='insufficient_parts'
                                         # )
-                                        jobpart[0].save()
+                                    jobpart[0].save()
 
 
                             for t in job.jobtask_set.filter(is_deleted=False):
@@ -1449,13 +1526,13 @@ def edit_account_holder(request, uuid):
             if discount == FixedDiscount.objects.get():
                 data2['discount_plan'] = '1'
             else:
-                if discount == FlexibleDiscount.objects.first():
-                    data2['discount_plan'] = '2'
+                if discount == VariableDiscount.objects.get():
+                    data2['discount_plan'] = '3'
                 else:
-                    if discount == VariableDiscount.objects.get():
-                        data2['discount_plan'] = '3'
+                    if discount == "":
+                        data2['discount_plan'] = ''
                     else:
-                        data2['discount_plan'] = ""
+                        data2['discount_plan'] = "2"
 
             form = AccountHolderForm(initial=data)
             discount_form = DiscountPlanForm(initial=data2)
@@ -2164,6 +2241,27 @@ def view_customer(request, uuid):
             'customer': customer,
             'vehicle_table': vehicle_table,
             'invoice_table': invoice_table
+        })
+        return HttpResponse(template.render(context))
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_dropin(request, uuid):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+        request.user.staffmember.role == '2':
+
+        customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
+
+        vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
+        RequestConfig(request).configure(vehicle_table)
+
+        template = loader.get_template('nod/view_dropin.html')
+        context = RequestContext(request, {
+            'customer': customer,
+            'vehicle_table': vehicle_table,
         })
         return HttpResponse(template.render(context))
     else:

@@ -48,6 +48,16 @@
             <tr class="success"><td><a href="#report5">Response Rate Report</a></td></tr>
             <tr class="success"><td><a href="/averagepricereport">Price Report</a></td></tr>
         </table>
+        <br>
+
+        <h3 class="text-danger">Outstanding Payments</h3>
+            {% render_table invoices_to_print_table %}
+
+        <h3 class="text-danger">MOT Reminders</h3>
+            {% render_table mot_reminders_table %}
+
+        <h3 class="text-danger">Low Stock</h3>
+            {% render_table low_parts %}
     </div>
 </div>
 {% endblock %}

@@ -34,6 +34,7 @@
               <ul class="dropdown-menu" role="menu">
                 <li><a href="{% url 'active-jobs' %}">Active Jobs</a></li>
                 <li><a href="{% url 'untaken-jobs' %}">Pending Jobs</a></li>
+                <li><a href="{% url 'paused-jobs' %}">Paused Jobs</a></li>
               </ul>
             </li>
             {% endif %}
@@ -61,7 +62,7 @@
               <ul class="dropdown-menu" role="menu">
                 <li><a href="{% url 'account-holders' %}">Account Holders</a></li>
                 <li><a href="{% url 'business-customers' %}">Business Customers</a></li>
-                <li><a href="#">Drop Ins</a></li>
+                <li><a href="{% url 'dropins' %}">Drop Ins</a></li>
               </ul>
             </li>
             {% endif %}

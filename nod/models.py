@@ -526,6 +526,14 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_customer(self):
         return self.vehicle.get_customer()
 
+    def sufficient_quantity(self):
+        for jobpart in JobPart.objects.filter(job=self, is_deleted=False):
+            if jobpart.sufficient_quantity is False:
+                return False
+                break
+            else:
+                return True
+
 
 class JobTask(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     task = models.ForeignKey(Task)

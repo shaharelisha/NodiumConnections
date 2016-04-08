@@ -1,0 +1,33 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+
+<div id="main">
+<a href="{% url 'create-job' %}" class="btn btn-default">Create New Job</a>
+    <h2>Paused Jobs (Insufficient parts in stock)</h2>
+        {% render_table job_table %}
+</div>
+{% endblock %}

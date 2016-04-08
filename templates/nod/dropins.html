@@ -1,0 +1,35 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                {#          Data saved successfully #}
+                <li class="success">
+                    {{ message }}
+                </li>
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <li class="error">
+                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <hr/>
+{% endif %}
+{#<div id="pagename">Customers</div>#}
+<div id="main">
+    <a href="{% url 'create-dropin' %}" class="btn btn-default">Create New Drop In</a>
+    <h2>Drop Ins</h2>
+
+        {% render_table dropin_table %}
+
+</div>
+{% endblock %}

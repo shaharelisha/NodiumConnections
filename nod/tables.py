@@ -41,6 +41,31 @@ class AccountHolderTable(tables.Table):
         attrs = {"class": "table table-striped table-hover "}
 
 
+class DropInTable(tables.Table):
+    # tr_class = tables.Column(visible=False, empty_values=())
+    full_name = tables.LinkColumn('view-dropin', args=[A('uuid')], order_by="surname", verbose_name="Name")
+    list_emails = tables.Column(verbose_name="Emails", orderable=False)
+    get_phones = tables.Column(verbose_name="Phones", orderable=False)
+    # full_address = tables.Column(verbose_name="Address", orderable=False)
+    # discount_plan = tables.Column(verbose_name="Discount Plan")
+    # suspended = tables.BooleanColumn(visible=False, verbose_name="Suspended")
+
+    # def render_tr_class(self):
+    #     for row in self.rows:
+    #         if row.suspended is True:
+    #             return "danger"
+        # if self.suspended is True:
+        #     return "danger"
+    # def render_source(self, value):
+    #     if value == 'some_value':
+    #         return mark_safe("<span class='highlight_this_row'>%s</span>" % (escape(value)))
+    #     else:
+    #         return value
+    #
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
 # TODO: highlight suspended customers
 class BusinessCustomerTable(tables.Table):
     company_name = tables.LinkColumn('view-customer', args=[A('uuid')], order_by="company_name",
@@ -204,3 +229,18 @@ class MOTRemindersTable(tables.Table):
     issue_date = tables.Column(order_by='issue_date', verbose_name="Issue Date")
     renewal_test_date = tables.Column(order_by='renewal_test_date', verbose_name="Renewal Test Date")
     days_remaining = tables.Column(verbose_name="Days Remaining")
+
+
+class LowStockTable(tables.Table):
+    name = tables.LinkColumn('edit-part', args=[A('uuid')], order_by="name",
+                                     verbose_name="Name")
+    code = tables.Column(verbose_name="Code", order_by="code")
+    manufacturer = tables.Column(verbose_name="Manufacturer", order_by="manufacturer")
+    vehicle_type = tables.Column(verbose_name="Vehicle Type", order_by="vehicle_type")
+    years = tables.Column(verbose_name="Year(s)", order_by="years")
+    price = tables.Column(verbose_name="Price (£)", order_by="price")
+    quantity = tables.Column(verbose_name="Quantity", order_by="quantity")
+    low_level_threshold = tables.Column(verbose_name="Low Level Threshold", order_by="low_level_threshold")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
