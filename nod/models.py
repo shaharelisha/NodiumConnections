@@ -270,6 +270,9 @@ class AccountHolder(Customer):
     object_id = models.PositiveIntegerField(null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    spent_this_month = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    month = models.PositiveSmallIntegerField(null=True)
+
     def __str__(self):
         return self.forename + ' ' + self.surname
 
@@ -353,6 +356,11 @@ class VariableDiscount(DiscountPlan):
         super(VariableDiscount, self).__init__(*args, **kwargs)
         self.type = '3'
 
+
+# class CustomerDiscount(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
+#     date = models.DateField(defualt=datetime.date.today())
+#     discount = FlexibleDiscount
+#     customer =
 
 class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     # personal_id = models.CharField(max_length=15, unique=True) #TODO: check this.
@@ -573,7 +581,7 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     reminder_phase = models.CharField(choices=INVOICE_STATUS, max_length=1, default='1')
     paid = models.BooleanField(default=False)
 
-    def get_price(self):
+    def get_pre_discount_price(self):
         if self.job_done:
             return self.job_done.get_grand_total()
         else:
@@ -614,6 +622,65 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         else:
             if self.part_order:
                 return "Parts"
+
+
+    def get_discount(self):
+        uuid = self.get_customer().content_object.uuid
+        try:
+            discount = FixedDiscount.objects.get(uuid=uuid)
+            d = 'fixed'
+        except ObjectDoesNotExist:
+            try:
+                discount = VariableDiscount.objects.get(uuid=uuid)
+                d = 'variable'
+            except ObjectDoesNotExist:
+                try:
+                    discount = FlexibleDiscount.objects.get(uuid=uuid)
+                    d = 'flexible'
+                except ObjectDoesNotExist:
+                    d = 'none'
+        return d
+        # if d=='fixed':
+        #     price = price * discount/100
+        #     return round(price, 2)
+
+
+    def get_price(self):
+        price = self.get_pre_discount_price()
+        d = self.get_discount()
+        uuid = self.get_customer().content_object.uuid
+        if d == 'none':
+            return round(price, 2)
+        if d == 'fixed':
+            discount = FixedDiscount.objects.get(uuid=uuid).discount
+            price = float(price)
+            price -= float(price) * float(discount)/100
+            return round(price, 2)
+        if d == 'variable':
+            if self.job_done:
+                # MOT
+                if self.job_done.type == '1':
+                    discount = VariableDiscount.objects.get(uuid=uuid).mot_discount
+                # Repair
+                if self.job_done.type == '2':
+                    discount = VariableDiscount.objects.get(uuid=uuid).repair_discount
+                # Annual
+                if self.job_done.type == '3':
+                    discount = VariableDiscount.objects.get(uuid=uuid).annual_discount
+                # Parts
+            else:
+                if self.part_order:
+                    discount = VariableDiscount.objects.get(uuid=uuid).parts_discount
+            price = float(price)
+            price -= float(price) * float(discount)/100
+            return round(price, 2)
+        if d == 'flexible':
+            self.get_customer().spent_this_month += price
+            return round(price, 2)
+
+    def discount_value(self):
+        return float(self.get_pre_discount_price()) - float(self.get_price())
+
 
     # def get_VAT(self):
     #     vat = PriceControl.objects.get().vat/100

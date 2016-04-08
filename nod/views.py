@@ -1132,7 +1132,7 @@ def create_account_holder(request):
             except ObjectDoesNotExist:
                 pass
 
-            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
                 print('a)')
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
@@ -1352,7 +1352,7 @@ def edit_account_holder(request, uuid):
             print('2')
 
 
-            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
                 print('3')
 
                 forename = form.cleaned_data['forename']
@@ -1620,7 +1620,7 @@ def create_business_customer(request):
             except ObjectDoesNotExist:
                 pass
 
-            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
                 company_name = form.cleaned_data['company_name']
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
@@ -1845,7 +1845,7 @@ def edit_business_customer(request, uuid):
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
 
-            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
+            if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
                 company_name = form.cleaned_data['company_name']
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
@@ -3072,6 +3072,7 @@ def view_invoice(request, uuid):
         if invoice.job_done:
             job = invoice.job_done
             customer = invoice.get_customer()
+            discount = customer.content_object
             vehicle = invoice.job_done.vehicle
             mechanic = invoice.job_done.mechanic
             if invoice.reminder_phase == '1':
@@ -3088,6 +3089,7 @@ def view_invoice(request, uuid):
                 'invoice': invoice,
                 'job': job,
                 'customer': customer,
+                'discount': discount,
                 'vehicle': vehicle,
                 'mechanic': mechanic,
             })

@@ -107,8 +107,8 @@ def get_vat(job):
 
 
 @register.filter(name='grand_total')
-def get_grand_total(job):
-    return job.get_grand_total()
+def get_grand_total(invoice):
+    return invoice.get_price()
 
 
 @register.filter(name='copy2')
@@ -133,6 +133,16 @@ def copy4_exists(invoice):
         return True
     else:
         return False
+
+
+@register.filter(name='get_discount')
+def get_discount(invoice):
+    return invoice.get_discount()
+
+
+@register.filter(name='get_discount_value')
+def get_discount_value(invoice):
+    return round(invoice.discount_value(), 2)
 
 
 @register.filter(name='parts')
@@ -211,3 +221,4 @@ def get_average_time_for_annual_per_mechanic(report, mechanic):
 #         return True
 #     else:
 #         return False
+

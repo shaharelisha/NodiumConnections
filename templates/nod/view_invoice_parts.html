@@ -85,7 +85,9 @@
             <tr><td></td><td></td><td>Total</td><td></td><td>{{ order|total }}</td></tr>
             <tr><td></td><td></td><td>VAT</td><td></td><td>{{ order|vat }}</td></tr>
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
-            <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ order|grand_total }}</td></tr>
+            <tr><td></td><td></td><td>Discount ({{ invoice|get_discount }})</td><td></td><td>-{{ invoice|get_discount_value }}</td></tr>
+            <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
+            <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ invoice|grand_total }}</td></tr>
         </table>
 
     </div>
