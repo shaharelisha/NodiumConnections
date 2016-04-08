@@ -46,7 +46,7 @@ INSTALLED_APPS = (
 )
 
 DBBACKUP_STORAGE = 'dbbackup.storage.filesystem_storage'
-DBBACKUP_STORAGE_OPTIONS = {'location': '/var/backups'}
+DBBACKUP_STORAGE_OPTIONS = {'location': BASE_DIR}
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

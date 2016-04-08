@@ -975,8 +975,8 @@ def edit_profile(request):
             request.user.username = username
 
             request.user.save()
-
-            return HttpResponseRedirect('/thanks/')
+            messages.success(request, "Your details were saved!")
+            return HttpResponseRedirect('/garits/')
 
     else:
         data = {}
@@ -1064,7 +1064,7 @@ def create_dropin(request):
 
                         dropin.save()
 
-                        return HttpResponseRedirect('/garits/customers/')
+                        return HttpResponseRedirect('/garits/customers/dropin/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -1169,7 +1169,7 @@ def edit_dropin(request, uuid):
 
                         dropin.save()
 
-                        return HttpResponseRedirect('/garits/customers/')
+                        return redirect('view-dropin', uuid=dropin.uuid)
 
                 except IntegrityError:
                     #If the transaction failed
@@ -1292,7 +1292,7 @@ def create_account_holder(request):
                         print(request.POST)
                         account_holder.save()
 
-                        return HttpResponseRedirect('/garits/customers/')
+                        return HttpResponseRedirect('/garits/customers/account_holders/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -1391,7 +1391,7 @@ def create_account_holder(request):
                             print(request.POST)
                             account_holder.save()
 
-                            return HttpResponseRedirect('/garits/customers/')
+                            return HttpResponseRedirect('/garits/customers/account_holders/')
 
                     except IntegrityError:
                         messages.error(request, "There was an error saving")
@@ -1784,7 +1784,7 @@ def create_business_customer(request):
 
                         business_customer.save()
 
-                        return HttpResponseRedirect('/garits/customers/')
+                        return HttpResponseRedirect('/garits/customers/business_customers/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -1887,7 +1887,7 @@ def create_business_customer(request):
 
                             business_customer.save()
 
-                            return HttpResponseRedirect('/garits/customers/')
+                            return HttpResponseRedirect('/garits/customers/business_customers/')
 
                     except IntegrityError:
                         messages.error(request, "There was an error saving")
@@ -2216,50 +2216,71 @@ def view_customer(request, uuid):
         request.user.staffmember.role == '2':
         try:
             customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+            if customer.suspended:
+                if len(customer.get_unpaid_invoices()) < 0:
+                    for invoice in customer.get_unpaid_invoices():
+                        if invoice.reminder_phase == '4' or invoice.issue_date <= (datetime.date.today() - relativedelta(months=3, weeks=1)):
+                            customer.suspended = True
+                            break
+                        else:
+                            customer.suspended = False
+                else:
+                    customer.suspended = False
+            customer.save()
+            if customer.suspended is True:
+                messages.error(request, "SUSPENDED")
 
+            vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
+            RequestConfig(request).configure(vehicle_table)
+
+            invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
+            RequestConfig(request).configure(invoice_table)
+
+            template = loader.get_template('nod/view_customer.html')
+            context = RequestContext(request, {
+                'customer': customer,
+                'vehicle_table': vehicle_table,
+                'invoice_table': invoice_table
+            })
+            return HttpResponse(template.render(context))
         except ObjectDoesNotExist:
             try:
                 customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
-            except ObjectDoesNotExist:
-                try:
-                    customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
-                except ObjectDoesNotExist:
-                    pass
-                except MultipleObjectsReturned:
-                    pass # TODO: get last one?
-            except MultipleObjectsReturned:
-                pass
-        except MultipleObjectsReturned:
-            pass
-
-        if customer.suspended:
-            if len(customer.get_unpaid_invoices()) < 0:
-                for invoice in customer.get_unpaid_invoices():
-                    if invoice.reminder_phase == '4' or invoice.issue_date <= (datetime.date.today() - relativedelta(months=3, weeks=1)):
-                        customer.suspended = True
-                        break
+                if customer.suspended:
+                    if len(customer.get_unpaid_invoices()) < 0:
+                        for invoice in customer.get_unpaid_invoices():
+                            if invoice.reminder_phase == '4' or invoice.issue_date <= (datetime.date.today() - relativedelta(months=3, weeks=1)):
+                                customer.suspended = True
+                                break
+                            else:
+                                customer.suspended = False
                     else:
                         customer.suspended = False
-            else:
-                customer.suspended = False
-        customer.save()
+                customer.save()
+                if customer.suspended is True:
+                    messages.error(request, "SUSPENDED")
 
-        if customer.suspended is True:
-            messages.error(request, "SUSPENDED")
+                vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
+                RequestConfig(request).configure(vehicle_table)
 
-        vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
-        RequestConfig(request).configure(vehicle_table)
+                invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
+                RequestConfig(request).configure(invoice_table)
 
-        invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
-        RequestConfig(request).configure(invoice_table)
+                template = loader.get_template('nod/view_customer.html')
+                context = RequestContext(request, {
+                    'customer': customer,
+                    'vehicle_table': vehicle_table,
+                    'invoice_table': invoice_table
+                })
+                return HttpResponse(template.render(context))
 
-        template = loader.get_template('nod/view_customer.html')
-        context = RequestContext(request, {
-            'customer': customer,
-            'vehicle_table': vehicle_table,
-            'invoice_table': invoice_table
-        })
-        return HttpResponse(template.render(context))
+            except ObjectDoesNotExist:
+                return redirect('/garits/')
+            except MultipleObjectsReturned:
+                return redirect('/garits/')
+        except MultipleObjectsReturned:
+            return redirect('/garits/')
+
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
@@ -2789,7 +2810,7 @@ def create_supplier(request):
 
                         supplier.save()
 
-                        return HttpResponseRedirect('/thanks/')
+                        return HttpResponseRedirect('/garits/suppliers/')
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -2889,7 +2910,7 @@ def edit_supplier(request, uuid):
 
                         supplier.save()
 
-                        return HttpResponseRedirect('/thanks/')
+                        return HttpResponseRedirect('/garits/suppliers/')
 
                 except IntegrityError:
                     #If the transaction failed
@@ -3161,7 +3182,7 @@ def price_control(request):
                 control.marked_up = marked_up
                 control.save()
 
-                return HttpResponseRedirect('/thanks/')
+                return HttpResponseRedirect('/garits/')
 
         else:
             data = {}
@@ -3427,7 +3448,9 @@ def create_payment(request, job_uuid):
                         job.invoice.paid = True
                         job.invoice.save()
 
-                        return HttpResponseRedirect('/thanks/')
+                        messages.success(request, "Payment accepted!")
+                        return redirect('view-invoice', uuid=job.invoice.uuid)
+
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
