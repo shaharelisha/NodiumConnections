@@ -761,17 +761,23 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     start_date = models.DateField()
     end_date = models.DateField()
 
-
     def get_average_time_per_mechanic(self, mechanic):
+        start_date = self.start_date
+        end_date = self.end_date
         total_time = 0
-        for j in mechanic.job_set.all():
+        for j in mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1'):
             total_time += j.get_duration() #not j.get_price()?
-        total_jobs = mechanic.job_set.count()
-        average_time = total_time/total_jobs
+        total_jobs = mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1').count()
+        if total_jobs == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/total_jobs
         return round(average_time, 2)
 
     def get_average_time(self):
-        jobs = Job.objects.filter(is_deleted=False)
+        start_date = self.start_date
+        end_date = self.end_date
+        jobs = Job.objects.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
@@ -780,34 +786,48 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         return round(average_time, 2)
 
     def get_average_time_for_mot_per_mechanic(self, mechanic):
+        start_date = self.start_date
+        end_date = self.end_date
         total_time = 0
-        for j in mechanic.job_set.all():
-            if j.type is '1':
-                total_time += j.get_duration()
-        total_jobs = mechanic.job_set.count()
-        average_time = total_time/total_jobs
+        for j in mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='1'):
+            total_time += j.get_duration()
+        total_jobs = mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='1').count()
+        if total_jobs == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/total_jobs
         return round(average_time, 2)
 
     def get_average_time_for_repair_per_mechanic(self, mechanic):
+        start_date = self.start_date
+        end_date = self.end_date
         total_time = 0
-        for j in mechanic.job_set.all():
-            if j.type is '2':
-                total_time += j.get_duration()
-        total_jobs = mechanic.job_set.count()
-        average_time = total_time/total_jobs
+        for j in mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='2'):
+            total_time += j.get_duration()
+        total_jobs = mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='2').count()
+        if total_jobs == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/total_jobs
         return round(average_time, 2)
 
     def get_average_time_for_annual_per_mechanic(self, mechanic):
+        start_date = self.start_date
+        end_date = self.end_date
         total_time = 0
-        for j in mechanic.job_set.all():
-            if j.type is '3':
+        for j in mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='3'):
                 total_time += j.get_duration()
-        total_jobs = mechanic.job_set.count()
-        average_time = total_time/total_jobs
+        total_jobs = mechanic.job_set.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='3').count()
+        if total_jobs == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/total_jobs
         return round(average_time,2)
 
     def get_average_time_for_mot(self):
-        jobs = Job.objects.filter(is_deleted=False, type='1')
+        start_date = self.start_date
+        end_date = self.end_date
+        jobs = Job.objects.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='1')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
@@ -819,7 +839,9 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         return round(average_time, 2)
 
     def get_average_time_for_repair(self):
-        jobs = Job.objects.filter(is_deleted=False, type='2')
+        start_date = self.start_date
+        end_date = self.end_date
+        jobs = Job.objects.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='2')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
@@ -831,7 +853,9 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         return round(average_time, 2)
 
     def get_average_time_for_annual(self):
-        jobs = Job.objects.filter(is_deleted=False, type='3')
+        start_date = self.start_date
+        end_date = self.end_date
+        jobs = Job.objects.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1', type='3')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:

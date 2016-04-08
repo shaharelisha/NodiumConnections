@@ -96,6 +96,8 @@ def automated_invoice_checks():
             report.sparepart_set.add(spare)
         report.save()
 
+        TimeReport.objects.create(start_date=date, end_date=today, date=today)
+
     return None
 
 
