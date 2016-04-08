@@ -56,4 +56,5 @@ urlpatterns = [
     url(r'^time_reports/$', views.time_report_table, name='time-report'),
     url(r'^time_reports/create/new/$', views.generate_time_report, name='generate-time-report'),
     url(r'^time_reports/(?P<uuid>\w+)/$', views.view_time_report, name='view-time-report'),
+    url(r'^mot_reminders/(?P<uuid>\w+)/$', views.view_mot_reminder, name='view-mot-reminder'),
 ]

@@ -1,6 +1,8 @@
 {% extends "nod/base.html" %}
 {% load staticfiles %}
 {% load crispy_forms_tags %}
+{% load django_tables2 %}
+
 
 {% block content %}
 
@@ -28,25 +30,24 @@
     </ul>
     <hr/>
 {% endif %}
-<div id="pagename">Home</div>
+
+{#<div id="pagename">Home</div>#}
 <div id="main">
-    <div id="reminders">
-        <h2>Outstanding payments</h2>
-        <table class="table">
-            <tr><th>Customer</th><th>Number of invoice reminders</th><th></th></tr>
-            <tr class="danger"><td>Dave Smith</td><td>3</td><td><input type="submit" class="btn btn-danger" value="Generate reminder"/></td></tr>
-            <tr class="warning"><td>John Jones</td><td>2</td><td><input type="submit" class="btn btn-warning" value="Generate reminder"/></td></tr>
-            <tr class="active"><td>Dave Jackson</td><td>1</td><td><input type="submit" class="btn btn-default" value="Generate reminder"/></td></tr>
-        </table>
-    </div><div id="alerts">
-        <h2>Service reminders</h2>
-        <table class="table">
-            <tr><th>Customer</th><th>Service type</th></tr>
-            <tr class="danger"><td>Dave Jones</td><td>General service</td><td><input type="submit" class="btn btn-danger" value="Generate reminder"/></td></tr>
-            <tr class="active"><td>John Smith</td><td>MOT</td><td><input type="submit" class="btn btn-default" value="Generate reminder"/></td></tr>
-        </table>
-    </div>
+    {% if request.user.first_name %}
+        <h2>Hello, {{ request.user.first_name }}!</h2>
+    {% else %}
+        <h2>Hello!</h2>
+    {% endif %}
+        <h3 class="text-danger">Outstanding Payments</h3>
+            {% render_table invoices_to_print_table %}
+
+        <h3 class="text-danger">MOT Reminders</h3>
+            {% render_table mot_reminders_table %}
+
+        <h3 class="text-danger">Low Stock</h3>
+
+
+{#    </div>#}
 </div>
-</body>
-</html>
+
 {% endblock %}

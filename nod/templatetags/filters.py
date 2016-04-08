@@ -41,10 +41,11 @@ def is_business(customer):
 
 @register.filter(name='has_unpaid_invoices')
 def has_unpaid_invoices(customer):
-    if len(customer.get_unpaid_invoices()) < 0:
+    if len(customer.get_unpaid_invoices()) > 0:
         return True
     else:
         return False
+
 
 @register.filter(name='job_tasks')
 def get_tasks(invoice):
@@ -202,3 +203,11 @@ def get_average_time_for_repair_per_mechanic(report, mechanic):
 @register.filter(name='average_time_for_annual_per_mechanic')
 def get_average_time_for_annual_per_mechanic(report, mechanic):
     return report.get_average_time_for_annual_per_mechanic(mechanic)
+
+
+# @register.filter(name='mot_reminders')
+# def exist_mot_reminders(reminder):
+#     if len() > 0:
+#         return True
+#     else:
+#         return False

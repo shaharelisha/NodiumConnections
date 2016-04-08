@@ -152,7 +152,7 @@ class UnpaidInvoiceTable(tables.Table):
     issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")
     reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
     type = tables.Column(verbose_name="Type", order_by="type")
-    get_price = tables.Column(verbose_name="Total Price", order_by="total_price")
+    get_price = tables.Column(verbose_name="Total Price")
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}
@@ -184,3 +184,23 @@ class SupplierTable(tables.Table):
 
     class Meta:
         attrs = {"class": "table table-striped table-hover "}
+
+
+class InvoiceRemindersToPrintTable(tables.Table):
+    invoice_number = tables.LinkColumn('view-invoice', args=[A('uuid')], order_by="invoice_number",
+                                   verbose_name="Invoice No.")
+    get_customer = tables.Column(verbose_name="Customer")
+    issue_date = tables.Column(verbose_name="Date Issued", order_by="issue_date")
+    reminder_phase = tables.Column(verbose_name="Reminder Phase", order_by="reminder_phase")
+    type = tables.Column(verbose_name="Type", order_by="type")
+    get_price = tables.Column(verbose_name="Total Price")
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class MOTRemindersTable(tables.Table):
+    vehicle = tables.LinkColumn('view-mot-reminder', args=[A('uuid')], order_by="vehicle", verbose_name="Vehicle")
+    issue_date = tables.Column(order_by='issue_date', verbose_name="Issue Date")
+    renewal_test_date = tables.Column(order_by='renewal_test_date', verbose_name="Renewal Test Date")
+    days_remaining = tables.Column(verbose_name="Days Remaining")

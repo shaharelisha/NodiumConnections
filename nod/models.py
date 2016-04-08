@@ -122,7 +122,7 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_markedup_price(self):
         markup = PriceControl.objects.get().marked_up/100
         price = self.price + (self.price * markup)
-        return price
+        return round(price, 2)
 
     def delivered_parts(self, start_date, end_date):
         quantity = 0
@@ -181,18 +181,18 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             unit_price = part.get_markedup_price()
             quantity = part.quantity
             price += unit_price*quantity
-        return price
+        return round(price, 2)
 
     def get_price(self):
-        return self.get_parts_price()
+        return round(self.get_parts_price(), 2)
 
     def get_vat(self):
-        vat = float(PriceControl.objects.get().vat/100)
-        total_vat = float(self.get_price()) * vat
-        return total_vat
+        vat = PriceControl.objects.get().vat/100
+        total_vat = self.get_price() * vat
+        return round(total_vat, 2)
 
     def get_grand_total(self):
-        return float(self.get_price()) + self.get_vat()
+        return round((self.get_price() + self.get_vat()), 2)
 
 
 class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
@@ -381,9 +381,6 @@ class Mechanic(StaffMember):
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
 
-# TODO:
-    #TODO: generate report data methods
-
 
 class Bay(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     BAYS = [
@@ -420,7 +417,15 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return self.reg_number
 
     def get_customer(self):
-        return self.customer
+        uuid = self.customer.uuid
+        try:
+            customer = BusinessCustomer.objects.get(uuid=uuid)
+        except ObjectDoesNotExist:
+            try:
+                customer = AccountHolder.objects.get(uuid=uuid)
+            except ObjectDoesNotExist:
+                pass
+        return customer
 
 
 class Task(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -468,14 +473,12 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         time = 0
         for t in self.jobtask_set.all(): #not self.tasks?
             time += t.duration.seconds / 3600
-        # time = float(time)
-        # time / 3600
-        return time
+        return round(time, 2)
 
     def get_labour_price(self):
         time = self.get_duration()
         rate = self.mechanic.hourly_pay
-        return float(time)*float(rate)
+        return round((float(time)*float(rate)), 2)
 
     def get_parts_price(self):
         price = 0
@@ -483,18 +486,18 @@ class Job(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             unit_price = part.part.price
             quantity = part.quantity
             price += unit_price*quantity
-        return price
+        return round(float(price), 2)
 
     def get_price(self):
-        return float(self.get_labour_price()) + float(self.get_parts_price())
+        return round((self.get_labour_price() + self.get_parts_price()),2)
 
     def get_vat(self):
         vat = float(PriceControl.objects.get().vat/100)
         total_vat = float(self.get_price()) * vat
-        return total_vat
+        return round(total_vat, 2)
 
     def get_grand_total(self):
-        return self.get_price() + self.get_vat()
+        return round((self.get_price() + self.get_vat()),2)
 
     # generates invoice assigned to the given job object
     def create_invoice(self):
@@ -535,7 +538,7 @@ class JobPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     sufficient_quantity = models.BooleanField(default=True)
 
     def get_cost(self):
-        return self.part.get_markedup_price() * self.quantity
+        return round((self.part.get_markedup_price() * self.quantity),2)
 
 
 class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -547,10 +550,10 @@ class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_markedup_price(self):
         markup = PriceControl.objects.get().marked_up/100
         price = self.part.price + (self.part.price * markup)
-        return price
+        return round(price, 2)
 
     def get_cost(self):
-        return self.part.get_markedup_price() * self.quantity
+        return round((self.part.get_markedup_price() * self.quantity),2)
 
 
 class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -635,7 +638,6 @@ class InvoiceReminder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     issue_date = models.DateField(default=timezone.datetime.now)
 
 
-
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     amount = models.DecimalField(max_digits=4, decimal_places=2)
     PAYMENT_TYPES = (
@@ -668,13 +670,13 @@ class SparePartsReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         cost = 0
         for p in SparePart.objects.filter(report=self, is_deleted=False):
             cost += p.get_initial_cost()
-        return cost
+        return round(cost, 2)
 
     def get_total_stock_cost(self):
         cost = 0
         for p in SparePart.objects.filter(report=self, is_deleted=False):
             cost += p.get_stock_cost()
-        return cost
+        return round(cost, 2)
 
     def reporting_period(self):
         return str(self.start_date.strftime('%d/%m/%Y')) + "-" + str(self.end_date.strftime('%d/%m/%Y'))
@@ -692,10 +694,10 @@ class SparePart(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         return self.initial_stock_level - self.used + self.delivery
 
     def get_initial_cost(self):
-        return self.part.price * self.initial_stock_level
+        return round((self.part.price * self.initial_stock_level),2)
 
     def get_stock_cost(self):
-        return self.part.price * self.get_new_stock_level()
+        return round((self.part.price * self.get_new_stock_level()), 2)
 
 
 class PartOrder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
@@ -708,7 +710,7 @@ class PartOrder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         cost = 0
         for p in self.parts:
             cost += p.price
-        return cost
+        return round(cost,2)
 
 
 class OrderPartRelationship(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
@@ -924,8 +926,11 @@ class ResponseRateReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
 class MOTReminder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     vehicle = models.ForeignKey(Vehicle)
-    issue_date = models.DateTimeField(default=timezone.datetime.now)
-    renewal_test_date = models.DateTimeField()
+    issue_date = models.DateField(default=datetime.date.today())
+    renewal_test_date = models.DateField(default=datetime.date.today())
 
     def get_customer(self):
         return self.vehicle.customer
+
+    def days_remaining(self):
+        return (self.renewal_test_date - self.issue_date).days

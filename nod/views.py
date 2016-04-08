@@ -14,6 +14,10 @@ import json
 from django.template import RequestContext, loader
 from django.contrib.auth import logout
 import datetime
+from datetime import date
+
+from workalendar.europe import UnitedKingdom
+cal = UnitedKingdom()
 from dateutil.relativedelta import relativedelta
 
 # london_tz = pytz.timezone("Europe/London")
@@ -34,7 +38,16 @@ def index(request):
     # Foreperson
     if request.user.staffmember.role == '2':
         automated_invoice_checks()
-        return render(request, "nod/index-foreperson.html")
+        uuid = request.user.staffmember.uuid
+        my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
+        RequestConfig(request).configure(my_jobs_table)
+        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+        RequestConfig(request).configure(invoices_to_print_table)
+        context = {
+            'invoices_to_print_table': invoices_to_print_table,
+            'my_jobs_table': my_jobs_table,
+        }
+        return render(request, "nod/index-foreperson.html", context)
     # Franchisee
     if request.user.staffmember.role == '3':
         automated_invoice_checks()
@@ -42,7 +55,18 @@ def index(request):
     # Receptionist
     if request.user.staffmember.role == '4':
         automated_invoice_checks()
-        return render(request, "nod/index-receptionist.html")
+        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+        RequestConfig(request).configure(invoices_to_print_table)
+        today = datetime.date.today()
+        mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
+                                                                           renewal_test_date__gte=today,
+                                                                           issue_date__lte=today))
+        RequestConfig(request).configure(mot_reminders_table)
+        context = {
+            'invoices_to_print_table': invoices_to_print_table,
+            'mot_reminders_table': mot_reminders_table,
+        }
+        return render(request, "nod/index-receptionist.html", context)
     # Admin
     if request.user.staffmember.role == '5':
         return render(request, "nod/index-administrator.html")
@@ -69,13 +93,14 @@ def automated_invoice_checks():
 
     year = datetime.date.today().year
     month = datetime.date.today().month
+    today = datetime.date.today()
+
     # returns (week number of first day of given month/year, number of days in given month/year),
     # so [1] gets the number of days in the current month.
     # Then checks if today is the last day of the month
     if datetime.date.today().day == calendar.monthrange(year, month)[1]:
-        date = datetime.date(year, month, 1)
-        today = datetime.date.today()
-        report = SparePartsReport.objects.create(start_date=date, end_date=today, date=today)
+        first_date = datetime.date(year, month, 1)
+        report = SparePartsReport.objects.create(start_date=first_date, end_date=today, date=today)
 
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
@@ -96,7 +121,14 @@ def automated_invoice_checks():
             report.sparepart_set.add(spare)
         report.save()
 
-        TimeReport.objects.create(start_date=date, end_date=today, date=today)
+        TimeReport.objects.create(start_date=first_date, end_date=today, date=today)
+
+    for v in Vehicle.objects.filter(is_deleted=False):
+        mot_month = v.mot_base_date.month
+        mot_day = v.mot_base_date.day
+        mot_date = date(year, mot_month, mot_day)
+        if today == cal.add_working_days(date(year, mot_month, mot_day), -5):
+            MOTReminder.objects.create(vehicle=v, issue_date=today, renewal_test_date=mot_date)
 
     return None
 
@@ -3439,4 +3471,23 @@ def view_time_report(request, uuid):
         return HttpResponse(template.render(context))
     else:
         messages.error(request, "You must be a franchisee in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_mot_reminder(request, uuid):
+    if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
+                    request.user.staffmember.role == '2':
+        reminder = get_object_or_404(MOTReminder, uuid=uuid)
+        template = loader.get_template('nod/view_mot_reminder.html')
+
+        context = RequestContext(request, {
+            'reminder': reminder,
+            'vehicle': reminder.vehicle,
+            'customer': reminder.vehicle.get_customer(),
+        })
+        return HttpResponse(template.render(context))
+
+    else:
+        messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')

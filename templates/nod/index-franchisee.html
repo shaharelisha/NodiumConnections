@@ -1,6 +1,8 @@
 {% extends "nod/base.html" %}
 {% load staticfiles %}
 {% load crispy_forms_tags %}
+{% load django_tables2 %}
+
 
 {% block content %}
 
@@ -29,19 +31,23 @@
     <hr/>
 {% endif %}
 
-<div id="pagename">Home</div>
+{#<div id="pagename">Home</div>#}
 <div id="main">
+    {% if request.user.first_name %}
+        <h2>Hello, {{ request.user.first_name }}!</h2>
+    {% else %}
+        <h2>Hello!</h2>
+    {% endif %}
     <div id="reports">
         <h2>Reports</h2>
+        <br>
         <table class="table">
-            <tr class="success"><td><a href="/averagepricereport">Average price per job (overall/per given mechanic</a></td></tr>
+            <tr class="success"><td><a href="{% url 'time-report' %}">Time Report</a></td></tr>
             <tr class="success"><td><a href="{% url 'spare-parts-report' %}">Spare Parts Report</a></td></tr>
-            <tr class="success"><td><a href="#report1">Number of vehicles booked monthly (overall/per service/type of customer)</a></td></tr>
-            <tr class="success"><td><a href="#report2">Average time to service vehicle (overall/per service/repairs requested/mechanic</a></td></tr>
-            <tr class="success"><td><a href="#report5">Customer response rate for MOT and service reminders</a></td></tr>
+            <tr class="success"><td><a href="#report1">Vehicle Report</a></td></tr>
+            <tr class="success"><td><a href="#report5">Response Rate Report</a></td></tr>
+            <tr class="success"><td><a href="/averagepricereport">Price Report</a></td></tr>
         </table>
     </div>
 </div>
-</body>
-</html>
 {% endblock %}

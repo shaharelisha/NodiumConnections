@@ -1,0 +1,69 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load filters %}
+
+{% block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+<a href="#" class="btn btn-primary">Print</a>
+<br><br>
+<div id="view">
+
+    <div id="invoice_rem">
+    <div class="row">
+        <div class="col-sm-6">
+            {% if customer.company_name %}
+                {{ customer.company_name }}<br>
+            {% endif %}
+            {{ customer.address }}<br>{{ customer.postcode }}</div>
+        <div class="col-sm-6" style="text-align:right;">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>{{ reminder.issue_date }}</div>
+    </div>
+
+    Dear {{ customer.forename }} {{ customer.surname }},
+    <br><br>
+    <div id="details">
+        <h3><b>REMINDER - MOT TEST DUE</b></h3>
+        <h5>Vehicle Registration No.: {{ vehicle.reg_number }}</h5>
+        <h5>Renewal Test Date: {{ reminder.renewal_test_date }}</h5>
+
+    </div>
+    <br><br>
+    According to our records, the above vehicle is due to have its MoT certificate renewed on the date shown.
+        <br>Valued customers such as yourself are assured of our prompt attention, and we hope that you will use our services on this occasion
+        in order to have the necessary test carried out on your vehicle.<br><br>
+        <br>Yours sincerely,
+        <br>G. Lancaster<br>
+    </div>
+    </div>
+
+</div>
+
+
+
+{% endblock %}
