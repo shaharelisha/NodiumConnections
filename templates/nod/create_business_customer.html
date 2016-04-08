@@ -9,7 +9,8 @@
         <script src="http://malsup.github.com/jquery.form.js"></script>
 {#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
     {% endblock %}
-{% if messages %}
+
+    {% if messages %}
 {#    <ul class="messages">#}
         {% for message in messages %}
             {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
@@ -39,7 +40,7 @@
         {% endfor %}
 {#    </ul>#}
 {#    <hr/>#}
-{% endif %}
+    {% endif %}
 
 <div id="main">
     <div id="job_add_form">

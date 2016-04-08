@@ -6,143 +6,131 @@
 {% block content %}
     {% block extra_js%}
         <script src="http://malsup.github.com/jquery.form.js"></script>
-{#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
     {% endblock %}
 
-{#<link rel="stylesheet" href="{% static "database/css/jquery-ui-1.10.0.custom.css" %}"/>#}
-{% if messages %}
-{#    <ul class="messages">#}
-        {% for message in messages %}
-            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-                {#          Data saved successfully #}
-{#                <span class="label label-success">#}
-{#                    {{ message }}#}
-{#                </span>#}
+    {% if messages %}
+            {% for message in messages %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                    {#          Data saved successfully #}
 
-                <div class="alert alert-dismissible alert-success">
-                  <button type="button" class="close" data-dismiss="alert">&times;</button>
-                  {{ message }}
-                </div>
+                    <div class="alert alert-dismissible alert-success">
+                      <button type="button" class="close" data-dismiss="alert">&times;</button>
+                      {{ message }}
+                    </div>
 
-            {% endif %}
-            {#        Data not saved. Validation errors#}
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-{#                <li class="error">#}
-{#                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>#}
-{#                </li>#}
+                {% endif %}
+                {#        Data not saved. Validation errors#}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
 
-                <div class="alert alert-dismissible alert-danger">
-                  <button type="button" class="close" data-dismiss="alert">&times;</button>
-                  {{ message }}
-                </div>
-            {% endif %}
-        {% endfor %}
-{#    </ul>#}
-{#    <hr/>#}
-{% endif %}
-
-<div id="main">
-    <div id="job_add_form">
-        <h3>Create New Account Holder Customer</h3>
-        <form action='{% url 'create-account-holder' %}' method="post">
-            {% csrf_token %}
-            {% crispy form form.helper 'bootstrap3' %}
-
-            {% if request.user|role == 'Franchisee' %}
-                {% crispy discount_form discount_form.helper 'bootstrap3' %}
-            {% endif %}
-
-            <p>Click <a data-toggle="modal" data-target="#modal" href="{% url 'create-vehicle' account_holder.uuid %}">here</a> to add a Vehicle</p>
-            <div class="modal fade" id="modal"></div>
-            <div id="vehicles"></div>
-
-            <h4>Emails</h4>
-            {{ email_formset.management_form|crispy }}
-            {% for form in email_formset %}
-                <div class="email-formset">
-                 {% crispy form email_helper 'bootstrap3' %}
-                <br/>
-                </div>
+                    <div class="alert alert-dismissible alert-danger">
+                      <button type="button" class="close" data-dismiss="alert">&times;</button>
+                      {{ message }}
+                    </div>
+                {% endif %}
             {% endfor %}
+    {% endif %}
 
-            <br/>
-            <h4>Phone Numbers</h4>
-            {{ phone_formset.management_form|crispy }}
-            {% for form in phone_formset %}
-                <div class="phone-formset">
-                 {% crispy form phone_helper 'bootstrap3' %}
-                <br/>
-                </div>
-            {% endfor %}
+    <div id="main">
+        <div id="job_add_form">
+            <h3>Create New Account Holder Customer</h3>
+            <form action='{% url 'create-account-holder' %}' method="post">
+                {% csrf_token %}
+                {% crispy form form.helper 'bootstrap3' %}
 
+                {% if request.user|role == 'Franchisee' %}
+                    {% crispy discount_form discount_form.helper 'bootstrap3' %}
+                {% endif %}
 
-            <div class="form-group">
-                <div class="col-lg-10 col-lg-offset-2">
+                <p>Click <a data-toggle="modal" data-target="#modal" href="{% url 'create-vehicle' account_holder.uuid %}">here</a> to add a Vehicle</p>
+                <div class="modal fade" id="modal"></div>
+                <div id="vehicles"></div>
+
+                <h4>Emails</h4>
+                {{ email_formset.management_form|crispy }}
+                {% for form in email_formset %}
+                    <div class="email-formset">
+                     {% crispy form email_helper 'bootstrap3' %}
                     <br/>
-                    <button type="reset" class="btn btn-default">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                {% endfor %}
+
+                <br/>
+                <h4>Phone Numbers</h4>
+                {{ phone_formset.management_form|crispy }}
+                {% for form in phone_formset %}
+                    <div class="phone-formset">
+                     {% crispy form phone_helper 'bootstrap3' %}
+                    <br/>
+                    </div>
+                {% endfor %}
+
+
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <br/>
+                        <button type="reset" class="btn btn-default">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-    $('#modal').on('show.bs.modal', function (event) {
-        var modal = $(this)
-        $.ajax({
-            url: "{% url 'create-vehicle' account_holder.uuid %}",
-            context: document.body
-        }).done(function(response) {
-            modal.html(response);
+    <script>
+        $('#modal').on('show.bs.modal', function (event) {
+            var modal = $(this)
+            $.ajax({
+                url: "{% url 'create-vehicle' account_holder.uuid %}",
+                context: document.body
+            }).done(function(response) {
+                modal.html(response);
+            });
         });
-    });
 
-    $('#modal').on('hidden.bs.modal', function (event) {
-      $.getJSON( "{% url 'get-vehicles' account_holder.uuid %}", function( data ) {
-        var items = [];
-        data.forEach(function(val) {
-          var id = val.uuid;
-          var url_mask = "{% url 'edit-vehicle' account_holder.uuid 12345 %}".replace(/12345/, id);
-          items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+        $('#modal').on('hidden.bs.modal', function (event) {
+          $.getJSON( "{% url 'get-vehicles' account_holder.uuid %}", function( data ) {
+            var items = [];
+            data.forEach(function(val) {
+              var id = val.uuid;
+              var url_mask = "{% url 'edit-vehicle' account_holder.uuid 12345 %}".replace(/12345/, id);
+              items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+            });
+            document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
+          });
         });
-        document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
-      });
-    });
 
 
-    $( document ).ready(function() {
-      $.getJSON( "{% url 'get-vehicles' account_holder.uuid %}", function( data ) {
-        var items = [];
-        data.forEach(function(val) {
-          var id = val.uuid;
-          var url_mask = "{% url 'edit-vehicle' account_holder.uuid 12345 %}".replace(/12345/, id);
-          items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+        $( document ).ready(function() {
+          $.getJSON( "{% url 'get-vehicles' account_holder.uuid %}", function( data ) {
+            var items = [];
+            data.forEach(function(val) {
+              var id = val.uuid;
+              var url_mask = "{% url 'edit-vehicle' account_holder.uuid 12345 %}".replace(/12345/, id);
+              items.push( "<li> <a target='_blank' href=" + url_mask + ">" + val.make + " " + val.model + " (" + val.reg_number + ") " + "</a></li>");
+            });
+            document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
+          });
         });
-        document.getElementById("vehicles").innerHTML = "<ul>" + items.join( "" ) + "</ul>";
-      });
-    });
-</script>
+    </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
-<script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script>
+    <script>
 
-    $(".email-formset").formset({
-        addText: 'add email',
-        deleteText: 'remove',
-        prefix: '{{ email_formset.prefix }}',
-        formCssClass: 'email-formset',
-{#        deleteCssClass: 'task-formset'#}
-    });
+        $(".email-formset").formset({
+            addText: 'add email',
+            deleteText: 'remove',
+            prefix: '{{ email_formset.prefix }}',
+            formCssClass: 'email-formset',
+    {#        deleteCssClass: 'task-formset'#}
+        });
 
-    $(".phone-formset").formset({
-        addText: 'add phone',
-        deleteText: 'remove',
-        prefix: '{{ phone_formset.prefix }}',
-        formCssClass: 'phone-formset',
-{#        deleteCssClass: 'part-formset'#}
-    });
-</script>
+        $(".phone-formset").formset({
+            addText: 'add phone',
+            deleteText: 'remove',
+            prefix: '{{ phone_formset.prefix }}',
+            formCssClass: 'phone-formset',
+    {#        deleteCssClass: 'part-formset'#}
+        });
+    </script>
 
 {% endblock %}

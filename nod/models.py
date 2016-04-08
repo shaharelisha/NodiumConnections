@@ -97,7 +97,7 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     manufacturer = models.CharField(max_length=100)
     vehicle_type = models.CharField(max_length=100)
     years = models.CharField(max_length=9)
-    price = models.DecimalField(max_digits=4, decimal_places=2)
+    price = models.FloatField()
     code = models.CharField(max_length=20, unique=True)
     quantity = models.PositiveIntegerField()
     low_level_threshold = models.PositiveIntegerField()
@@ -338,9 +338,9 @@ class FixedDiscount(DiscountPlan):
 
 
 class FlexibleDiscount(DiscountPlan):
-    lower_range = models.DecimalField(max_digits=4, decimal_places=2)
-    upper_range = models.DecimalField(max_digits=4, decimal_places=2)
-    discount = models.DecimalField(max_digits=4, decimal_places=2)
+    lower_range = models.FloatField()
+    upper_range = models.FloatField()
+    discount = models.FloatField()
 
     def __init__(self, *args, **kwargs):
         super(FlexibleDiscount, self).__init__(*args, **kwargs)
@@ -386,7 +386,7 @@ class StaffMember(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
         return self.user.username
 
 class Mechanic(StaffMember):
-    hourly_pay = models.DecimalField(max_digits=4, decimal_places=2)
+    hourly_pay = models.FloatField()
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
@@ -836,7 +836,7 @@ class PriceReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
 
 class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
-    date = models.DateTimeField(default=timezone.datetime.now)
+    date = models.DateField(default=datetime.date.today())
     start_date = models.DateField()
     end_date = models.DateField()
 
