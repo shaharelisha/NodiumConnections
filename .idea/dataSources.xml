@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="866652288">
+  <component name="DataSourceManagerImpl" format="xml" hash="3118472223">
     <data-source source="LOCAL" name="SQLite -" uuid="f0349195-8356-46f6-a622-3236ce587798">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
@@ -8,21 +8,7 @@
       <jdbc-url>jdbc:sqlite:</jdbc-url>
       <libraries />
     </data-source>
-    <data-source source="LOCAL" name="db" uuid="9612325b-5892-4cf4-8a0b-d460f0e27d3c">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/db.sqlite3</jdbc-url>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/xerial-sqlite-license.txt</url>
-        </library>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/sqlite-jdbc-3.8.9.jar</url>
-        </library>
-      </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="db [2]" uuid="5b6b33d3-3654-4d34-940e-a273378bc8c9">
+    <data-source source="LOCAL" name="db" uuid="5b6b33d3-3654-4d34-940e-a273378bc8c9">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>

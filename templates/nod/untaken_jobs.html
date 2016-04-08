@@ -2,31 +2,45 @@
 {% load staticfiles %}
 {% load crispy_forms_tags %}
 {% load django_tables2 %}
+{% load filters %}
 
 {% block content %}
 {% if messages %}
-    <ul class="messages">
+{#    <ul class="messages">#}
         {% for message in messages %}
             {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
                 {#          Data saved successfully #}
-                <li class="success">
-                    {{ message }}
-                </li>
+{#                <span class="label label-success">#}
+{#                    {{ message }}#}
+{#                </span>#}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
             {% endif %}
             {#        Data not saved. Validation errors#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                <li class="error">
-                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
-                </li>
+{#                <li class="error">#}
+{#                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>#}
+{#                </li>#}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
             {% endif %}
         {% endfor %}
-    </ul>
-    <hr/>
+{#    </ul>#}
+{#    <hr/>#}
 {% endif %}
 
 <div id="main">
+{% if request.user|role == 'Receptionist' or request.user|role == 'Foreperson' or request.user|role == 'Franchisee' %}
 <a href="{% url 'create-job' %}" class="btn btn-default">Create New Job</a>
+{% endif %}
     <h2>Pending Jobs</h2>
         {% render_table untaken_job_table %}
 </div>

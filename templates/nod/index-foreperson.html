@@ -11,24 +11,35 @@
 {#        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>#}
     {% endblock %}
 {% if messages %}
-    <ul class="messages">
+{#    <ul class="messages">#}
         {% for message in messages %}
             {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
                 {#          Data saved successfully #}
-                <li class="success">
-                    {{ message }}
-                </li>
+{#                <span class="label label-success">#}
+{#                    {{ message }}#}
+{#                </span>#}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
             {% endif %}
             {#        Data not saved. Validation errors#}
             {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                <li class="error">
-                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>
-                </li>
+{#                <li class="error">#}
+{#                    <i class="fi-alert"></i> {{ message }} <i class="fi-alert"></i>#}
+{#                </li>#}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
             {% endif %}
         {% endfor %}
-    </ul>
-    <hr/>
+{#    </ul>#}
+{#    <hr/>#}
 {% endif %}
 
 {#<div id="pagename">Home</div>#}
@@ -38,31 +49,19 @@
     {% else %}
         <h2>Hello!</h2>
     {% endif %}
-    <h3>My Outstanding Jobs</h3>
+<br>
+<div id="reports">
+        <h3 class="text-danger">My Outstanding Jobs</h3>
         {%  render_table my_jobs_table %}
-    </div><div id="spareparts">
-        <form action="#view_spare_parts_db">
-            <input type="submit" class="btn btn-default btn-lg btn-block" value="View spare parts database"/>
-        </form>
-    </div>
-    <div id="reminders">
-        <h2>Outstanding Payments</h2>
+        <br>
+        <h3 class="text-danger">Outstanding Payments</h3>
             {% render_table invoices_to_print_table %}
-
-    </div><div id="alerts">
-        <h2>Alerts</h2>
-        <table class="table">
-            <tr><th>Customer name</th><th>Type</th></tr>
-            <tr class="active"><td>Something3</td><td>Something4</td></tr>
-            <tr class="danger"><td>Something3</td><td>Something4</td></tr>
-        </table>
-    </div>
-    <div id="stocklevel">
-        <h2>Low stock level parts</h2>
-        <table class="table">
-            <tr><th>Partname</th><th>Stock level</th></tr>
-            <tr class="danger"><td>Large exhaust</td><td>3</td></tr>
-        </table>
-    </div>
+        <br>
+        <h3 class="text-danger">MOT Reminders</h3>
+            {% render_table mot_reminders_table %}
+        <br>
+        <h3 class="text-danger">Low Stock</h3>
+            {% render_table low_parts %}
+</div>
 </div>
 {% endblock %}

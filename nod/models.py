@@ -12,9 +12,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+from concurrency.fields import IntegerVersionField
 
 
 class RandomUUIDModel(models.Model):
+    version = IntegerVersionField( )
     uuid = models.CharField(max_length=32, editable=False, blank=True, null=False, default='')
 
     def save(self, *args, **kwargs):

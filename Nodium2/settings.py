@@ -41,8 +41,12 @@ INSTALLED_APPS = (
     'crispy_forms',
     'widget_tweaks',
     'django_tables2',
+    'dbbackup',  # django-dbbackup
     # 'simple_history'
 )
+
+DBBACKUP_STORAGE = 'dbbackup.storage.filesystem_storage'
+DBBACKUP_STORAGE_OPTIONS = {'location': '/var/backups'}
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

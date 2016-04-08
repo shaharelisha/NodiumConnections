@@ -28,81 +28,98 @@ from .tables import *
 
 
 def index(request):
-    # Mechanic
-    if request.user.staffmember.role == '1':
-        uuid = request.user.staffmember.uuid
-        my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
-        RequestConfig(request).configure(my_jobs_table)
-        return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
-        # return render(request, "nod/index-mechanic.html")
-    # Foreperson
-    if request.user.staffmember.role == '2':
-        automated_invoice_checks()
-        uuid = request.user.staffmember.uuid
-        my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
-        RequestConfig(request).configure(my_jobs_table)
-        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
-        RequestConfig(request).configure(invoices_to_print_table)
-        context = {
-            'invoices_to_print_table': invoices_to_print_table,
-            'my_jobs_table': my_jobs_table,
-        }
-        return render(request, "nod/index-foreperson.html", context)
-    # Franchisee
-    if request.user.staffmember.role == '3':
-        automated_invoice_checks()
+    try:
+        # Mechanic
+        if request.user.staffmember.role == '1':
+            uuid = request.user.staffmember.uuid
+            my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
+            RequestConfig(request).configure(my_jobs_table)
+            return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
+            # return render(request, "nod/index-mechanic.html")
+        # Foreperson
+        if request.user.staffmember.role == '2':
+            automated_invoice_checks()
+            uuid = request.user.staffmember.uuid
+            my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
+            RequestConfig(request).configure(my_jobs_table)
+            invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+            RequestConfig(request).configure(invoices_to_print_table)
+            today = datetime.date.today()
+            mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
+                                                                               renewal_test_date__gte=today,
+                                                                               issue_date__lte=today))
+            RequestConfig(request).configure(mot_reminders_table)
 
-        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
-        RequestConfig(request).configure(invoices_to_print_table)
-        today = datetime.date.today()
-        mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
-                                                                           renewal_test_date__gte=today,
-                                                                           issue_date__lte=today))
-        RequestConfig(request).configure(mot_reminders_table)
+            parts = []
+            for p in Part.objects.filter(is_deleted=False):
+                if p.quantity <= p.low_level_threshold:
+                    parts.append(p)
 
-        parts = []
-        for p in Part.objects.filter(is_deleted=False):
-            if p.quantity <= p.low_level_threshold:
-                parts.append(p)
+            low_parts = LowStockTable(parts)
+            RequestConfig(request).configure(low_parts)
 
-        low_parts = LowStockTable(parts)
-        RequestConfig(request).configure(low_parts)
+            context = {
+                'invoices_to_print_table': invoices_to_print_table,
+                'mot_reminders_table': mot_reminders_table,
+                'my_jobs_table': my_jobs_table,
+                'low_parts': low_parts,
+            }
+            return render(request, "nod/index-foreperson.html", context)
+        # Franchisee
+        if request.user.staffmember.role == '3':
+            automated_invoice_checks()
 
-        context = {
-            'invoices_to_print_table': invoices_to_print_table,
-            'mot_reminders_table': mot_reminders_table,
-            'low_parts': low_parts,
-        }
-        return render(request, "nod/index-franchisee.html", context)
-    # Receptionist
-    if request.user.staffmember.role == '4':
-        automated_invoice_checks()
-        invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
-        RequestConfig(request).configure(invoices_to_print_table)
-        today = datetime.date.today()
-        mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
-                                                                           renewal_test_date__gte=today,
-                                                                           issue_date__lte=today))
-        RequestConfig(request).configure(mot_reminders_table)
+            invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+            RequestConfig(request).configure(invoices_to_print_table)
+            today = datetime.date.today()
+            mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
+                                                                               renewal_test_date__gte=today,
+                                                                               issue_date__lte=today))
+            RequestConfig(request).configure(mot_reminders_table)
 
-        parts = []
-        for p in Part.objects.filter(is_deleted=False):
-            if p.quantity <= p.low_level_threshold:
-                parts.append(p)
+            parts = []
+            for p in Part.objects.filter(is_deleted=False):
+                if p.quantity <= p.low_level_threshold:
+                    parts.append(p)
 
-        low_parts = LowStockTable(parts)
-        RequestConfig(request).configure(low_parts)
+            low_parts = LowStockTable(parts)
+            RequestConfig(request).configure(low_parts)
 
-        context = {
-            'invoices_to_print_table': invoices_to_print_table,
-            'mot_reminders_table': mot_reminders_table,
-            'low_parts': low_parts,
-        }
-        return render(request, "nod/index-receptionist.html", context)
-    # Admin
-    if request.user.staffmember.role == '5':
-        return render(request, "nod/index-administrator.html")
-    else:
+            context = {
+                'invoices_to_print_table': invoices_to_print_table,
+                'mot_reminders_table': mot_reminders_table,
+                'low_parts': low_parts,
+            }
+            return render(request, "nod/index-franchisee.html", context)
+        # Receptionist
+        if request.user.staffmember.role == '4':
+            automated_invoice_checks()
+            invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
+            RequestConfig(request).configure(invoices_to_print_table)
+            today = datetime.date.today()
+            mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
+                                                                               renewal_test_date__gte=today,
+                                                                               issue_date__lte=today))
+            RequestConfig(request).configure(mot_reminders_table)
+
+            parts = []
+            for p in Part.objects.filter(is_deleted=False):
+                if p.quantity <= p.low_level_threshold:
+                    parts.append(p)
+
+            low_parts = LowStockTable(parts)
+            RequestConfig(request).configure(low_parts)
+
+            context = {
+                'invoices_to_print_table': invoices_to_print_table,
+                'mot_reminders_table': mot_reminders_table,
+                'low_parts': low_parts,
+            }
+            return render(request, "nod/index-receptionist.html", context)
+        # Admin
+        if request.user.staffmember.role == '5':
+            return render(request, "nod/index-administrator.html")
+    except AttributeError:
         messages.error(request, "You must be logged in to view this page.")
         return redirect('/accounts/login/')
 
@@ -3363,7 +3380,7 @@ def pay_invoice(request, uuid):
 
         else:
             data = {}
-            data['amount'] = invoice.total_price()
+            data['amount'] = invoice.get_price()
             form = PaymentForm(initial=data)
 
         context = {

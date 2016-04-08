@@ -74,7 +74,7 @@
     <br><br>
     <div id="details">
         <h3><b>FINAL REMINDER - Invoice No.: {{ invoice.invoice_number }}</b></h3>
-        <h5>Total Amount: (&pound;){{ job|grand_total }}</h5>
+        <h5>Total Amount: (&pound;){{ invoice|grand_total }}</h5>
     </div>
     <br><br>
     Despite two reminders, it appears that we still have not yet received payment of the above invoice, which was posted to you on {{ invoice.issue_date }}, for parts sold.<br>
