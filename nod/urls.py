@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from . import views
+from nod import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
@@ -53,5 +53,7 @@ urlpatterns = [
     url(r'^spare_parts_reports/$', views.spare_parts_report_table, name='spare-parts-report'),
     url(r'^spare_parts_reports/create/new/$', views.generate_spare_parts_report, name='generate-spare-parts-report'),
     url(r'^spare_parts_reports/(?P<uuid>\w+)/$', views.view_spare_parts_report, name='view-spare-parts-report'),
-
+    url(r'^time_reports/$', views.time_report_table, name='time-report'),
+    url(r'^time_reports/create/new/$', views.generate_time_report, name='generate-time-report'),
+    url(r'^time_reports/(?P<uuid>\w+)/$', views.view_time_report, name='view-time-report'),
 ]

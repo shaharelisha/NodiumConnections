@@ -159,7 +159,17 @@ class UnpaidInvoiceTable(tables.Table):
 
 
 class SparePartsReportTable(tables.Table):
-    reporting_period = tables.LinkColumn('view-spare-parts-report', args=[A('uuid')], verbose_name='Reporting Period', order_by='reporting_period')
+    reporting_period = tables.LinkColumn('view-spare-parts-report', args=[A('uuid')], verbose_name='Reporting Period',
+                                         order_by='end_date')
+    date = tables.Column(verbose_name='Date', order_by='date')
+
+    class Meta:
+        attrs = {"class": "table table-striped table-hover "}
+
+
+class TimeReportTable(tables.Table):
+    reporting_period = tables.LinkColumn('view-time-report', args=[A('uuid')], verbose_name='Reporting Period',
+                                         order_by='end_date')
     date = tables.Column(verbose_name='Date', order_by='date')
 
     class Meta:

@@ -758,14 +758,17 @@ class PriceReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
 class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     date = models.DateTimeField(default=timezone.datetime.now)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
 
     def get_average_time_per_mechanic(self, mechanic):
         total_time = 0
-        for j in mechanic.job_set:
+        for j in mechanic.job_set.all():
             total_time += j.get_duration() #not j.get_price()?
         total_jobs = mechanic.job_set.count()
         average_time = total_time/total_jobs
-        return average_time
+        return round(average_time, 2)
 
     def get_average_time(self):
         jobs = Job.objects.filter(is_deleted=False)
@@ -774,64 +777,73 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         for j in jobs:
             total_time += j.get_duration() #not j.get_price()?
         average_time = total_time/job_count
-        return average_time
+        return round(average_time, 2)
 
     def get_average_time_for_mot_per_mechanic(self, mechanic):
         total_time = 0
-        for j in mechanic.job_set:
+        for j in mechanic.job_set.all():
             if j.type is '1':
                 total_time += j.get_duration()
         total_jobs = mechanic.job_set.count()
         average_time = total_time/total_jobs
-        return average_time
+        return round(average_time, 2)
 
     def get_average_time_for_repair_per_mechanic(self, mechanic):
         total_time = 0
-        for j in mechanic.job_set:
+        for j in mechanic.job_set.all():
             if j.type is '2':
                 total_time += j.get_duration()
         total_jobs = mechanic.job_set.count()
         average_time = total_time/total_jobs
-        return average_time
+        return round(average_time, 2)
 
     def get_average_time_for_annual_per_mechanic(self, mechanic):
         total_time = 0
-        for j in mechanic.job_set:
+        for j in mechanic.job_set.all():
             if j.type is '3':
                 total_time += j.get_duration()
         total_jobs = mechanic.job_set.count()
         average_time = total_time/total_jobs
-        return average_time
+        return round(average_time,2)
 
     def get_average_time_for_mot(self):
-        jobs = Job.objects.filter(is_deleted=False)
+        jobs = Job.objects.filter(is_deleted=False, type='1')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
-            if j.type is '1':
-                total_time += j.get_duration()
-        average_time = total_time/job_count
-        return average_time
+            total_time += j.get_duration()
+        if job_count == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/job_count
+        return round(average_time, 2)
 
     def get_average_time_for_repair(self):
-        jobs = Job.objects.filter(is_deleted=False)
+        jobs = Job.objects.filter(is_deleted=False, type='2')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
-            if j.type is '2':
-                total_time += j.get_duration()
-        average_time = total_time/job_count
-        return average_time
+            total_time += j.get_duration()
+        if job_count == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/job_count
+        return round(average_time, 2)
 
     def get_average_time_for_annual(self):
-        jobs = Job.objects.filter(is_deleted=False)
+        jobs = Job.objects.filter(is_deleted=False, type='3')
         total_time = 0
         job_count = jobs.count()
         for j in jobs:
-            if j.type is '3':
-                total_time += j.get_duration()
-        average_time = total_time/job_count
-        return average_time
+            total_time += j.get_duration()
+        if job_count == 0:
+            average_time = 0.0
+        else:
+            average_time = total_time/job_count
+        return round(average_time, 2)
+
+    def reporting_period(self):
+        return str(self.start_date.strftime('%d/%m/%Y')) + "-" + str(self.end_date.strftime('%d/%m/%Y'))
 
     # TODO: good test: check that average time/per type == average time overall.
 
@@ -884,7 +896,6 @@ class ResponseRateReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
     def get_mot_response_rate(self):
         self.mot_response_rate = 100*self.mot_jobs/self.mot_reminders_sent
         return self.mot_response_rate
-
 
 
 class MOTReminder(TimestampedModel, RandomUUIDModel, SoftDeleteModel):

@@ -1,0 +1,86 @@
+{% extends "nod/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load filters %}
+
+{% block content %}
+{% if messages %}
+{#    <ul class="messages">#}
+        {% for message in messages %}
+            {#        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+
+            {% endif %}
+            {#        Data not saved. Validation errors#}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
+                <div class="alert alert-dismissible alert-danger">
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+{#    </ul>#}
+{#    <hr/>#}
+{% endif %}
+
+<div id="main">
+<a href="#" class="btn btn-default">Print</a>
+
+<div id="view">
+    <div id="invoice_rem">
+    <div class="row">
+        <div class="col-sm-6">Quick Fix Fitters,<br>19 High St.,<br>Ashford,<br>Kent<br>CT16 8YY<br><br>
+            <h3><b>Time Report</b></h3>
+            <br>
+            <br>
+            Reporting Period: {{ report.start_date }}-{{ report.end_date }}
+        </div>
+    </div>
+
+    <br><br>
+    <div id="details">
+        <table style="margin:10px 15%; width:70%;" class="table">
+            <tr>
+                <th>Mechanic</th>
+                <th>Average Time/Job</th>
+                <th>Average Time/MoT</th>
+                <th>Average Time/Annual</th>
+                <th>Average Time/Repair</th>
+
+            </tr>
+            <tr>
+                <td>Overall</td>
+                <td>{{ report|average_time }}</td>
+                <td>{{ report|average_time_for_mot }}</td>
+                <td>{{ report|average_time_for_annual }}</td>
+                <td>{{ report|average_time_for_repair }}</td>
+            </tr>
+
+            {% for mechanic in mechanics %}
+            <tr>
+                <td>{{ mechanic.user.first_name }} {{ mechanic.user.last_name }}</td>
+                <td>{{ report|average_time_per_mechanic:mechanic }}</td>
+                <td>{{ report|average_time_for_mot_per_mechanic:mechanic }}</td>
+                <td>{{ report|average_time_for_annual_per_mechanic:mechanic }}</td>
+                <td>{{ report|average_time_for_repair_per_mechanic:mechanic }}</td>
+
+            </tr>
+            {% endfor %}
+
+        </table>
+    </div>
+    <br><br>
+        <br>Report Date: {{ report.date }}<br>
+        <br>Senior Storekeeper:<br>
+        <br>E. Kournikova<br>
+    </div>
+    </div>
+</div>
+{% endblock %}

@@ -82,11 +82,14 @@
             <h4>Discount Plan: {{ customer.content_object }}</h4>
         {% else %}<h4>Discount Plan: --</h4>
         {% endif %}
+
         <h3>Vehicles</h3>
         {% render_table vehicle_table %}
 
-        <h3>Unpaid Invoices</h3>
-        {% render_table invoice_table %}
+        {% if customer|has_unpaid_invoices %}
+            <h3>Unpaid Invoices</h3>
+            {% render_table invoice_table %}
+        {% endif %}
     </div>
 </div>
 

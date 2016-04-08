@@ -39,6 +39,13 @@ def is_business(customer):
         return False
 
 
+@register.filter(name='has_unpaid_invoices')
+def has_unpaid_invoices(customer):
+    if len(customer.get_unpaid_invoices()) < 0:
+        return True
+    else:
+        return False
+
 @register.filter(name='job_tasks')
 def get_tasks(invoice):
     return invoice.job_done.tasks.filter(is_deleted=False)
@@ -155,3 +162,43 @@ def get_total_initial_cost(report):
 @register.filter(name='total_stock_cost')
 def get_total_initial_cost(report):
     return report.get_total_stock_cost()
+
+
+@register.filter(name='average_time')
+def get_average_time(report):
+    return report.get_average_time()
+
+
+@register.filter(name='average_time_for_mot')
+def get_average_time_for_mot(report):
+    return report.get_average_time_for_mot()
+
+
+@register.filter(name='average_time_for_repair')
+def get_average_time_for_repair(report):
+    return report.get_average_time_for_repair()
+
+
+@register.filter(name='average_time_for_annual')
+def get_average_time_for_annual(report):
+    return report.get_average_time_for_annual()
+
+
+@register.filter(name='average_time_per_mechanic')
+def get_average_time_per_mechanic(report, mechanic):
+        return report.get_average_time_per_mechanic(mechanic)
+
+
+@register.filter(name='average_time_for_mot_per_mechanic')
+def get_average_time_for_mot_per_mechanic(report, mechanic):
+    return report.get_average_time_for_mot_per_mechanic(mechanic)
+
+
+@register.filter(name='average_time_for_repair_per_mechanic')
+def get_average_time_for_repair_per_mechanic(report, mechanic):
+    return report.get_average_time_for_repair_per_mechanic(mechanic)
+
+
+@register.filter(name='average_time_for_annual_per_mechanic')
+def get_average_time_for_annual_per_mechanic(report, mechanic):
+    return report.get_average_time_for_annual_per_mechanic(mechanic)

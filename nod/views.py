@@ -3392,3 +3392,49 @@ def view_spare_parts_report(request, uuid):
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
+
+
+@login_required
+def time_report_table(request):
+    if request.user.staffmember.role == '3':
+        time_report_table = TimeReportTable(TimeReport.objects.filter(is_deleted=False))
+        RequestConfig(request).configure(time_report_table)
+        return render(request, "nod/time_reports.html", {'reports_table': time_report_table})
+    else:
+        messages.error(request, "You must be a franchisee in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def generate_time_report(request):
+    if request.user.staffmember.role == '3':
+        month = datetime.date.today().month
+        year = datetime.date.today().year
+
+        date = datetime.date(year, month, 1)
+        today = datetime.date.today()
+        report = TimeReport.objects.create(start_date=date, end_date=today, date=today)
+        # for job in Job.objects.filter(is_deleted=False, booking_date__gte=report.start_date,
+        #                               booking_date__lte=report.end_date):
+        return view_time_report(request, report.uuid)
+    else:
+        messages.error(request, "You must be a franchisee in order to view this page.")
+        return redirect('/garits/')
+
+
+@login_required
+def view_time_report(request, uuid):
+    if request.user.staffmember.role == '3':
+        report = get_object_or_404(TimeReport, uuid=uuid)
+        mechanics = []
+        for job in Job.objects.filter(is_deleted=False, booking_date__gte=report.start_date, status='1'):
+            mechanics.append(job.mechanic)
+        template = loader.get_template('nod/view_time_report.html')
+        context = RequestContext(request, {
+            'report': report,
+            'mechanics': mechanics,
+        })
+        return HttpResponse(template.render(context))
+    else:
+        messages.error(request, "You must be a franchisee in order to view this page.")
+        return redirect('/garits/')
