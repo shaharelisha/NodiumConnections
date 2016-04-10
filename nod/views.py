@@ -2201,12 +2201,15 @@ def delete_customer(request, uuid):
                     request.user.staffmember.role == '2':
         try:
             customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
+            c = 'dropin'
         except ObjectDoesNotExist:
             try:
                 customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
+                c = 'ah'
             except ObjectDoesNotExist:
                 try:
                     customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+                    c = 'bc'
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
@@ -2222,7 +2225,21 @@ def delete_customer(request, uuid):
             v.save()
         customer.save()
 
-        return HttpResponseRedirect('/garits/customers/')
+
+        if c == 'dropin':
+
+            messages.error(request, 'Customer ' + customer.forename + " " + customer.surname + " is deleted.")
+            return HttpResponseRedirect('/garits/customers/dropin/')
+        else:
+            if c == 'ah':
+                messages.error(request, 'Customer ' + customer.forename + " " + customer.surname + " is deleted.")
+                return HttpResponseRedirect('/garits/customers/account_holders/')
+            else:
+                if c == 'bc':
+                    messages.error(request, 'Customer ' + customer.company_name + " is deleted.")
+                    return HttpResponseRedirect('/garits/customers/business_customer/')
+                else:
+                    return HttpResponseRedirect('/garits/customers/business_customer/')
     else:
         messages.error(request, "You must be a franchisee/foreperson/receptionist in order to view this page.")
         return redirect('/garits/')
@@ -3566,16 +3583,18 @@ def generate_spare_parts_report(request):
         print('b')
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
-            delivered = 0
-            for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
-                delivered += p.quantity
+            # delivered = 0
+            # for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
+            #     delivered += p.quantity
+            delivered = part.delivered_parts(start_date=date, end_date=today)
             spare.delivery = delivered
 
-            used = 0
-            for p in JobPart.objects.filter(part=part, job__booking_date__gte=report.start_date):
-                used += p.quantity
-            for p in SellPart.objects.filter(part=part, order__date__gte=report.start_date):
-                used +=p.quantity
+            # used = 0
+            # for p in JobPart.objects.filter(part=part, job__booking_date__gte=report.start_date):
+            #     used += p.quantity
+            # for p in SellPart.objects.filter(part=part, order__date__gte=report.start_date):
+            #     used +=p.quantity
+            used = part.total_used_parts(start_date=date, end_date=today)
             spare.used = used
 
             spare.initial_stock_level = spare.new_stock_level + spare.used - spare.delivery

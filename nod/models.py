@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist, Multiple
 from concurrency.fields import IntegerVersionField
 
 
+# generates a universally unique identifier (uuid) for every inheriting class.
 class RandomUUIDModel(models.Model):
     version = IntegerVersionField( )
     uuid = models.CharField(max_length=32, editable=False, blank=True, null=False, default='')
@@ -29,6 +30,8 @@ class RandomUUIDModel(models.Model):
         abstract = True
 
 
+# generates a 'created' value when an object is first created, and an 'updated' value when
+# an object is saved for every inheriting class
 class TimestampedModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -37,6 +40,7 @@ class TimestampedModel(models.Model):
         abstract = True
 
 
+# gives each inheriting class object a soft delete boolean value
 class SoftDeleteModel(models.Model):
     is_deleted = models.BooleanField(default=False)
 
@@ -73,14 +77,9 @@ class PhoneModel(TimestampedModel, SoftDeleteModel):
     phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)                # unique = True
 
     def save(self, *args, **kwargs):
-        # try:
         clean = self.full_clean()
         if clean is None:
-            # print("yay")
             super(PhoneModel, self).save(*args, **kwargs)
-        # except ValidationError:
-        #     # print("Invalid")
-        #     pass
 
     def __str__(self):
         return self.phone_number
@@ -92,7 +91,6 @@ class PriceControl(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
 
 class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    # part_number = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=100)
     vehicle_type = models.CharField(max_length=100)
@@ -105,6 +103,7 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def __str__(self):
         return self.name
 
+    # following three methods never used.
     def increase_quantity_by_one(self):
         q = self.quantity
         q += 1
@@ -121,47 +120,39 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         self.quantity = quantity
         return quantity
 
+    # returns the part's price multiplied by the marked up rate, rounded to two decimal points.
     def get_markedup_price(self):
         markup = float(PriceControl.objects.get().marked_up/100)
         price = float(self.price) + (float(self.price) * markup)
         return round(price, 2)
 
+    # calculates and returns number of delivered parts between two given dates
     def delivered_parts(self, start_date, end_date):
         quantity = 0
         for p in self.partorder_set.filter(is_deleted=False, order__date__lte=end_date, order__date__gte=start_date):
             quantity += p.quantity
-
         return quantity
 
-    # def sold_parts(self, start_date, end_date):
-    #     quantity = 0
-    #     for order in self.customerpartsorder_set.filter(is_deleted=False, date__lte=end_date, date__gte=start_date):
-    #         for p in order.parts.all():
-    #             if p.part == self:
-    #                 quantity += p.quantity
-    #
-    #
-    #     return quantity
-
+    # calculates and returns number of sold parts to customers between two given dates
     def sold_parts(self, start_date, end_date):
         quantity = 0
         for part in self.sellpart_set.filter(is_deleted=False, order__date__lte=end_date, order__date__gte=start_date):
             quantity += part.quantity
             print(part.quantity)
-
         return quantity
 
+    # calculates and returns the number of used parts for jobs between two given dates
     def used_parts(self, start_date, end_date):
         quantity = 0
         for p in self.jobpart_set.filter(is_deleted=False, job__booking_date__lte=end_date, job__booking_date__gte=start_date):
             quantity += p.quantity
-
         return quantity
 
+    # calculates and returns the number of all parts used between two given dates, be it by
+    # selling to a customer, or from using it for a job
     def total_used_parts(self, start_date, end_date):
-        quantity = self.used_parts(start_date=start_date, end_date=end_date) + \
+        quantity = self.used_parts(start_date=start_date, end_date=end_date) +\
                    self.sold_parts(start_date=start_date, end_date=end_date)
-
         return quantity
 
 
@@ -177,6 +168,7 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     parts = models.ManyToManyField(Part, through="SellPart")
 
+    #
     def get_parts_price(self):
         price = 0
         for part in self.sellpart_set.all(): #not self.parts
