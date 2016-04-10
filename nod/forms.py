@@ -409,6 +409,12 @@ class JobEditForm(forms.Form):
     work_carried_out = forms.CharField(max_length=1000, required=False, widget=forms.Textarea(
         attrs={'placeholder': "Work Carried Out",'rows': '3'}))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
+    JOB_TYPE = [
+        ('1', 'MOT'),
+        ('2', 'Repair'),
+        ('3', 'Annual')
+    ]
+    type = forms.ChoiceField(choices=JOB_TYPE)
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -419,6 +425,7 @@ class JobEditForm(forms.Form):
             'job_number',
             'vehicle',
             'booking_date',
+            'type',
             'bay',
             'work_carried_out',
         )
@@ -426,6 +433,7 @@ class JobEditForm(forms.Form):
         self.fields['job_number'].label = "Job Number"
         self.fields['bay'].label = "Bay"
         self.fields['vehicle'].label = "Vehicle"
+        self.fields['type'].label = "Service Type"
         self.fields['booking_date'].label = "Booking Date"
         self.fields['work_carried_out'].label = "Work Carried Out"
 

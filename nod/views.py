@@ -377,6 +377,7 @@ def create_job(request):
 
                 job_number = form.cleaned_data['job_number']
                 vehicle = form.cleaned_data['vehicle']
+                type = form.cleaned_data['type']
                 booking_date = form.cleaned_data['booking_date']
                 bay = form.cleaned_data['bay']
 
@@ -386,7 +387,7 @@ def create_job(request):
                 try:
                     with transaction.atomic():
                         job = Job.objects.create(job_number=job_number, vehicle=vehicle, status='3', booking_date=booking_date,
-                                         bay=bay)
+                                         bay=bay, type=type)
                 # job.job_number = job.id?
 
                         for task_form in task_formset:
@@ -480,6 +481,7 @@ def edit_job(request, uuid):
                 # job_number = form.cleaned_data['job_number']
                 vehicle = form.cleaned_data['vehicle']
                 booking_date = form.cleaned_data['booking_date']
+                type = form.cleaned_data['type']
                 bay = form.cleaned_data['bay']
 
 
@@ -491,6 +493,7 @@ def edit_job(request, uuid):
                     with transaction.atomic():
                         job.booking_date = booking_date
                         job.bay = bay
+                        job.type = type
 
                         old_jobtasks = job.jobtask_set.all()
                         for jt in old_jobtasks:
@@ -649,6 +652,7 @@ def edit_job(request, uuid):
                     vehicle = form.cleaned_data['vehicle']
                     booking_date = form.cleaned_data['booking_date']
                     bay = form.cleaned_data['bay']
+                    type = form.cleaned_data['type']
                     mechanic = mechanic_form.cleaned_data['mechanic']
 
                     vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
@@ -661,6 +665,7 @@ def edit_job(request, uuid):
                             job.booking_date = booking_date
                             job.bay = bay
                             job.mechanic = mechanic
+                            job.type = type
 
                             old_jobtasks = job.jobtask_set.all()
                             for jt in old_jobtasks:
