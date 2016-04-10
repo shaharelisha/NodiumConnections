@@ -41,7 +41,7 @@
 <a href="{% url 'pay-invoice' invoice.uuid %}" class="btn btn-default">Pay Invoice</a>
 {#<button onclick="exportpdf('#invoice_doc')">View as PDF</button>#}
 {#<a href="{% url 'print' %}" class="btn btn-default">Print</a>#}
-<a href="#" class="btn btn-primary">Print</a>
+<a href="#" onclick="myFunction()" class="btn btn-primary">Print</a>
 {% if invoice|copy2 == True %}
     <a href="{% url 'view-invoice-reminder1' invoice.uuid %}" class="btn btn-warning">Reminder 1</a>
 {% else %}
@@ -92,8 +92,11 @@
             <tr><td></td><td></td><td>Total</td><td></td><td>{{ order|total }}</td></tr>
             <tr><td></td><td></td><td>VAT</td><td></td><td>{{ order|vat }}</td></tr>
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
+            {% if invoice|get_discount == 'none' %}
+            {% else %}
             <tr><td></td><td></td><td>Discount ({{ invoice|get_discount }})</td><td></td><td>-{{ invoice|get_discount_value }}</td></tr>
             <tr><td></td><td></td><td></td><td>__________</td><td></td></tr>
+            {% endif %}
             <tr><td></td><td></td><td>Grand Total</td><td></td><td>{{ invoice|grand_total }}</td></tr>
         </table>
 
@@ -103,4 +106,10 @@
 </div>
 {#    </div>#}
 </div>
+
+<script>
+    function myFunction() {
+        window.print();
+    }
+</script>
 {% endblock %}

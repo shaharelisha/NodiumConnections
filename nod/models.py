@@ -122,8 +122,8 @@ class Part(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return quantity
 
     def get_markedup_price(self):
-        markup = PriceControl.objects.get().marked_up/100
-        price = self.price + (self.price * markup)
+        markup = float(PriceControl.objects.get().marked_up/100)
+        price = float(self.price) + (float(self.price) * markup)
         return round(price, 2)
 
     def delivered_parts(self, start_date, end_date):
@@ -189,8 +189,8 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
         return round(self.get_parts_price(), 2)
 
     def get_vat(self):
-        vat = PriceControl.objects.get().vat/100
-        total_vat = self.get_price() * vat
+        vat = float(PriceControl.objects.get().vat/100)
+        total_vat = float(self.get_price()) * vat
         return round(total_vat, 2)
 
     def get_grand_total(self):
@@ -272,7 +272,7 @@ class AccountHolder(Customer):
     object_id = models.PositiveIntegerField(null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    spent_this_month = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    spent_this_month = models.FloatField(default=0)
     month = models.PositiveSmallIntegerField(null=True)
 
     def __str__(self):
@@ -280,6 +280,9 @@ class AccountHolder(Customer):
 
     def full_address(self):
         return u"%s, %s" % (self.address, self.postcode)
+
+    def get_vehicles(self):
+        return self.vehicle_set.filter(is_deleted=False)
 
 class BusinessCustomer(AccountHolder):
     company_name = models.CharField(max_length=100, blank=True)
@@ -434,7 +437,10 @@ class Vehicle(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             try:
                 customer = AccountHolder.objects.get(uuid=uuid)
             except ObjectDoesNotExist:
-                pass
+                try:
+                    customer = Dropin.objects.get(uuid=uuid)
+                except ObjectDoesNotExist:
+                    pass
         return customer
 
 
@@ -566,8 +572,8 @@ class SellPart(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     sufficient_quantity = models.BooleanField(default=True)
 
     def get_markedup_price(self):
-        markup = PriceControl.objects.get().marked_up/100
-        price = self.part.price + (self.part.price * markup)
+        markup = float(PriceControl.objects.get().marked_up/100)
+        price = float(self.part.price) + (float(self.part.price) * markup)
         return round(price, 2)
 
     def get_cost(self):
@@ -635,20 +641,24 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 
     def get_discount(self):
-        uuid = self.get_customer().content_object.uuid
-        try:
-            discount = FixedDiscount.objects.get(uuid=uuid)
-            d = 'fixed'
-        except ObjectDoesNotExist:
+
+        if self.get_customer().content_object:
+            uuid = self.get_customer().content_object.uuid
             try:
-                discount = VariableDiscount.objects.get(uuid=uuid)
-                d = 'variable'
+                discount = FixedDiscount.objects.get(uuid=uuid)
+                d = 'fixed'
             except ObjectDoesNotExist:
                 try:
-                    discount = FlexibleDiscount.objects.get(uuid=uuid)
-                    d = 'flexible'
+                    discount = VariableDiscount.objects.get(uuid=uuid)
+                    d = 'variable'
                 except ObjectDoesNotExist:
-                    d = 'none'
+                    try:
+                        discount = FlexibleDiscount.objects.get(uuid=uuid)
+                        d = 'flexible'
+                    except ObjectDoesNotExist:
+                        d= 'none'
+        else:
+            d = 'none'
         return d
         # if d=='fixed':
         #     price = price * discount/100
@@ -658,35 +668,36 @@ class Invoice(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     def get_price(self):
         price = self.get_pre_discount_price()
         d = self.get_discount()
-        uuid = self.get_customer().content_object.uuid
         if d == 'none':
             return round(price, 2)
-        if d == 'fixed':
-            discount = FixedDiscount.objects.get(uuid=uuid).discount
-            price = float(price)
-            price -= float(price) * float(discount)/100
-            return round(price, 2)
-        if d == 'variable':
-            if self.job_done:
-                # MOT
-                if self.job_done.type == '1':
-                    discount = VariableDiscount.objects.get(uuid=uuid).mot_discount
-                # Repair
-                if self.job_done.type == '2':
-                    discount = VariableDiscount.objects.get(uuid=uuid).repair_discount
-                # Annual
-                if self.job_done.type == '3':
-                    discount = VariableDiscount.objects.get(uuid=uuid).annual_discount
-                # Parts
-            else:
-                if self.part_order:
-                    discount = VariableDiscount.objects.get(uuid=uuid).parts_discount
-            price = float(price)
-            price -= float(price) * float(discount)/100
-            return round(price, 2)
-        if d == 'flexible':
-            self.get_customer().spent_this_month += price
-            return round(price, 2)
+        else:
+            uuid = self.get_customer().content_object.uuid
+            if d == 'fixed':
+                discount = FixedDiscount.objects.get(uuid=uuid).discount
+                price = float(price)
+                price -= float(price) * float(discount)/100
+                return round(price, 2)
+            if d == 'variable':
+                if self.job_done:
+                    # MOT
+                    if self.job_done.type == '1':
+                        discount = VariableDiscount.objects.get(uuid=uuid).mot_discount
+                    # Repair
+                    if self.job_done.type == '2':
+                        discount = VariableDiscount.objects.get(uuid=uuid).repair_discount
+                    # Annual
+                    if self.job_done.type == '3':
+                        discount = VariableDiscount.objects.get(uuid=uuid).annual_discount
+                    # Parts
+                else:
+                    if self.part_order:
+                        discount = VariableDiscount.objects.get(uuid=uuid).parts_discount
+                price = float(price)
+                price -= float(price) * float(discount)/100
+                return round(price, 2)
+            if d == 'flexible':
+                self.get_customer().spent_this_month += price
+                return round(price, 2)
 
     def discount_value(self):
         return float(self.get_pre_discount_price()) - float(self.get_price())
@@ -716,7 +727,7 @@ class InvoiceReminder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
 
 
 class Payment(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
-    amount = models.DecimalField(max_digits=4, decimal_places=2)
+    amount = models.FloatField()
     PAYMENT_TYPES = (
         ('1', 'Cash'),
         ('2', 'Card'),
@@ -836,7 +847,7 @@ class PriceReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
 
 
 class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
-    date = models.DateField(default=datetime.date.today())
+    date = models.DateTimeField(default=timezone.datetime.now())
     start_date = models.DateField()
     end_date = models.DateField()
 
@@ -859,9 +870,12 @@ class TimeReport(TimestampedModel, RandomUUIDModel, SoftDeleteModel):
         jobs = Job.objects.filter(is_deleted=False, booking_date__gte=start_date, booking_date__lte=end_date, status='1')
         total_time = 0
         job_count = jobs.count()
-        for j in jobs:
-            total_time += j.get_duration() #not j.get_price()?
-        average_time = total_time/job_count
+        if job_count == 0:
+            average_time = 0
+        else:
+            for j in jobs:
+                total_time += j.get_duration() #not j.get_price()?
+            average_time = total_time/job_count
         return round(average_time, 2)
 
     def get_average_time_for_mot_per_mechanic(self, mechanic):

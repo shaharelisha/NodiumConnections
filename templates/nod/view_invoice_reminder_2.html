@@ -38,7 +38,8 @@
 {% endif %}
 
 <div id="main">
-<a href="#" class="btn btn-default">Print</a>
+<a href="#" onclick="myFunction()" class="btn btn-default">Print</a>
+<br><br>
 
 <div id="view">
     <div id="invoice_rem">
@@ -69,4 +70,11 @@
     </div>
     </div>
 </div>
+
+<script>
+    function myFunction() {
+        window.print();
+    }
+</script>
+
 {% endblock %}

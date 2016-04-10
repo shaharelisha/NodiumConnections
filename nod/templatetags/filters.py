@@ -215,6 +215,13 @@ def get_average_time_for_annual_per_mechanic(report, mechanic):
     return report.get_average_time_for_annual_per_mechanic(mechanic)
 
 
+@register.filter(name='owes_money')
+def owes_money(customer):
+    if len(customer.get_unpaid_invoices()) > 0:
+        return True
+    else:
+        return False
+
 # @register.filter(name='mot_reminders')
 # def exist_mot_reminders(reminder):
 #     if len() > 0:

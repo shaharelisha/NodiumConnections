@@ -79,7 +79,11 @@
                 <div class="col-lg-10 col-lg-offset-2">
                     <br/>
                     <button type="reset" class="btn btn-default">Cancel</button>
+                    {% if account_holder|owes_money %}
+                    <a href="{% url 'delete-customer' account_holder.uuid %}" class="btn btn-danger disabled">Delete</a>
+                    {% else %}
                     <a href="{% url 'delete-customer' account_holder.uuid %}" class="btn btn-danger">Delete</a>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </div>

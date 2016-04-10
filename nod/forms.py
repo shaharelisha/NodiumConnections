@@ -76,8 +76,6 @@ class EmailFormSetHelper(FormHelper):
         super(EmailFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        # self.label_class = 'col-lg-8'
-        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'email_type',
@@ -140,8 +138,6 @@ class PhoneFormSetHelper(FormHelper):
         super(PhoneFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        # self.label_class = 'col-lg-8'
-        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'phone_type',
@@ -207,8 +203,6 @@ class TaskCreateFormSetHelper(FormHelper):
         super(TaskCreateFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        # self.label_class = 'col-lg-8'
-        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'task_name',
@@ -279,8 +273,6 @@ class TaskFormSetHelper(FormHelper):
         super(TaskFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        # self.label_class = 'col-lg-8'
-        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'task_name',
@@ -368,6 +360,7 @@ class JobCreateForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
     vehicle = forms.CharField(max_length=100, widget=forms.TextInput(
         attrs={'placeholder': "Vehicle Registration No.",'rows': '1', "id": "vehicles"}))
+
     JOB_TYPE = [
         ('1', 'MOT'),
         ('2', 'Repair'),
@@ -386,8 +379,6 @@ class JobCreateForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-5'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',
@@ -396,12 +387,17 @@ class JobCreateForm(forms.Form):
             'booking_date',
             'bay',
         )
+        # customer_uuid = kwargs.pop('customer_uuid', None)
+        # customer = AccountHolder.objects.get(uuid=customer_uuid)
         super(JobCreateForm, self).__init__(*args, **kwargs)
         self.fields['job_number'].label = "Job Number"
         self.fields['vehicle'].label = "Vehicle Registration No."
         self.fields['type'].label = "Service Type"
         self.fields['booking_date'].label = "Booking Date"
         self.fields['bay'].label = "Bay"
+
+        # if customer_uuid:
+        #     self.fields['vehicle'] = forms.ChoiceField(choices=tuple([(str(o) ,str(o)) for o in customer.get_vehicles()]))
 
 
 class JobEditForm(forms.Form):
@@ -418,8 +414,6 @@ class JobEditForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'job_number',
@@ -445,8 +439,6 @@ class CustomerPartsOrderForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'date',
@@ -472,8 +464,6 @@ class DropinForm(CustomerForm):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'customer_uuid',
@@ -499,8 +489,6 @@ class DiscountPlanForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'discount_plan',
@@ -519,8 +507,6 @@ class AccountHolderForm(CustomerForm):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'customer_uuid',
@@ -552,8 +538,6 @@ class BusinessCustomerForm(CustomerForm):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'customer_uuid',
@@ -601,8 +585,6 @@ class VehicleForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'reg_number',
@@ -634,8 +616,6 @@ class EditPartForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'quantity',
@@ -667,8 +647,6 @@ class CreatePartForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'name',
@@ -702,8 +680,6 @@ class ReplenishmentOrderForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'company_name',
@@ -726,8 +702,6 @@ class SupplierForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'company_name',
@@ -758,8 +732,6 @@ class PaymentForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'amount',
@@ -798,8 +770,6 @@ class UserForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'first_name',
@@ -826,8 +796,6 @@ class PriceControlForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'vat',
@@ -851,8 +819,6 @@ class SparePartsReportGenerateForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'start_date',
@@ -872,8 +838,6 @@ class ProfileForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'user_name',
@@ -939,8 +903,6 @@ class PasswordChangeForm(SetPasswordForm):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-8'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'old_password',

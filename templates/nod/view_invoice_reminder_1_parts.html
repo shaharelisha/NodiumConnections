@@ -38,7 +38,7 @@
 {% endif %}
 
 <div id="main">
-<a href="#" class="btn btn-primary">Print</a>
+<a href="#" onclick="myFunction()" class="btn btn-primary">Print</a>
 <br><br>
 <div id="view">
 {#    <div id="customeraddress">{{ customer.address }}<br>{{ customer.postcode }}<br></div>#}
@@ -92,6 +92,10 @@
 
 </div>
 
-
+<script>
+    function myFunction() {
+        window.print();
+    }
+</script>
 
 {% endblock %}

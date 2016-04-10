@@ -128,15 +128,15 @@ def automated_invoice_checks():
     for c in AccountHolder.objects.filter(is_deleted=False):
         for invoice in c.get_unpaid_invoices():
             if invoice.issue_date <= datetime.date.today() - relativedelta(month=1):
-                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='2')
+                InvoiceReminder.objects.get_or_create(invoice=invoice, reminder_phase='2')
                 invoice.reminder_phase = '2'
                 invoice.save()
             if invoice.issue_date <= datetime.date.today() - relativedelta(month=2):
-                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='3')
+                InvoiceReminder.objects.get_or_create(invoice=invoice, reminder_phase='3')
                 invoice.reminder_phase = '3'
                 invoice.save()
             if invoice.issue_date <= datetime.date.today() - relativedelta(month=3):
-                InvoiceReminder.objects.create(invoice=invoice, reminder_phase='4')
+                InvoiceReminder.objects.get_or_create(invoice=invoice, reminder_phase='4')
                 invoice.reminder_phase = '4'
                 invoice.save()
 
@@ -149,10 +149,11 @@ def automated_invoice_checks():
     # Then checks if today is the last day of the month
     if datetime.date.today().day == calendar.monthrange(year, month)[1]:
         first_date = datetime.date(year, month, 1)
-        report = SparePartsReport.objects.create(start_date=first_date, end_date=today, date=today)
+        report = SparePartsReport.objects.get_or_create(start_date=first_date, end_date=today, date=today)
 
         for part in Part.objects.filter(is_deleted=False):
-            spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
+            spare = SparePart.objects.get_or_create(report=report, part=part, new_stock_level=part.quantity)
+            spare = spare[0]
             delivered = 0
             for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
                 delivered += p.quantity
@@ -177,7 +178,7 @@ def automated_invoice_checks():
         mot_day = v.mot_base_date.day
         mot_date = date(year, mot_month, mot_day)
         if today == cal.add_working_days(date(year, mot_month, mot_day), -5):
-            MOTReminder.objects.create(vehicle=v, issue_date=today, renewal_test_date=mot_date)
+            MOTReminder.objects.get_or_create(vehicle=v, issue_date=today, renewal_test_date=mot_date)
 
     return None
 
@@ -419,7 +420,7 @@ def create_job(request):
                         #                 code='insufficient_parts'
                         #             )
 
-                        messages.success(request, "Job No." + job.reg_num + " was successfully created.")
+                        messages.success(request, "Job No." + str(job.job_number) + " was successfully created.")
                         return HttpResponseRedirect('/garits/jobs/pending/')
 
                 except IntegrityError:
@@ -427,8 +428,11 @@ def create_job(request):
 
         else:
             data = {}
-            last_id = Job.objects.last().id
-            new_id = last_id + 1
+            if Invoice.objects.last() is not None:
+                last_id = Invoice.objects.last().id
+                new_id = last_id + 1
+            else:
+                new_id = 1
             data['job_number'] = new_id
             form = JobCreateForm(initial=data)
             task_formset = TaskCreateFormSet(initial=tasks_data, prefix='fs1')
@@ -580,8 +584,11 @@ def edit_job(request, uuid):
 
                         job.save()
                         if complete is True:
-                            last_id = Invoice.objects.last().id
-                            new_id = last_id + 1
+                            if Invoice.objects.last() is not None:
+                                last_id = Invoice.objects.last().id
+                                new_id = last_id + 1
+                            else:
+                                new_id = 1
                             invoice = Invoice.objects.create(job_done=job, invoice_number=new_id, issue_date=datetime.date.today())
 
                         messages.success(request, "Your changes to Job No." + str(job.job_number) + " were saved.")
@@ -748,8 +755,11 @@ def edit_job(request, uuid):
 
                             job.save()
                             if complete is True:
-                                last_id = Invoice.objects.last().id
-                                new_id = last_id + 1
+                                if Invoice.objects.last() is not None:
+                                    last_id = Invoice.objects.last().id
+                                    new_id = last_id + 1
+                                else:
+                                    new_id = 1
                                 invoice = Invoice.objects.create(job_done=job, invoice_number=new_id, issue_date=datetime.date.today())
 
                             messages.success(request, "Your changes to Job No." + str(job.job_number) + " were saved.")
@@ -2202,6 +2212,9 @@ def delete_customer(request, uuid):
             pass
 
         customer.is_deleted = True
+        for v in customer.vehicle_set.all():
+            v.is_deleted= True
+            v.save()
         customer.save()
 
         return HttpResponseRedirect('/garits/customers/')
@@ -3000,9 +3013,12 @@ def sell_parts(request, customer_uuid):
                         order = CustomerPartsOrder.objects.create(date=date, content_object=customer)
                         customer.part_orders.add(order)
                         customer.save()
+                        if Invoice.objects.last() is not None:
+                            last_id = Invoice.objects.last().id
+                            new_id = last_id + 1
+                        else:
+                            new_id = 1
 
-                        last_id = Invoice.objects.last().id
-                        new_id = last_id + 1
                         invoice = Invoice.objects.create(part_order=order, invoice_number=new_id, issue_date=date)
 
                         for part_form in part_formset:
@@ -3234,22 +3250,25 @@ def view_invoice(request, uuid):
             if invoice.part_order:
                 order = invoice.part_order
                 customer = invoice.get_customer()
-                # if invoice.reminder_phase == '1':
-                template = loader.get_template('nod/view_invoice_parts.html')
-                # else:
-                #     if invoice.reminder_phase == '2':
-                #         template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
-                #     else:
-                #         if invoice.reminder_phase == '3':
-                #             template = loader.get_template('nod/view_invoice_reminder_2_parts.html')
-                #         else:
-                #             template = loader.get_template('nod/view_invoice_reminder_final_parts.html')
+                if invoice.reminder_phase == '1':
+                    template = loader.get_template('nod/view_invoice_parts.html')
+                else:
+                    if invoice.reminder_phase == '2':
+                        template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
+                    else:
+                        if invoice.reminder_phase == '3':
+                            template = loader.get_template('nod/view_invoice_reminder_2_parts.html')
+                        else:
+                            template = loader.get_template('nod/view_invoice_reminder_final_parts.html')
                 context = RequestContext(request, {
                     'invoice': invoice,
                     'order': order,
                     'customer': customer,
                 })
                 return HttpResponse(template.render(context))
+            else:
+                return redirect('/garits/')
+
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
@@ -3261,26 +3280,43 @@ def view_invoice_reminder1(request, uuid):
                     request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='2')
-        job = invoice.job_done
-        customer = invoice.get_customer()
-        vehicle = invoice.job_done.vehicle
+        if invoice.job_done:
+            job = invoice.job_done
+            customer = invoice.get_customer()
+            vehicle = invoice.job_done.vehicle
 
-        if invoice_reminder.reminder_phase == '2':
-            pass
+            if invoice_reminder.reminder_phase == '2':
+                pass
+            else:
+                messages.error(request, "reminder doesn't exist")
+                return redirect('/garits/')
+
+            template = loader.get_template('nod/view_invoice_reminder_1.html')
+
+            context = RequestContext(request, {
+                'invoice': invoice,
+                'reminder': invoice_reminder,
+                'job': job,
+                'customer': customer,
+                'vehicle': vehicle,
+            })
+            return HttpResponse(template.render(context))
         else:
-            messages.error(request, "reminder doesn't exist")
-            return redirect('/garits/')
+            customer = invoice.get_customer()
+            if invoice_reminder.reminder_phase == '2':
+                pass
+            else:
+                messages.error(request, "reminder doesn't exist")
+                return redirect('/garits/')
 
-        template = loader.get_template('nod/view_invoice_reminder_1.html')
+            template = loader.get_template('nod/view_invoice_reminder_1_parts.html')
 
-        context = RequestContext(request, {
-            'invoice': invoice,
-            'reminder': invoice_reminder,
-            'job': job,
-            'customer': customer,
-            'vehicle': vehicle,
-        })
-        return HttpResponse(template.render(context))
+            context = RequestContext(request, {
+                'invoice': invoice,
+                'reminder': invoice_reminder,
+                'customer': customer,
+            })
+            return HttpResponse(template.render(context))
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
@@ -3394,7 +3430,7 @@ def pay_invoice(request, uuid):
                             pass
 
                         messages.success(request, "Invoice No. " + str(invoice.invoice_number) + " was paid.")
-                        return HttpResponseRedirect("nod/print_invoice.html")
+                        return redirect('view-customer', customer.uuid)
 
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
@@ -3476,8 +3512,11 @@ def generate_invoice_for_job(request, job_uuid):
                     request.user.staffmember.role == '2':
         job = get_object_or_404(Job, uuid=job_uuid)
 
-        last_id = Invoice.objects.last().id
-        new_id = last_id + 1
+        if Invoice.objects.last() is not None:
+            last_id = Invoice.objects.last().id
+            new_id = last_id + 1
+        else:
+            new_id = 1
         invoice = Invoice.objects.create(invoice_number=new_id, job_done=job)
 
         for p in job.jobpart_set.filter(is_deleted=False):
@@ -3600,9 +3639,10 @@ def generate_time_report(request):
 def view_time_report(request, uuid):
     if request.user.staffmember.role == '3':
         report = get_object_or_404(TimeReport, uuid=uuid)
-        mechanics = []
-        for job in Job.objects.filter(is_deleted=False, booking_date__gte=report.start_date, status='1'):
-            mechanics.append(job.mechanic)
+        # mechanics = []
+        # for job in Job.objects.filter(is_deleted=False, booking_date__gte=report.start_date, status='1'):
+        #     mechanics.append(job.mechanic)
+        mechanics = Mechanic.objects.filter(is_deleted=False)
         template = loader.get_template('nod/view_time_report.html')
         context = RequestContext(request, {
             'report': report,
