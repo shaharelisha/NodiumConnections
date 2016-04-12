@@ -3588,10 +3588,10 @@ def generate_spare_parts_report(request):
         print('b')
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
-            # delivered = 0
-            # for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
-            #     delivered += p.quantity
-            delivered = part.delivered_parts(start_date=date, end_date=today)
+            delivered = 0
+            for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
+                delivered += p.quantity
+            # delivered = part.delivered_parts(start_date=date, end_date=today)
             spare.delivery = delivered
 
             # used = 0
