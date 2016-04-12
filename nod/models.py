@@ -71,11 +71,14 @@ class PhoneModel(TimestampedModel, SoftDeleteModel):
     )
 
     type = models.CharField(max_length=1, choices=PHONE_TYPES, default='1')
+
+    # defines a regular expression, validating that the number input complies with that rule
     phone_regex = RegexValidator(regex=r'^0\d{7,10}$',
                                  message="Phone number must be entered in the format:"
                                          " '0xxxxxxxxxx'. NSN length of up to 10 digits.")
-    phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)                # unique = True
+    phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)
 
+    # overrides original save method to validate that the number is of the right format before saving.
     def save(self, *args, **kwargs):
         clean = self.full_clean()
         if clean is None:
@@ -168,7 +171,7 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
     date = models.DateTimeField(default=timezone.datetime.now)
     parts = models.ManyToManyField(Part, through="SellPart")
 
-    #
+    # gets the prices for all the parts of this order
     def get_parts_price(self):
         price = 0
         for part in self.sellpart_set.all(): #not self.parts
@@ -177,14 +180,17 @@ class CustomerPartsOrder(TimestampedModel, SoftDeleteModel, RandomUUIDModel):
             price += unit_price*quantity
         return round(price, 2)
 
+    # probably very redundant, but for the sake of naming properly
     def get_price(self):
         return round(self.get_parts_price(), 2)
 
+    # get VAT value of this order
     def get_vat(self):
         vat = float(PriceControl.objects.get().vat/100)
         total_vat = float(self.get_price()) * vat
         return round(total_vat, 2)
 
+    # get grand total (VAT + price)
     def get_grand_total(self):
         return round((self.get_price() + self.get_vat()), 2)
 
@@ -198,18 +204,23 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     date = models.DateField(default=timezone.datetime.now, null=True)
     part_orders = GenericRelation(CustomerPartsOrder)
 
+    # when object referenced, returns forename and surname of customer
     def __str__(self):
         return self.forename + " " + self.surname
 
+    # returns full name of customer
     def full_name(self):
         return self.forename + " " + self.surname
 
+    # returns list of all emails, separated by a semi-colon
     def list_emails(self):
         return "; ".join([s.address for s in self.emails.filter(is_deleted=False)])
 
+    # returns list of all phones, separated by a comma
     def get_phones(self):
         return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
 
+    # returns list of invoices generated for jobs/orders done which weren't paid
     def get_unpaid_invoices(self):
         invoices = []
         for v in self.vehicle_set.filter(is_deleted=False):
@@ -223,10 +234,7 @@ class Customer(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
 
 
 class Dropin(Customer):
-    def __str__(self):
-        return self.forename + " " + self.surname
-
-    # TODO: needs to be checked between dates.
+    # Gets number of MOT jobs per drop in
     def get_number_mot_jobs(self):
         mot = 0
         for v in self.vehicle_set:
@@ -235,6 +243,7 @@ class Dropin(Customer):
                     mot += 1
         return mot
 
+    # Gets number of repair jobs per drop in
     def get_number_repair_jobs(self):
         repair = 0
         for v in self.vehicle_set:
@@ -243,11 +252,12 @@ class Dropin(Customer):
                     repair += 1
         return repair
 
+    # Gets number of annual jobs per drop in
     def get_number_annual_jobs(self):
         annual = 0
         for v in self.vehicle_set:
             for job in v.job_set:
-                if job.type is '1':
+                if job.type is '3':
                     annual += 1
         return annual
 
@@ -257,6 +267,7 @@ class AccountHolder(Customer):
     postcode = models.CharField(max_length=8, blank=True)
     suspended = models.BooleanField(default=False)
 
+    # defines a generic relationship, which is limited to the different types of discounts
     limit = Q(app_label="nod", model="fixeddiscount") | \
         Q(app_label="nod", model="flexiblediscount") | \
         Q(app_label="nod", model="variablediscount")
@@ -267,22 +278,24 @@ class AccountHolder(Customer):
     spent_this_month = models.FloatField(default=0)
     month = models.PositiveSmallIntegerField(null=True)
 
-    def __str__(self):
-        return self.forename + ' ' + self.surname
-
+    # returns full address in this format (address, postcode)
     def full_address(self):
         return u"%s, %s" % (self.address, self.postcode)
 
+    # returns list of vehicles assigned to this customer which aren't deleted
     def get_vehicles(self):
         return self.vehicle_set.filter(is_deleted=False)
+
 
 class BusinessCustomer(AccountHolder):
     company_name = models.CharField(max_length=100, blank=True)
     rep_role = models.CharField(max_length=80, blank=True)
 
+    # when object referenced, returns company name of customer
     def __str__(self):
         return self.company_name
 
+    # returns the name and role of the rep
     def rep(self):
         return self.forename + ' ' + self.surname + ", " + self.rep_role
 
@@ -294,15 +307,19 @@ class Supplier(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     address = models.CharField(max_length=80, blank=True)
     postcode = models.CharField(max_length=8, blank=True)
 
+    # when object referenced, returns company name of customer
     def __str__(self):
         return self.company_name
 
+    # returns full address in this format (address, postcode)
     def full_address(self):
         return u"%s, %s" % (self.address, self.postcode)
 
+    # returns list of all emails, separated by a semi-colon
     def get_emails(self):
         return "; ".join([s.address for s in self.emails.filter(is_deleted=False)])
 
+    # returns list of all phones, separated by a comma
     def get_phones(self):
         return ", ".join([s.phone_number for s in self.phone_numbers.filter(is_deleted=False)])
 
@@ -315,6 +332,7 @@ class DiscountPlan(SoftDeleteModel, TimestampedModel, RandomUUIDModel):
     ]
     type = models.CharField(choices=PLAN, max_length=1)
     customer = GenericRelation(AccountHolder)
+
 
     def __str__(self):
         type = next(name for value, name in DiscountPlan.PLAN if value==self.type)

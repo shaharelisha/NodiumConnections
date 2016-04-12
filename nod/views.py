@@ -460,12 +460,12 @@ def edit_job(request, uuid):
         job = get_object_or_404(Job, uuid=uuid)
 
         TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
-        task_set = job.jobtask_set.all()
+        task_set = job.jobtask_set.filter(is_deleted=False)
         tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
                       for t in task_set]
 
         PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
-        part_set = job.jobpart_set.all()
+        part_set = job.jobpart_set.filter(is_deleted=False)
         parts_data = [{'part_name': p.part, 'quantity': p.quantity}
                       for p in part_set]
 
@@ -496,6 +496,7 @@ def edit_job(request, uuid):
                         job.type = type
 
                         old_jobtasks = job.jobtask_set.all()
+                        print(old_jobtasks)
                         for jt in old_jobtasks:
                             jt.is_deleted = True
                             jt.save()
@@ -507,15 +508,18 @@ def edit_job(request, uuid):
 
                             if task_name:
                                 task = get_object_or_404(Task, description=task_name)
-                                # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-                                jobtask = job.jobtask_set.get_or_create(task=task)
+                                print(task)
+                                jobtask = JobTask.objects.get_or_create(task=task, job=job)
+                                print(jobtask)
+                                # jobtask = job.jobtask_set.get_or_create(task=task)
 
                                 # get_or_create returns tuple {object returned, whether it was created or just retrieved}
                                 if jobtask[0].is_deleted is True:
                                     jobtask[0].is_deleted = False
                                     jobtask[0].save()
-                                if jobtask[1] is True:
-                                    job.jobtask_set.add(jobtask[0])
+                                # if jobtask[1] is True:
+                                job.jobtask_set.add(jobtask[0])
+
 
                                 jobtask = jobtask[0]
                                 if status:
@@ -568,6 +572,7 @@ def edit_job(request, uuid):
                                     # )
                                 jobpart[0].save()
 
+                        complete = False
                         for t in job.jobtask_set.filter(is_deleted=False):
                             if t.status == '1':
                                 complete = True
