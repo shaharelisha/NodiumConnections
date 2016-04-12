@@ -1,6 +1,5 @@
 from django.http import HttpResponse
-from django.forms import formset_factory
-from django.shortcuts import get_object_or_404, render, render_to_response, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.db import IntegrityError, transaction
@@ -8,48 +7,53 @@ from django.contrib import messages
 from django_tables2 import RequestConfig
 from django.forms.formsets import formset_factory
 from django.contrib.auth import update_session_auth_hash
-import calendar
-from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned
 import json
 from django.template import RequestContext, loader
 from django.contrib.auth import logout
-import datetime
 from datetime import date
 
 from workalendar.europe import UnitedKingdom
 cal = UnitedKingdom()
 from dateutil.relativedelta import relativedelta
 
-# london_tz = pytz.timezone("Europe/London")
-
 from .forms import *
-from nod.models import *
 from .tables import *
 
 
+# Home page view, specified for different user roles
 def index(request):
     try:
         # Mechanic
         if request.user.staffmember.role == '1':
+            # generates 'My Outstanding Jobs' table
             uuid = request.user.staffmember.uuid
             my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
             RequestConfig(request).configure(my_jobs_table)
             return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
-            # return render(request, "nod/index-mechanic.html")
+
         # Foreperson
         if request.user.staffmember.role == '2':
+            # calls automated checks when accessing home page
             automated_invoice_checks()
+
+            # generates 'My Outstanding Jobs' table
             uuid = request.user.staffmember.uuid
             my_jobs_table = MyJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
             RequestConfig(request).configure(my_jobs_table)
+
+            # generates 'Late Payments' table
             invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
             RequestConfig(request).configure(invoices_to_print_table)
+
+            # generates 'MoT Reminders' table
             today = datetime.date.today()
             mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
                                                                                renewal_test_date__gte=today,
                                                                                issue_date__lte=today))
             RequestConfig(request).configure(mot_reminders_table)
 
+            # generates 'Low Stock' table
             parts = []
             for p in Part.objects.filter(is_deleted=False):
                 if p.quantity <= p.low_level_threshold:
@@ -65,18 +69,24 @@ def index(request):
                 'low_parts': low_parts,
             }
             return render(request, "nod/index-foreperson.html", context)
+
         # Franchisee
         if request.user.staffmember.role == '3':
+            # calls automated checks when accessing home page
             automated_invoice_checks()
 
+            # generates 'Late Payments' table
             invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
             RequestConfig(request).configure(invoices_to_print_table)
+
+            # generates 'MoT Reminders' table
             today = datetime.date.today()
             mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
                                                                                renewal_test_date__gte=today,
                                                                                issue_date__lte=today))
             RequestConfig(request).configure(mot_reminders_table)
 
+            # generates 'Low Stock' table
             parts = []
             for p in Part.objects.filter(is_deleted=False):
                 if p.quantity <= p.low_level_threshold:
@@ -91,17 +101,24 @@ def index(request):
                 'low_parts': low_parts,
             }
             return render(request, "nod/index-franchisee.html", context)
+
         # Receptionist
         if request.user.staffmember.role == '4':
+            # calls automated checks when accessing home page
             automated_invoice_checks()
+
+            # generates 'Late Payments' table
             invoices_to_print_table = InvoiceRemindersToPrintTable(Invoice.objects.filter(is_deleted=False, paid=False))
             RequestConfig(request).configure(invoices_to_print_table)
+
+            # generates 'MoT Reminders' table
             today = datetime.date.today()
             mot_reminders_table = MOTRemindersTable(MOTReminder.objects.filter(is_deleted=False,
                                                                                renewal_test_date__gte=today,
                                                                                issue_date__lte=today))
             RequestConfig(request).configure(mot_reminders_table)
 
+            # generates 'Low Stock' table
             parts = []
             for p in Part.objects.filter(is_deleted=False):
                 if p.quantity <= p.low_level_threshold:
@@ -124,7 +141,11 @@ def index(request):
         return redirect('/accounts/login/')
 
 
+# automated checks
 def automated_invoice_checks():
+    # creates invoice reminder objects and changes the reminder phase of invoices
+    # for all customer invoices generated once a month passes since the invoice was
+    # first issued
     for c in AccountHolder.objects.filter(is_deleted=False):
         for invoice in c.get_unpaid_invoices():
             if invoice.issue_date <= datetime.date.today() - relativedelta(month=1):
@@ -149,8 +170,12 @@ def automated_invoice_checks():
     # Then checks if today is the last day of the month
     if datetime.date.today().day == calendar.monthrange(year, month)[1]:
         first_date = datetime.date(year, month, 1)
+
+        # generating a Spare Parts Report
         report = SparePartsReport.objects.get_or_create(start_date=first_date, end_date=today, date=today)
 
+        # iterates through existing parts (which aren't deleted) in the database and counts all parts
+        # used and delivered for the report
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.get_or_create(report=report, part=part, new_stock_level=part.quantity)
             spare = spare[0]
@@ -171,8 +196,10 @@ def automated_invoice_checks():
             report.sparepart_set.add(spare)
         report.save()
 
+        # generating a Time Report
         TimeReport.objects.create(start_date=first_date, end_date=today, date=today)
 
+    # iterates through all vehicles, to check if an MoT job is due to be done in 5 working days
     for v in Vehicle.objects.filter(is_deleted=False):
         mot_month = v.mot_base_date.month
         mot_day = v.mot_base_date.day
@@ -183,12 +210,14 @@ def automated_invoice_checks():
     return None
 
 
+# log out view, redirects to log in page
 @login_required
 def logout_view(request):
     logout(request)
     return render(request, 'registration/login.html')
 
 
+# generates table of users, only admin has access to this page
 @login_required
 def user_table(request):
     if request.user.staffmember.role == '5':
@@ -200,6 +229,7 @@ def user_table(request):
         return redirect('/garits/')
 
 
+# generates table of existing parts in the database
 @login_required
 def part_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' \
@@ -212,6 +242,7 @@ def part_table(request):
         return redirect('/garits/')
 
 
+# generates table of active jobs (jobs which at least one task has started)
 @login_required
 def active_jobs_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -224,6 +255,7 @@ def active_jobs_table(request):
         return redirect('/garits/')
 
 
+# generates table of paused jobs (jobs which don't currently have sufficient parts for execution)
 @login_required
 def paused_jobs_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -242,6 +274,7 @@ def paused_jobs_table(request):
         return redirect('/garits/')
 
 
+# generates untaken jobs (jobs which weren't assigned a mechanic yet)
 @login_required
 def untaken_jobs_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '1' or\
@@ -254,18 +287,7 @@ def untaken_jobs_table(request):
         return redirect('/garits/')
 
 
-# @login_required
-# def my_jobs_table(request):
-#     if request.user.staffmember.role == '1' or request.user.staffmember.role == '2':
-#         uuid = request.user.staffmember.uuid
-#         my_jobs_table = UntakenJobsTable(Job.objects.filter(is_deleted=False, mechanic__uuid=uuid))
-#         RequestConfig(request).configure(my_jobs_table)
-#         return render(request, "nod/index-mechanic.html", {'my_jobs_table': my_jobs_table})
-#     else:
-#         messages.error(request, "You must be a mechanic/foreperson in order to view this page.")
-#         return redirect('/garits/')
-
-
+# generates table of suppliers
 @login_required
 def supplier_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -278,6 +300,7 @@ def supplier_table(request):
         return redirect('/garits/')
 
 
+# generates table of account holders
 @login_required
 def account_holder_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -304,6 +327,7 @@ def account_holder_table(request):
         return redirect('/garits/')
 
 
+# generates table of drop in customers
 @login_required
 def dropin_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -312,7 +336,7 @@ def dropin_table(request):
                                                                                                           surname=""))
         RequestConfig(request).configure(dropin_table)
 
-        # deletes account holders which were created (automatically when accessing the 'create' page)
+        # deletes customers which were created (automatically when accessing the 'create' page)
         # but then weren't submitted (left empty) for over 30 mintutes.
         for a in Customer.objects.filter(forename="", surname=""):
             if a.updated < timezone.now() - timedelta(minutes=30):
@@ -329,6 +353,7 @@ def dropin_table(request):
         return redirect('/garits/')
 
 
+# generates table of business customers
 @login_required
 def business_customers_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -353,6 +378,7 @@ def business_customers_table(request):
         return redirect('/garits/')
 
 
+# creates job form view
 @login_required
 def create_job(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4'\
@@ -383,12 +409,10 @@ def create_job(request):
 
 
                 vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
-                # bay = get_object_or_404(Bay, bay_type=bay)
                 try:
                     with transaction.atomic():
                         job = Job.objects.create(job_number=job_number, vehicle=vehicle, status='3', booking_date=booking_date,
-                                         bay=bay, type=type)
-                # job.job_number = job.id?
+                                                 bay=bay, type=type)
 
                         for task_form in task_formset:
                             task_name = task_form.cleaned_data['task_name']
@@ -410,7 +434,6 @@ def create_job(request):
                         #         # checks that the quantity required is not more than the total quantity in stock.
                         #         # if it is, it removes the quantity used for a job from the total quantity and,
                         #         # creates a job part object, otherwise, it throws an error.
-                        #         # TODO: do something to warn if drops below threshold
                         #         if part.quantity >= quantity:
                         #             part.quantity -= quantity
                         #             JobPart.objects.create(part=part, job=job, quantity=quantity)
@@ -429,6 +452,7 @@ def create_job(request):
 
         else:
             data = {}
+            # set job number based on previous job number
             if Invoice.objects.last() is not None:
                 last_id = Invoice.objects.last().id
                 new_id = last_id + 1
@@ -453,6 +477,7 @@ def create_job(request):
         return redirect('/garits/')
 
 
+# generates edit job form page view
 @login_required
 def edit_job(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '1' or \
@@ -460,11 +485,13 @@ def edit_job(request, uuid):
         job = get_object_or_404(Job, uuid=uuid)
 
         TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
+        # current tasks assigned to job
         task_set = job.jobtask_set.filter(is_deleted=False)
         tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
                       for t in task_set]
 
         PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
+        # current parts assigned to job
         part_set = job.jobpart_set.filter(is_deleted=False)
         parts_data = [{'part_name': p.part, 'quantity': p.quantity}
                       for p in part_set]
@@ -478,25 +505,21 @@ def edit_job(request, uuid):
             part_formset = PartFormSet(request.POST, prefix='fs2')
 
             if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
-                # job_number = form.cleaned_data['job_number']
                 vehicle = form.cleaned_data['vehicle']
                 booking_date = form.cleaned_data['booking_date']
                 type = form.cleaned_data['type']
                 bay = form.cleaned_data['bay']
 
-
                 vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
-                # bay = get_object_or_404(Bay, bay_type=bay)
 
-                # job.job_number = job.id?
                 try:
                     with transaction.atomic():
                         job.booking_date = booking_date
                         job.bay = bay
                         job.type = type
 
+                        # sets all tasks assign to this job to soft deleted
                         old_jobtasks = job.jobtask_set.all()
-                        print(old_jobtasks)
                         for jt in old_jobtasks:
                             jt.is_deleted = True
                             jt.save()
@@ -508,20 +531,17 @@ def edit_job(request, uuid):
 
                             if task_name:
                                 task = get_object_or_404(Task, description=task_name)
-                                print(task)
                                 jobtask = JobTask.objects.get_or_create(task=task, job=job)
-                                print(jobtask)
-                                # jobtask = job.jobtask_set.get_or_create(task=task)
 
-                                # get_or_create returns tuple {object returned, whether it was created or just retrieved}
-                                if jobtask[0].is_deleted is True:
-                                    jobtask[0].is_deleted = False
-                                    jobtask[0].save()
-                                # if jobtask[1] is True:
-                                job.jobtask_set.add(jobtask[0])
-
-
+                                # get_or_create method returns tuple {object returned, whether it was
+                                # created or just retrieved}
                                 jobtask = jobtask[0]
+
+                                if jobtask.is_deleted is True:
+                                    jobtask.is_deleted = False
+                                    jobtask.save()
+                                job.jobtask_set.add(jobtask)
+
                                 if status:
                                     jobtask.status = status
                                 else:
@@ -532,6 +552,7 @@ def edit_job(request, uuid):
                                     jobtask.duration = task.estimated_time
                                 jobtask.save()
 
+                        # sets all parts assign to this job to soft deleted
                         old_jobparts = job.jobpart_set.all()
                         for jp in old_jobparts:
                             jp.is_deleted = True
@@ -543,7 +564,6 @@ def edit_job(request, uuid):
 
                             if part_name and quantity:
                                 part = get_object_or_404(Part, name=part_name)
-                                # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
                                 jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
 
                                 if jobpart[0].is_deleted is True:
@@ -552,19 +572,14 @@ def edit_job(request, uuid):
                                 if jobpart[1] is True:
                                     job.jobpart_set.add(jobpart[0])
 
-                                # jobpart[0].quantity = quantity
-
-
                                 # checks that the quantity required is not more than the total quantity in stock.
                                 # if it is, it removes the quantity used for a job from the total quantity and assigns,
                                 # the quantity to the job part object, otherwise, it throws an error.
-                                # TODO: do something if q drops below threshold
                                 if part.quantity >= quantity:
                                     part.quantity -= quantity
                                     jobpart[0].sufficient_quantity = True
                                     part.save()
                                 else:
-                                    # TODO: when changed back to TRUE, must subtract ^
                                     jobpart[0].sufficient_quantity = False
                                     # raise forms.ValidationError(
                                     #     'Not enough parts in stock.',
@@ -580,7 +595,6 @@ def edit_job(request, uuid):
                             else:
                                 complete = False
                                 break
-
 
                         if complete is False:
                             for t in job.jobtask_set.filter(is_deleted=False):
@@ -605,6 +619,7 @@ def edit_job(request, uuid):
                 except IntegrityError:
                     messages.error(request, "There was an error saving")
 
+        # handles GET request
         else:
             data = {}
             data['job_number'] = job.job_number
@@ -634,12 +649,14 @@ def edit_job(request, uuid):
             job = get_object_or_404(Job, uuid=uuid)
 
             TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
-            task_set = job.jobtask_set.all()
+            # current tasks assigned to job
+            task_set = job.jobtask_set.filter(is_deleted=False)
             tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
                           for t in task_set]
 
             PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
-            part_set = job.jobpart_set.all()
+            # current parts assigned to job
+            part_set = job.jobpart_set.filter(is_deleted=False)
             parts_data = [{'part_name': p.part, 'quantity': p.quantity}
                           for p in part_set]
 
@@ -653,7 +670,6 @@ def edit_job(request, uuid):
                 part_formset = PartFormSet(request.POST, prefix='fs2')
 
                 if form.is_valid() and task_formset.is_valid() and part_formset.is_valid() and mechanic_form.is_valid():
-                    # job_number = form.cleaned_data['job_number']
                     vehicle = form.cleaned_data['vehicle']
                     booking_date = form.cleaned_data['booking_date']
                     bay = form.cleaned_data['bay']
@@ -662,9 +678,6 @@ def edit_job(request, uuid):
 
                     vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
 
-                    # bay = get_object_or_404(Bay, bay_type=bay)
-
-                    # job.job_number = job.id?
                     try:
                         with transaction.atomic():
                             job.booking_date = booking_date
@@ -672,6 +685,7 @@ def edit_job(request, uuid):
                             job.mechanic = mechanic
                             job.type = type
 
+                            # sets all tasks assign to this job to soft deleted
                             old_jobtasks = job.jobtask_set.all()
                             for jt in old_jobtasks:
                                 jt.is_deleted = True
@@ -684,17 +698,17 @@ def edit_job(request, uuid):
 
                                 if task_name:
                                     task = get_object_or_404(Task, description=task_name)
-                                    # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-                                    jobtask = job.jobtask_set.get_or_create(task=task)
+                                    jobtask = JobTask.objects.get_or_create(task=task, job=job)
 
-                                    # get_or_create returns tuple {object returned, whether it was created or just retrieved}
-                                    if jobtask[0].is_deleted is True:
-                                        jobtask[0].is_deleted = False
-                                        jobtask[0].save()
-                                    if jobtask[1] is True:
-                                        job.jobtask_set.add(jobtask[0])
-
+                                    # get_or_create method returns tuple {object returned, whether it was
+                                    # created or just retrieved}
                                     jobtask = jobtask[0]
+
+                                    if jobtask.is_deleted is True:
+                                        jobtask.is_deleted = False
+                                        jobtask.save()
+                                    job.jobtask_set.add(jobtask)
+
                                     if status:
                                         jobtask.status = status
                                     else:
@@ -705,6 +719,7 @@ def edit_job(request, uuid):
                                         jobtask.duration = task.estimated_time
                                     jobtask.save()
 
+                            # sets all parts assign to this job to soft deleted
                             old_jobparts = job.jobpart_set.all()
                             for jp in old_jobparts:
                                 jp.is_deleted = True
@@ -716,7 +731,6 @@ def edit_job(request, uuid):
 
                                 if part_name and quantity:
                                     part = get_object_or_404(Part, name=part_name)
-                                    # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
                                     jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
 
                                     if jobpart[0].is_deleted is True:
@@ -725,26 +739,20 @@ def edit_job(request, uuid):
                                     if jobpart[1] is True:
                                         job.jobpart_set.add(jobpart[0])
 
-                                    # jobpart[0].quantity = quantity
-
-
                                     # checks that the quantity required is not more than the total quantity in stock.
                                     # if it is, it removes the quantity used for a job from the total quantity and assigns,
                                     # the quantity to the job part object, otherwise, it throws an error.
-                                    # TODO: do something if q drops below threshold
                                     if part.quantity >= quantity:
                                         part.quantity -= quantity
                                         jobpart[0].sufficient_quantity = True
                                         part.save()
                                     else:
-                                        # TODO: when changed back to TRUE, must subtract ^
                                         jobpart[0].sufficient_quantity = False
                                         # raise forms.ValidationError(
                                         #     'Not enough parts in stock.',
                                         #     code='insufficient_parts'
                                         # )
                                     jobpart[0].save()
-
 
                             for t in job.jobtask_set.filter(is_deleted=False):
                                 if t.status == '1':
@@ -753,7 +761,6 @@ def edit_job(request, uuid):
                                 else:
                                     complete = False
                                     break
-
 
                             if complete is False:
                                 for t in job.jobtask_set.filter(is_deleted=False):
@@ -765,11 +772,13 @@ def edit_job(request, uuid):
 
                             job.save()
                             if complete is True:
+                                # defines invoice number to be the previous one + 1. If there are 0, it sets it to 1.
                                 if Invoice.objects.last() is not None:
                                     last_id = Invoice.objects.last().id
                                     new_id = last_id + 1
                                 else:
                                     new_id = 1
+                                # creates Invoice object for the job object
                                 invoice = Invoice.objects.create(job_done=job, invoice_number=new_id, issue_date=datetime.date.today())
 
                             messages.success(request, "Your changes to Job No." + str(job.job_number) + " were saved.")
@@ -778,6 +787,7 @@ def edit_job(request, uuid):
                     except IntegrityError:
                         messages.error(request, "There was an error saving")
 
+            # handles GET request
             else:
                 data = {}
                 data2 = {}
@@ -811,164 +821,11 @@ def edit_job(request, uuid):
             return redirect('/garits/')
 
 
-# @login_required
-# def assign_mechanic_job(request, uuid):
-#     if request.user.staffmember.role == '2':
-#         job = get_object_or_404(Job, uuid=uuid)
-#
-#         TaskFormSet = formset_factory(JobTaskForm, formset=BaseJobTaskForm, min_num=1, extra=0)
-#         task_set = job.jobtask_set.all()
-#         tasks_data = [{'task_name': t.task, 'status': t.status, 'duration': t.duration}
-#                       for t in task_set]
-#
-#         PartFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
-#         part_set = job.jobpart_set.all()
-#         parts_data = [{'part_name': p.part, 'quantity': p.quantity}
-#                       for p in part_set]
-#
-#         task_helper = TaskFormSetHelper()
-#         part_helper = PartFormSetHelper()
-#
-#         if request.method == 'POST':
-#             form = JobEditForm(request.POST)
-#             mechanic_form = MechanicJobForm(request.POST)
-#             task_formset = TaskFormSet(request.POST, prefix='fs1')
-#             part_formset = PartFormSet(request.POST, prefix='fs2')
-#
-#             if form.is_valid() and task_formset.is_valid() and part_formset.is_valid():
-#                 # job_number = form.cleaned_data['job_number']
-#                 vehicle = form.cleaned_data['vehicle']
-#                 booking_date = form.cleaned_data['booking_date']
-#                 bay = form.cleaned_data['bay']
-#                 mechanic = mechanic_form.cleaned_data['mechanic']
-#
-#                 vehicle = get_object_or_404(Vehicle, reg_number=vehicle)
-#
-#                 # bay = get_object_or_404(Bay, bay_type=bay)
-#
-#                 # job.job_number = job.id?
-#                 try:
-#                     with transaction.atomic():
-#                         job.booking_date = booking_date
-#                         job.bay = bay
-#                         job.mechanic = mechanic
-#
-#                         old_jobtasks = job.jobtask_set.all()
-#                         for jt in old_jobtasks:
-#                             jt.is_deleted = True
-#                             jt.save()
-#
-#                         for task_form in task_formset:
-#                             task_name = task_form.cleaned_data.get('task_name')
-#                             status = task_form.cleaned_data.get('status')
-#                             duration = task_form.cleaned_data.get('duration')
-#
-#                             if task_name:
-#                                 task = get_object_or_404(Task, description=task_name)
-#                                 # jobtask = JobTask.objects.get_or_create(task=task, job=job, is_deleted=False)
-#                                 jobtask = job.jobtask_set.get_or_create(task=task)
-#
-#                                 # get_or_create returns tuple {object returned, whether it was created or just retrieved}
-#                                 if jobtask[0].is_deleted is True:
-#                                     jobtask[0].is_deleted = False
-#                                     jobtask[0].save()
-#                                 if jobtask[1] is True:
-#                                     job.jobtask_set.add(jobtask[0])
-#
-#                                 jobtask = jobtask[0]
-#                                 if status:
-#                                     jobtask.status = status
-#                                 else:
-#                                     jobtask.status = '3'
-#                                 if duration:
-#                                     jobtask.duration = duration
-#                                 else:
-#                                     jobtask.duration = task.estimated_time
-#                                 jobtask.save()
-#
-#                         old_jobparts = job.jobpart_set.all()
-#                         for jp in old_jobparts:
-#                             jp.is_deleted = True
-#                             jp.save()
-#
-#                         for part_form in part_formset:
-#                             part_name = part_form.cleaned_data.get('part_name')
-#                             quantity = part_form.cleaned_data.get('quantity')
-#
-#                             if part_name and quantity:
-#                                 part = get_object_or_404(Part, name=part_name)
-#                                 # jobpart = JobPart.objects.get_or_create(part=part, job=job, is_deleted=False)
-#                                 jobpart = job.jobpart_set.get_or_create(part=part, quantity=quantity)
-#
-#                                 if jobpart[0].is_deleted is True:
-#                                     jobpart[0].is_deleted = False
-#                                     jobpart[0].save()
-#                                 if jobpart[1] is True:
-#                                     job.jobpart_set.add(jobpart[0])
-#
-#                                 # jobpart[0].quantity = quantity
-#
-#
-#                                 # checks that the quantity required is not more than the total quantity in stock.
-#                                 # if it is, it removes the quantity used for a job from the total quantity and assigns,
-#                                 # the quantity to the job part object, otherwise, it throws an error.
-#                                 # TODO: do something if q drops below threshold
-#                                 if part.quantity >= quantity:
-#                                     part.quantity -= quantity
-#                                     part.save()
-#                                 else:
-#                                     # TODO: when changed back to TRUE, must subtract ^
-#                                     jobpart[0].sufficient_quantity = False
-#                                     # raise forms.ValidationError(
-#                                     #     'Not enough parts in stock.',
-#                                     #     code='insufficient_parts'
-#                                     # )
-#                                     jobpart[0].save()
-#
-#                         job.save()
-#
-#                         return HttpResponseRedirect('/garits/jobs/active/')
-#
-#                 except IntegrityError:
-#                     messages.error(request, "There was an error saving")
-#
-#         else:
-#             data = {}
-#             data2 = {}
-#             data['job_number'] = job.job_number
-#             data['vehicle'] = job.vehicle.reg_number
-#             data['type'] = job.type
-#             data['bay'] = job.bay
-#             data['status'] = job.status
-#             data['booking_date'] = job.booking_date
-#             data['work_carried_out'] = job.work_carried_out
-#             data2['mechanic'] = job.mechanic
-#
-#             form = JobEditForm(initial=data)
-#             mechanic_form = MechanicJobForm(initial=data2)
-#             task_formset = TaskFormSet(initial=tasks_data, prefix='fs1')
-#             part_formset = PartFormSet(initial=parts_data, prefix='fs2')
-#
-#         context = {
-#             'form': form,
-#             'mechanic_form': mechanic_form,
-#             'task_formset': task_formset,
-#             'part_formset': part_formset,
-#             'task_helper': task_helper,
-#             'part_helper': part_helper,
-#             'job': job,
-#         }
-#
-#         return render(request, 'nod/assign_jobsheet.html', context)
-#     else:
-#         messages.error(request, "You must be a foreperson in order to view this page.")
-#         return redirect('/garits/')
-
-
+# sets job to soft deleted
 @login_required
 def delete_job(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+            request.user.staffmember.role == '2':
         job = get_object_or_404(Job, uuid=uuid)
 
         job.is_deleted = True
@@ -981,6 +838,7 @@ def delete_job(request, uuid):
         return redirect('/garits/')
 
 
+# generates edit profile form page view
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
@@ -1014,6 +872,7 @@ def edit_profile(request):
     return render(request, 'nod/edit_profile.html', context)
 
 
+# creates drop in customer form view
 @login_required
 def create_dropin(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
@@ -1044,9 +903,6 @@ def create_dropin(request):
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
                 date = form.cleaned_data['date']
-
-                # create Dropin Customer object using input data
-                # dropin = Dropin.objects.create(forename=forename, surname=surname, date=date)
 
                 try:
                     with transaction.atomic():
@@ -1090,6 +946,8 @@ def create_dropin(request):
                     messages.error(request, "There was an error saving")
 
         else:
+            # creates drop in object every time the create drop in page is accessed in order to
+            # have a customer to assign to the vehicles. Customers left empty are then deleted every 30 minutes.
             dropin = Dropin.objects.create()
             data = {}
             data['customer_uuid'] = dropin.uuid
@@ -1112,6 +970,7 @@ def create_dropin(request):
         return redirect('/garits/')
 
 
+# generates edit drop in form page view
 @login_required
 def edit_dropin(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -1119,11 +978,13 @@ def edit_dropin(request, uuid):
         dropin = get_object_or_404(Dropin, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+        # current emails assigned to drop in
         user_emails = dropin.emails.filter(is_deleted=False)
         email_data = [{'email_address': e.address, 'email_type': e.type}
                       for e in user_emails]
 
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+        # current phones assigned to drop in
         user_phone_numbers = dropin.phone_numbers.filter(is_deleted=False)
         phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                       for p in user_phone_numbers]
@@ -1149,8 +1010,8 @@ def edit_dropin(request, uuid):
 
                         dropin.save()
 
+                        # sets all assigned emails to soft deleted
                         old_emails = dropin.emails.all()
-                        print(old_emails)
                         for e in old_emails:
                             e.is_deleted = True
                             e.save()
@@ -1159,8 +1020,8 @@ def edit_dropin(request, uuid):
                             email_address = email_form.cleaned_data.get('email_address')
                             email_type = email_form.cleaned_data.get('email_type')
 
+                            # either changes an existing email back to is_deleted=True, or creates a new assigned email
                             if email_address and email_type:
-                                # updates = {'is_deleted':'True'}
                                 email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                 email = email[0]
                                 if email.is_deleted is True:
@@ -1169,6 +1030,7 @@ def edit_dropin(request, uuid):
                                 dropin.emails.add(email)
                                 dropin.save()
 
+                        # sets all assigned phones to soft deleted
                         old_phones = dropin.phone_numbers.all()
                         for p in old_phones:
                             p.is_deleted = True
@@ -1178,6 +1040,7 @@ def edit_dropin(request, uuid):
                             phone_number = phone_form.cleaned_data.get('phone_number')
                             phone_type = phone_form.cleaned_data.get('phone_type')
 
+                            # either changes an existing phone back to is_deleted=True, or creates a new assigned phone
                             if phone_number and phone_type:
                                 phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                 phone = phone[0]
@@ -1219,6 +1082,7 @@ def edit_dropin(request, uuid):
         return redirect('/garits/')
 
 
+# creates account holder customer form view
 @login_required
 def create_account_holder(request):
     if request.user.staffmember.role == '3':
@@ -1247,7 +1111,6 @@ def create_account_holder(request):
                 pass
 
             if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
-                print('a)')
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
                 date = form.cleaned_data['date']
@@ -1255,13 +1118,8 @@ def create_account_holder(request):
                 postcode = form.cleaned_data['postcode']
                 discount_plan = discount_form.cleaned_data['discount_plan']
 
-                # create Account Holder Customer object using input data
-                # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
-                #                                               address=address, postcode=postcode,
-                #                                               discount_plan=discount_plan)
                 try:
                     with transaction.atomic():
-                        print('b')
                         account_holder.forename = forename
                         account_holder.surname = surname
                         account_holder.date = date
@@ -1282,7 +1140,6 @@ def create_account_holder(request):
                                 discount = VariableDiscount.objects.get()
 
                             account_holder.content_object = discount
-                            print('c')
 
                         for email_form in email_formset:
                             email_address = email_form.cleaned_data.get('email_address')
@@ -1309,7 +1166,6 @@ def create_account_holder(request):
                                     phone.save()
                                 account_holder.phone_numbers.add(phone)
                                 account_holder.save()
-                        print(request.POST)
                         account_holder.save()
 
                         return HttpResponseRedirect('/garits/customers/account_holders/')
@@ -1318,6 +1174,8 @@ def create_account_holder(request):
                     messages.error(request, "There was an error saving")
 
         else:
+            # creates account holder object every time the create drop in page is accessed in order to
+            # have a customer to assign to the vehicles. Customers left empty are then deleted every 30 minutes.
             account_holder = AccountHolder.objects.create()
             data = {}
             data['customer_uuid'] = account_holder.uuid
@@ -1363,20 +1221,14 @@ def create_account_holder(request):
                     pass
 
                 if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
-                    print('a)')
                     forename = form.cleaned_data['forename']
                     surname = form.cleaned_data['surname']
                     date = form.cleaned_data['date']
                     address = form.cleaned_data['address']
                     postcode = form.cleaned_data['postcode']
 
-                    # create Account Holder Customer object using input data
-                    # account_holder = AccountHolder.objects.create(forename=forename, surname=surname, date=date,
-                    #                                               address=address, postcode=postcode,
-                    #                                               discount_plan=discount_plan)
                     try:
                         with transaction.atomic():
-                            print('b')
                             account_holder.forename = forename
                             account_holder.surname = surname
                             account_holder.date = date
@@ -1417,6 +1269,8 @@ def create_account_holder(request):
                         messages.error(request, "There was an error saving")
 
             else:
+                # creates account holder object every time the create drop in page is accessed in order to
+                # have a customer to assign to the vehicles. Customers left empty are then deleted every 30 minutes.
                 account_holder = AccountHolder.objects.create()
                 data = {}
                 data['customer_uuid'] = account_holder.uuid
@@ -1439,36 +1293,34 @@ def create_account_holder(request):
             return redirect('/garits/')
 
 
+# generates edit account holder form page view
 @login_required
 def edit_account_holder(request, uuid):
     if request.user.staffmember.role == '3':
         account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+        # current emails assigned to account holder
         user_emails = account_holder.emails.filter(is_deleted=False)
         email_data = [{'email_address': e.address, 'email_type': e.type}
                       for e in user_emails]
 
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+        # current phones assigned to account holder
         user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
         phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                       for p in user_phone_numbers]
 
         email_helper = EmailFormSetHelper()
         phone_helper = PhoneFormSetHelper()
-        print('1')
 
         if request.method == 'POST':
             form = AccountHolderForm(request.POST)
             discount_form = DiscountPlanForm(request.POST)
             email_formset = EmailFormSet(request.POST, prefix='fs1')
             phone_formset = PhoneFormSet(request.POST, prefix='fs2')
-            print('2')
-
 
             if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid() and discount_form.is_valid():
-                print('3')
-
                 forename = form.cleaned_data['forename']
                 surname = form.cleaned_data['surname']
                 date = form.cleaned_data['date']
@@ -1478,8 +1330,6 @@ def edit_account_holder(request, uuid):
 
                 try:
                     with transaction.atomic():
-                        print('4')
-
                         account_holder.forename = forename
                         account_holder.surname = surname
                         account_holder.date = date
@@ -1501,8 +1351,8 @@ def edit_account_holder(request, uuid):
 
                             account_holder.content_object = discount
 
+                        # sets all assigned emails to soft deleted
                         old_emails = account_holder.emails.all()
-                        print(old_emails)
                         for e in old_emails:
                             e.is_deleted = True
                             e.save()
@@ -1511,8 +1361,8 @@ def edit_account_holder(request, uuid):
                             email_address = email_form.cleaned_data.get('email_address')
                             email_type = email_form.cleaned_data.get('email_type')
 
+                            # either changes an existing email back to is_deleted=True, or creates a new assigned email
                             if email_address and email_type:
-                                # updates = {'is_deleted':'True'}
                                 email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                 email = email[0]
                                 if email.is_deleted is True:
@@ -1521,6 +1371,7 @@ def edit_account_holder(request, uuid):
                                 account_holder.emails.add(email)
                                 account_holder.save()
 
+                        # sets all assigned phones to soft deleted
                         old_phones = account_holder.phone_numbers.all()
                         for p in old_phones:
                             p.is_deleted = True
@@ -1530,6 +1381,7 @@ def edit_account_holder(request, uuid):
                             phone_number = phone_form.cleaned_data.get('phone_number')
                             phone_type = phone_form.cleaned_data.get('phone_type')
 
+                            # either changes an existing phone back to is_deleted=True, or creates a new assigned phone
                             if phone_number and phone_type:
                                 phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                 phone = phone[0]
@@ -1592,28 +1444,26 @@ def edit_account_holder(request, uuid):
             account_holder = get_object_or_404(AccountHolder, uuid=uuid)
 
             EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+            # current emails assigned to account holder
             user_emails = account_holder.emails.filter(is_deleted=False)
             email_data = [{'email_address': e.address, 'email_type': e.type}
                           for e in user_emails]
 
             PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+            # current phones assigned to account holder
             user_phone_numbers = account_holder.phone_numbers.filter(is_deleted=False)
             phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                           for p in user_phone_numbers]
 
             email_helper = EmailFormSetHelper()
             phone_helper = PhoneFormSetHelper()
-            print('1')
 
             if request.method == 'POST':
                 form = AccountHolderForm(request.POST)
                 email_formset = EmailFormSet(request.POST, prefix='fs1')
                 phone_formset = PhoneFormSet(request.POST, prefix='fs2')
-                print('2')
-
 
                 if form.is_valid() and email_formset.is_valid() and phone_formset.is_valid():
-                    print('3')
 
                     forename = form.cleaned_data['forename']
                     surname = form.cleaned_data['surname']
@@ -1623,16 +1473,14 @@ def edit_account_holder(request, uuid):
 
                     try:
                         with transaction.atomic():
-                            print('4')
-
                             account_holder.forename = forename
                             account_holder.surname = surname
                             account_holder.date = date
                             account_holder.address = address
                             account_holder.postcode = postcode
 
+                            # sets all assigned emails to soft deleted
                             old_emails = account_holder.emails.all()
-                            print(old_emails)
                             for e in old_emails:
                                 e.is_deleted = True
                                 e.save()
@@ -1641,8 +1489,9 @@ def edit_account_holder(request, uuid):
                                 email_address = email_form.cleaned_data.get('email_address')
                                 email_type = email_form.cleaned_data.get('email_type')
 
+                                # either changes an existing email back to is_deleted=True, or creates a new assigned
+                                # email
                                 if email_address and email_type:
-                                    # updates = {'is_deleted':'True'}
                                     email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                     email = email[0]
                                     if email.is_deleted is True:
@@ -1651,6 +1500,7 @@ def edit_account_holder(request, uuid):
                                     account_holder.emails.add(email)
                                     account_holder.save()
 
+                            # sets all assigned phones to soft deleted
                             old_phones = account_holder.phone_numbers.all()
                             for p in old_phones:
                                 p.is_deleted = True
@@ -1660,6 +1510,8 @@ def edit_account_holder(request, uuid):
                                 phone_number = phone_form.cleaned_data.get('phone_number')
                                 phone_type = phone_form.cleaned_data.get('phone_type')
 
+                                # either changes an existing phone back to is_deleted=True, or creates a new
+                                # assigned phone
                                 if phone_number and phone_type:
                                     phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                     phone = phone[0]
@@ -1708,6 +1560,7 @@ def edit_account_holder(request, uuid):
             return redirect('/garits/')
 
 
+# creates business customer form view
 @login_required
 def create_business_customer(request):
     if request.user.staffmember.role == '3':
@@ -1744,11 +1597,6 @@ def create_business_customer(request):
                 postcode = form.cleaned_data['postcode']
                 discount_plan = discount_form.cleaned_data['discount_plan']
 
-                # create Business Company Customer object using input data
-                # business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
-                #                                                     address=address, postcode=postcode,
-                #                                                     discount_plan=discount_plan, company_name=company_name,
-                #                                                     rep_role=rep_role)
                 try:
                     with transaction.atomic():
                         business_customer.company_name = company_name
@@ -1810,6 +1658,8 @@ def create_business_customer(request):
                     messages.error(request, "There was an error saving")
 
         else:
+            # creates business customers object every time the create drop in page is accessed in order to
+            # have a customer to assign to the vehicles. Customers left empty are then deleted every 30 minutes.
             business_customer = BusinessCustomer.objects.create()
             data = {}
             data['customer_uuid'] = business_customer.uuid
@@ -1862,11 +1712,6 @@ def create_business_customer(request):
                     address = form.cleaned_data['address']
                     postcode = form.cleaned_data['postcode']
 
-                    # create Business Company Customer object using input data
-                    # business_customer = BusinessCustomer.objects.create(forename=forename, surname=surname, date=date,
-                    #                                                     address=address, postcode=postcode,
-                    #                                                     discount_plan=discount_plan, company_name=company_name,
-                    #                                                     rep_role=rep_role)
                     try:
                         with transaction.atomic():
                             business_customer.company_name = company_name
@@ -1913,6 +1758,8 @@ def create_business_customer(request):
                         messages.error(request, "There was an error saving")
 
             else:
+                # creates business customers object every time the create drop in page is accessed in order to
+                # have a customer to assign to the vehicles. Customers left empty are then deleted every 30 minutes.
                 business_customer = BusinessCustomer.objects.create()
                 data = {}
                 data['customer_uuid'] = business_customer.uuid
@@ -1935,17 +1782,20 @@ def create_business_customer(request):
             return redirect('/garits/')
 
 
+# generates edit business customers form page view
 @login_required
 def edit_business_customer(request, uuid):
     if request.user.staffmember.role == '3':
         business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+        # current emails assigned to business customer
         user_emails = business_customer.emails.filter(is_deleted=False)
         email_data = [{'email_address': e.address, 'email_type': e.type}
                       for e in user_emails]
 
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+        # current phones assigned to business customer
         user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
         phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                       for p in user_phone_numbers]
@@ -1996,8 +1846,8 @@ def edit_business_customer(request, uuid):
 
                         business_customer.save()
 
+                        # sets all assigned emails to soft deleted
                         old_emails = business_customer.emails.all()
-                        print(old_emails)
                         for e in old_emails:
                             e.is_deleted = True
                             e.save()
@@ -2006,8 +1856,8 @@ def edit_business_customer(request, uuid):
                             email_address = email_form.cleaned_data.get('email_address')
                             email_type = email_form.cleaned_data.get('email_type')
 
+                            # either changes an existing email back to is_deleted=True, or creates a new assigned email
                             if email_address and email_type:
-                                # updates = {'is_deleted':'True'}
                                 email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                 email = email[0]
                                 if email.is_deleted is True:
@@ -2016,6 +1866,7 @@ def edit_business_customer(request, uuid):
                                 business_customer.emails.add(email)
                                 business_customer.save()
 
+                        # sets all assigned phones to soft deleted
                         old_phones = business_customer.phone_numbers.all()
                         for p in old_phones:
                             p.is_deleted = True
@@ -2025,6 +1876,7 @@ def edit_business_customer(request, uuid):
                             phone_number = phone_form.cleaned_data.get('phone_number')
                             phone_type = phone_form.cleaned_data.get('phone_type')
 
+                            # either changes an existing phone back to is_deleted=True, or creates a new assigned phone
                             if phone_number and phone_type:
                                 phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                 phone = phone[0]
@@ -2086,11 +1938,13 @@ def edit_business_customer(request, uuid):
             business_customer = get_object_or_404(BusinessCustomer, uuid=uuid)
 
             EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+            # current emails assigned to business customer
             user_emails = business_customer.emails.filter(is_deleted=False)
             email_data = [{'email_address': e.address, 'email_type': e.type}
                           for e in user_emails]
 
             PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+            # current phones assigned to business customer
             user_phone_numbers = business_customer.phone_numbers.filter(is_deleted=False)
             phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                           for p in user_phone_numbers]
@@ -2124,8 +1978,8 @@ def edit_business_customer(request, uuid):
 
                             business_customer.save()
 
+                            # sets all assigned emails to soft deleted
                             old_emails = business_customer.emails.all()
-                            print(old_emails)
                             for e in old_emails:
                                 e.is_deleted = True
                                 e.save()
@@ -2134,8 +1988,9 @@ def edit_business_customer(request, uuid):
                                 email_address = email_form.cleaned_data.get('email_address')
                                 email_type = email_form.cleaned_data.get('email_type')
 
+                                # either changes an existing email back to is_deleted=True, or creates a new
+                                # assigned email
                                 if email_address and email_type:
-                                    # updates = {'is_deleted':'True'}
                                     email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                     email = email[0]
                                     if email.is_deleted is True:
@@ -2144,6 +1999,7 @@ def edit_business_customer(request, uuid):
                                     business_customer.emails.add(email)
                                     business_customer.save()
 
+                            # sets all assigned phones to soft deleted
                             old_phones = business_customer.phone_numbers.all()
                             for p in old_phones:
                                 p.is_deleted = True
@@ -2153,6 +2009,8 @@ def edit_business_customer(request, uuid):
                                 phone_number = phone_form.cleaned_data.get('phone_number')
                                 phone_type = phone_form.cleaned_data.get('phone_type')
 
+                                # either changes an existing phone back to is_deleted=True, or creates a new
+                                # assigned phone
                                 if phone_number and phone_type:
                                     phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                     phone = phone[0]
@@ -2200,6 +2058,7 @@ def edit_business_customer(request, uuid):
             return redirect('/garits/')
 
 
+# set customer to soft deleted
 @login_required
 def delete_customer(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2230,9 +2089,7 @@ def delete_customer(request, uuid):
             v.save()
         customer.save()
 
-
         if c == 'dropin':
-
             messages.error(request, 'Customer ' + customer.forename + " " + customer.surname + " is deleted.")
             return HttpResponseRedirect('/garits/customers/dropin/')
         else:
@@ -2250,12 +2107,16 @@ def delete_customer(request, uuid):
         return redirect('/garits/')
 
 
+# generates page for a given customer
 @login_required
 def view_customer(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
         request.user.staffmember.role == '2':
+        # if customer is of type Business Customer
         try:
             customer = BusinessCustomer.objects.get(uuid=uuid, is_deleted=False)
+
+            # if there are no more unpaid invoices, change suspended to false
             if customer.suspended:
                 if len(customer.get_unpaid_invoices()) < 0:
                     for invoice in customer.get_unpaid_invoices():
@@ -2267,12 +2128,16 @@ def view_customer(request, uuid):
                 else:
                     customer.suspended = False
             customer.save()
+
+            # sends a SUSPENDED error message to page if customer is suspended
             if customer.suspended is True:
                 messages.error(request, "SUSPENDED")
 
+            # generates table of vehicles assigned to this customer
             vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
             RequestConfig(request).configure(vehicle_table)
 
+            # generates table of unpaid invoices assigned to this customer
             invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
             RequestConfig(request).configure(invoice_table)
 
@@ -2284,8 +2149,11 @@ def view_customer(request, uuid):
             })
             return HttpResponse(template.render(context))
         except ObjectDoesNotExist:
+            # if customer of type Account Holder
             try:
                 customer = AccountHolder.objects.get(uuid=uuid, is_deleted=False)
+
+                # if there are no more unpaid invoices, change suspended to false
                 if customer.suspended:
                     if len(customer.get_unpaid_invoices()) < 0:
                         for invoice in customer.get_unpaid_invoices():
@@ -2297,12 +2165,16 @@ def view_customer(request, uuid):
                     else:
                         customer.suspended = False
                 customer.save()
+
+                # sends a SUSPENDED error message to page if customer is suspended
                 if customer.suspended is True:
                     messages.error(request, "SUSPENDED")
 
+                # generates table of vehicles assigned to this customer
                 vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
                 RequestConfig(request).configure(vehicle_table)
 
+                # generates table of unpaid invoices assigned to this customer
                 invoice_table = UnpaidInvoiceTable(customer.get_unpaid_invoices())
                 RequestConfig(request).configure(invoice_table)
 
@@ -2326,6 +2198,7 @@ def view_customer(request, uuid):
         return redirect('/garits/')
 
 
+# generates page for a given drop in
 @login_required
 def view_dropin(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2333,6 +2206,7 @@ def view_dropin(request, uuid):
 
         customer = Dropin.objects.get(uuid=uuid, is_deleted=False)
 
+        # generates table of vehicles assigned to this customer
         vehicle_table = VehicleTable(customer.vehicle_set.filter(is_deleted=False))
         RequestConfig(request).configure(vehicle_table)
 
@@ -2347,25 +2221,26 @@ def view_dropin(request, uuid):
         return redirect('/garits/')
 
 
+# generates create vehicle form
 @login_required
 def create_vehicle(request, customer_uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
 
-        # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
-        # check for account holder, if still not found, check business customer.
+        # get customer from uuid. First try Business Customer customer with given uuid, if not found or if multiple found,
+        # check for account holder, if still not found, check drop in.
         try:
-            customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+            customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
         except ObjectDoesNotExist:
             try:
                 customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
             except ObjectDoesNotExist:
                 try:
-                    customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+                    customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
-                    pass # TODO: get last one?
+                    pass
             except MultipleObjectsReturned:
                 pass
         except MultipleObjectsReturned:
@@ -2384,10 +2259,12 @@ def create_vehicle(request, customer_uuid):
                 mot_base_date = form.cleaned_data['mot_base_date']
                 type = form.cleaned_data['type']
 
+                # create vehicle object
                 vehicle = Vehicle.objects.create(customer=customer, reg_number=reg_number, make=make, model=model,
                                                  engine_serial=engine_serial, chassis_number=chassis_number, color=color,
                                                  mot_base_date=mot_base_date, type=type)
 
+                # redirect to success modal
                 return render(request, 'nod/create_vehicle_success.html', {'vehicle': vehicle})
 
         else:
@@ -2403,33 +2280,34 @@ def create_vehicle(request, customer_uuid):
         return redirect('/garits/')
 
 
+# generates edit vehicle form page
 @login_required
 def edit_vehicle(request, customer_uuid, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
 
-        # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
-        # check for account holder, if still not found, check business customer.
+        # get customer from uuid. First try Business Customer customer with given uuid, if not found or if multiple found,
+        # check for account holder, if still not found, check drop in.
         try:
-            customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+            customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
         except ObjectDoesNotExist:
             try:
                 customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
             except ObjectDoesNotExist:
                 try:
-                    customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+                    customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
-                    pass # TODO: get last one?
+                    pass
             except MultipleObjectsReturned:
                 pass
         except MultipleObjectsReturned:
             pass
 
+        # find vehicle object with uuid
         vehicle = get_object_or_404(Vehicle, uuid=uuid)
-        print(uuid)
-        print(vehicle.uuid)
+
         if request.method == 'POST':
             form = VehicleForm(request.POST)
 
@@ -2482,16 +2360,16 @@ def edit_vehicle(request, customer_uuid, uuid):
         return redirect('/garits/')
 
 
+# sets vehicle object to soft deleted
 @login_required
 def delete_vehicle(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+            request.user.staffmember.role == '2':
         vehicle = get_object_or_404(Vehicle, uuid=uuid)
 
         vehicle.is_deleted = True
         vehicle.save()
 
-        # TODO: check that customer string is correct
         messages.error(request, "Vehicle " + vehicle.reg_number + " was removed from " + vehicle.get_customer().__str__())
         return redirect('view-customer', uuid=vehicle.get_customer().uuid)
     else:
@@ -2499,21 +2377,22 @@ def delete_vehicle(request, uuid):
         return redirect('/garits/')
 
 
+# retrieves vehicles as serialised objects in json format as part of the api
 def get_vehicles(request, customer_uuid):
-    # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
-    # check for account holder, if still not found, check business customer.
+    # get customer from uuid. First try business customer customer with given uuid, if not found or if multiple found,
+    # check for account holder, if still not found, check drop in.
     try:
-        customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
+        customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
     except ObjectDoesNotExist:
         try:
             customer = AccountHolder.objects.get(uuid=customer_uuid, is_deleted=False)
         except ObjectDoesNotExist:
             try:
-                customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
+                customer = Dropin.objects.get(uuid=customer_uuid, is_deleted=False)
             except ObjectDoesNotExist:
                 pass
             except MultipleObjectsReturned:
-                pass # TODO: get last one?
+                pass
         except MultipleObjectsReturned:
             pass
     except MultipleObjectsReturned:
@@ -2535,6 +2414,7 @@ def get_vehicles(request, customer_uuid):
     return HttpResponse(data, mimetype)
 
 
+# create part form
 @login_required
 def create_part(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2566,6 +2446,7 @@ def create_part(request):
         return redirect('/garits/')
 
 
+# edit part form
 @login_required
 def edit_part(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2608,6 +2489,7 @@ def edit_part(request, uuid):
         return redirect('/garits/')
 
 
+# set given part to soft deleted
 @login_required
 def delete_part(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
@@ -2624,6 +2506,8 @@ def delete_part(request, uuid):
         return redirect('/garits/')
 
 
+# retrieves vehicles as serialised objects in json format as part of the api for the purpose of autocomplete
+# (different data to the previous get_vehicles method)
 def get_vehicles_autocomplete(request):
     if request.is_ajax():
         q = request.GET.get('term')
@@ -2642,6 +2526,7 @@ def get_vehicles_autocomplete(request):
     return HttpResponse(data, mimetype)
 
 
+# generates form to specify which parts are ordered, and then populates the database with specified data
 @login_required
 def replenish_stock(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2669,11 +2554,12 @@ def replenish_stock(request):
                             part_name = part_form.cleaned_data['part_name']
                             quantity = part_form.cleaned_data['quantity']
 
+                            # adds the quantity specified to the database for each given part
                             if part_name and quantity:
                                 part = get_object_or_404(Part, name=part_name)
 
                                 order.orderpartrelationship_set.create(part=part, quantity=quantity,
-                                                                                          is_deleted=False)
+                                                                       is_deleted=False)
 
                                 part.quantity += quantity
                                 part.save()
@@ -2700,6 +2586,7 @@ def replenish_stock(request):
         return redirect('/garits/')
 
 
+# edit order form
 @login_required
 def edit_replenish_stock(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2707,6 +2594,7 @@ def edit_replenish_stock(request, uuid):
         order = get_object_or_404(PartOrder, uuid=uuid)
         PartCreateFormSet = formset_factory(JobPartForm, formset=BaseJobPartForm, min_num=1, extra=0)
         part_set = order.orderpartrelationship_set.all()
+        # current parts assigned to the replenish stock order form
         parts_data = [{'part_name': p.part, 'quantity': p.quantity}
                       for p in part_set]
 
@@ -2730,14 +2618,8 @@ def edit_replenish_stock(request, uuid):
 
                             if part_name and quantity:
                                 part = get_object_or_404(Part, name=part_name)
-                                print('a')
-                                print(order)
-                                print(part)
-                                print(order.orderpartrelationship_set.all())
-                                print(order.orderpartrelationship_set.get_or_create(part=part, is_deleted=False))
                                 op = order.orderpartrelationship_set.get_or_create(part=part, is_deleted=False)
 
-                                print('d')
                                 # if object was created
                                 if op[1] is True:
                                     print('b')
@@ -2746,7 +2628,6 @@ def edit_replenish_stock(request, uuid):
                                     part.quantity += quantity
                                     part.save()
                                 else:
-                                    print('c')
                                     part.quantity = part.quantity - op[0].quantity + quantity
                                     part.save()
                                     op[0].quantity = quantity
@@ -2775,7 +2656,7 @@ def edit_replenish_stock(request, uuid):
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
-
+# retrieves suppliers as serialised objects in json format as part of the api for the purpose of autocomplete
 def get_suppliers_autocomplete(request):
     if request.is_ajax():
         q = request.GET.get('term')
@@ -2794,6 +2675,7 @@ def get_suppliers_autocomplete(request):
     return HttpResponse(data, mimetype)
 
 
+# create supplier form
 @login_required
 def create_supplier(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2874,6 +2756,7 @@ def create_supplier(request):
         return redirect('/garits/')
 
 
+# edit supplier form
 @login_required
 def edit_supplier(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -2881,11 +2764,15 @@ def edit_supplier(request, uuid):
         supplier = get_object_or_404(Supplier, uuid=uuid)
 
         EmailFormSet = formset_factory(EmailForm, formset=BaseEmailFormSet, min_num=1, extra=0)
+
+        # current emails assigned to supplier
         user_emails = supplier.emails.filter(is_deleted=False)
         email_data = [{'email_address': e.address, 'email_type': e.type}
                       for e in user_emails]
 
         PhoneFormSet = formset_factory(PhoneForm, formset=BasePhoneFormSet, min_num=1, extra=0)
+
+        # current phones assigned to supplier
         user_phone_numbers = supplier.phone_numbers.filter(is_deleted=False)
         phone_data = [{'phone_number': p.phone_number, 'phone_type': p.type}
                       for p in user_phone_numbers]
@@ -2911,8 +2798,8 @@ def edit_supplier(request, uuid):
 
                         supplier.save()
 
+                        # sets all assigned emails to soft deleted
                         old_emails = supplier.emails.all()
-                        print(old_emails)
                         for e in old_emails:
                             e.is_deleted = True
                             e.save()
@@ -2921,6 +2808,7 @@ def edit_supplier(request, uuid):
                             email_address = email_form.cleaned_data.get('email_address')
                             email_type = email_form.cleaned_data.get('email_type')
 
+                            # either changes an existing email back to is_deleted=True, or creates a new assigned email
                             if email_address and email_type:
                                 email = EmailModel.objects.get_or_create(type=email_type, address=email_address)
                                 email = email[0]
@@ -2930,6 +2818,7 @@ def edit_supplier(request, uuid):
                                 supplier.emails.add(email)
                                 supplier.save()
 
+                        # sets all assigned phones to soft deleted
                         old_phones = supplier.phone_numbers.all()
                         for p in old_phones:
                             p.is_deleted = True
@@ -2939,6 +2828,7 @@ def edit_supplier(request, uuid):
                             phone_number = phone_form.cleaned_data.get('phone_number')
                             phone_type = phone_form.cleaned_data.get('phone_type')
 
+                            # either changes an existing phone back to is_deleted=True, or creates a new assigned phone
                             if phone_number and phone_type:
                                 phone = PhoneModel.objects.get_or_create(type=phone_type, phone_number=phone_number)
                                 phone = phone[0]
@@ -2980,13 +2870,11 @@ def edit_supplier(request, uuid):
         return redirect('/garits/')
 
 
+# sets supplier to soft deleted
 @login_required
 def delete_supplier(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
-        # try:
-        #     staff = get_object_or_404(Mechanic, uuid=uuid)
-        # except ObjectDoesNotExist:
         supplier = get_object_or_404(Supplier, uuid=uuid)
 
         supplier.is_deleted = True
@@ -2999,12 +2887,13 @@ def delete_supplier(request, uuid):
         return redirect('/garits/')
 
 
+# sell parts form to a customer
 @login_required
 def sell_parts(request, customer_uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
                     request.user.staffmember.role == '2':
-        # get customer from uuid. First try Dropin customer with given uuid, if not found or if multiple found,
-        # check for account holder, if still not found, check business customer.
+        # get customer from uuid. First try Business customer with given uuid, if not found or if multiple found,
+        # check for account holder, if still not found, check drop in.
         try:
             customer = BusinessCustomer.objects.get(uuid=customer_uuid, is_deleted=False)
         except ObjectDoesNotExist:
@@ -3016,7 +2905,7 @@ def sell_parts(request, customer_uuid):
                 except ObjectDoesNotExist:
                     pass
                 except MultipleObjectsReturned:
-                    pass # TODO: get last one?
+                    pass
             except MultipleObjectsReturned:
                 pass
         except MultipleObjectsReturned:
@@ -3037,17 +2926,22 @@ def sell_parts(request, customer_uuid):
                 try:
                     with transaction.atomic():
 
+                        # creates CustomerPartsOrder object for specified customer
                         order = CustomerPartsOrder.objects.create(date=date, content_object=customer)
                         customer.part_orders.add(order)
                         customer.save()
+
+                        # defines invoice number to be the previous one + 1. If there are 0, it sets it to 1.
                         if Invoice.objects.last() is not None:
                             last_id = Invoice.objects.last().id
                             new_id = last_id + 1
                         else:
                             new_id = 1
 
+                        # creates Invoice object for the part order object
                         invoice = Invoice.objects.create(part_order=order, invoice_number=new_id, issue_date=date)
 
+                        # adds the parts (and the quantity) defined to the order
                         for part_form in part_formset:
                             part_name = part_form.cleaned_data['part_name']
                             quantity = part_form.cleaned_data['quantity']
@@ -3056,7 +2950,6 @@ def sell_parts(request, customer_uuid):
                                 part = get_object_or_404(Part, name=part_name)
                                 part_sold = SellPart.objects.create(part=part, quantity=quantity, order=order)
                                 invoice.parts_sold.add(part_sold)
-                                #TODO: don't allow to drop below 0. and raise error if drops below threshold.
                                 part.quantity -= quantity
                                 part.save()
 
@@ -3087,6 +2980,7 @@ def sell_parts(request, customer_uuid):
         return redirect('/garits/')
 
 
+# create user form, only accessed by admin role
 @login_required
 def create_user(request):
     if request.user.staffmember.role == '5':
@@ -3101,8 +2995,6 @@ def create_user(request):
                 hourly_rate = form.cleaned_data['hourly_rate']
                 password = form.cleaned_data['password']
 
-                # TODO: superuser if admin??
-                # TODO: specify permissions
                 user = User.objects.create(first_name=first_name, last_name=last_name, username=username)
                 user.set_password(password)
                 user.save()
@@ -3123,12 +3015,10 @@ def create_user(request):
         return redirect('/garits/')
 
 
+# edit user form, accessed only by admin role
 @login_required
 def edit_user(request, uuid):
     if request.user.staffmember.role == '5':
-        # try:
-        # staff = get_object_or_404(Mechanic, uuid=uuid)
-        # except ObjectDoesNotExist:
         staff = get_object_or_404(StaffMember, uuid=uuid)
         if staff.role == '1' or staff.role == '2':
             staff = get_object_or_404(Mechanic, uuid=uuid)
@@ -3144,29 +3034,32 @@ def edit_user(request, uuid):
                 hourly_rate = form.cleaned_data['hourly_rate']
                 password = form.cleaned_data['password']
 
-                # TODO: superuser if admin??
-                # TODO: specify permissions
                 staff.user.first_name = first_name
                 staff.user.last_name = last_name
                 if password is not "":
                     staff.user.set_password(password)
                 staff.user.username = username
                 staff.user.save()
+
                 # mechanic or foreperson
+
+                # if staff member originally mechanic/foreperson:
                 if staff.role == '1' or staff.role == '2':
                     staff = get_object_or_404(Mechanic, uuid=uuid)
+                    # if role stays one of the two, update hourly rate to newly put hourly rate
                     if role == '1' or role == '2':
                         staff.hourly_pay = hourly_rate
                         staff.role = role
                     else:
                         staff = staff.staffmember_ptr
                 else:
+                    # if role specified in form is mechanic/foreperson, but staff wasn't originally one of the two,
+                    # change object to be of the parent class Staff, and delete the Mechanic object
                     if role == '1' or role == '2':
                         if Mechanic.objects.get(staffmember_ptr_id=staff.id):
                             Mechanic.objects.get(staffmember_ptr_id=staff.id).delete()
-                        staff = Mechanic.objects.get_or_create(staffmember_ptr_id=staff.id, hourly_pay=hourly_rate, user_id=staff.user_id,
-                                                        created=staff.created)
-                        staff = staff[0]
+                        staff = Mechanic.objects.get_or_create(staffmember_ptr_id=staff.id, hourly_pay=hourly_rate,
+                                                               user_id=staff.user_id, created=staff.created)
 
                 staff.role = role
                 staff.save()
@@ -3194,6 +3087,7 @@ def edit_user(request, uuid):
         return redirect('/garits/')
 
 
+# set specified user to soft deleted
 @login_required
 def delete_user(request, uuid):
     if request.user.staffmember.role == '5':
@@ -3209,6 +3103,7 @@ def delete_user(request, uuid):
         return redirect('/garits/')
 
 
+# price control (marked up price, and VAT) form, accessed by admin role
 @login_required
 def price_control(request):
     if request.user.staffmember.role == '5':
@@ -3243,17 +3138,20 @@ def price_control(request):
         return redirect('/garits/')
 
 
+# view invoice page, sends information required: invoice object, order object, customer object
 @login_required
 def view_invoice(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+            request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
+        # if the invoice is for a job object:
         if invoice.job_done:
             job = invoice.job_done
             customer = invoice.get_customer()
             discount = customer.content_object
             vehicle = invoice.job_done.vehicle
             mechanic = invoice.job_done.mechanic
+            # loads page depending on the reminder phase of the invoice
             if invoice.reminder_phase == '1':
                 template = loader.get_template('nod/view_invoice.html')
             else:
@@ -3273,10 +3171,12 @@ def view_invoice(request, uuid):
                 'mechanic': mechanic,
             })
             return HttpResponse(template.render(context))
+        # else if the invoice is for parts sold to the customer:
         else:
             if invoice.part_order:
                 order = invoice.part_order
                 customer = invoice.get_customer()
+                # loads page based on the reminder phase
                 if invoice.reminder_phase == '1':
                     template = loader.get_template('nod/view_invoice_parts.html')
                 else:
@@ -3301,12 +3201,15 @@ def view_invoice(request, uuid):
         return redirect('/garits/')
 
 
+# view invoice reminder 1 page, sends information required: if for job - invoice object, order object, customer object,
+# discount details, job and mechanic. if for parts sold: invoice, order, customer
 @login_required
 def view_invoice_reminder1(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='2')
+        # if invoice generated for a job done:
         if invoice.job_done:
             job = invoice.job_done
             customer = invoice.get_customer()
@@ -3328,6 +3231,7 @@ def view_invoice_reminder1(request, uuid):
                 'vehicle': vehicle,
             })
             return HttpResponse(template.render(context))
+        # else if invoice generated for parts sold:
         else:
             customer = invoice.get_customer()
             if invoice_reminder.reminder_phase == '2':
@@ -3349,10 +3253,13 @@ def view_invoice_reminder1(request, uuid):
         return redirect('/garits/')
 
 
+# view invoice reminder 2 page, sends information required: if for job - invoice object, order object, customer object,
+# discount details, job and mechanic. if for parts sold: invoice, order, customer
+# TODO: change so that it's like reminder1, working for part orders not just jobs
 @login_required
 def view_invoice_reminder2(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+            request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='3')
         job = invoice.job_done
@@ -3373,15 +3280,19 @@ def view_invoice_reminder2(request, uuid):
             'vehicle': vehicle,
         })
         return HttpResponse(template.render(context))
+
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
+# view invoice reminder 3 page, sends information required: if for job - invoice object, order object, customer object,
+# discount details, job and mechanic. if for parts sold: invoice, order, customer
+# TODO: change so that it's like reminder1, working for part orders not just jobs
 @login_required
 def view_invoice_reminder3(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
-                    request.user.staffmember.role == '2':
+            request.user.staffmember.role == '2':
         invoice = get_object_or_404(Invoice, uuid=uuid)
         invoice_reminder = get_object_or_404(InvoiceReminder, invoice=invoice, reminder_phase='4')
         job = invoice.job_done
@@ -3408,6 +3319,7 @@ def view_invoice_reminder3(request, uuid):
         return redirect('/garits/')
 
 
+# form to pay a given invoice
 @login_required
 def pay_invoice(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -3426,6 +3338,7 @@ def pay_invoice(request, uuid):
 
                 try:
                     with transaction.atomic():
+                        # if card payment, create card object
                         if payment_type == '2':
                             if last_4_digits and cvv:
                                 Card.objects.create(amount=amount, date=date, payment_type=payment_type, last_4_digits=last_4_digits,
@@ -3442,6 +3355,8 @@ def pay_invoice(request, uuid):
                         invoice.save()
 
                         try:
+                            # checks now to see if the customer still has any other unpaid invoices; if not, it'll
+                            # change the suspended value to False
                             if customer.suspended:
                                 if len(customer.get_unpaid_invoices()) < 0:
                                     for invoice in customer.get_unpaid_invoices():
@@ -3479,6 +3394,7 @@ def pay_invoice(request, uuid):
         return redirect('/garits/')
 
 
+# not used. but was a form to create a payment before paying from invoice
 @login_required
 def create_payment(request, job_uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or\
@@ -3533,6 +3449,7 @@ def create_payment(request, job_uuid):
         return redirect('/garits/')
 
 
+# not used, invoices now generated immediately upon creation of job object or parts order object
 @login_required
 def generate_invoice_for_job(request, job_uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -3562,6 +3479,7 @@ def generate_invoice_for_job(request, job_uuid):
         return redirect('/garits/')
 
 
+# generates spare parts report table
 @login_required
 def spare_parts_report_table(request):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
@@ -3574,9 +3492,9 @@ def spare_parts_report_table(request):
         return redirect('/garits/')
 
 
+# generates a spare parts report when prompted to (on demand, as opposed to automatic) based on today's date
 @login_required
 def generate_spare_parts_report(request):
-    print('z')
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         month = datetime.date.today().month
@@ -3585,13 +3503,11 @@ def generate_spare_parts_report(request):
         date = datetime.date(year, month, 1)
         today = datetime.date.today()
         report = SparePartsReport.objects.create(start_date=date, end_date=today, date=today)
-        print('b')
         for part in Part.objects.filter(is_deleted=False):
             spare = SparePart.objects.create(report=report, part=part, new_stock_level=part.quantity)
             delivered = 0
             for p in OrderPartRelationship.objects.filter(part=part, order__date__gte=report.start_date):
                 delivered += p.quantity
-            # delivered = part.delivered_parts(start_date=date, end_date=today)
             spare.delivery = delivered
 
             # used = 0
@@ -3602,30 +3518,26 @@ def generate_spare_parts_report(request):
             used = part.total_used_parts(start_date=date, end_date=today)
             spare.used = used
 
+            # assigns the initial stock level value to the new stock level defined + the quantity used - the
+            # amount ordered/delivered to the garage
             spare.initial_stock_level = spare.new_stock_level + spare.used - spare.delivery
             spare.save()
             report.sparepart_set.add(spare)
         report.save()
-        print('a')
-        # return redirect('/garits/spare_parts_reports/')
+
         return view_spare_parts_report(request, report.uuid)
-    #     template = loader.get_template('nod/view_spare_parts_report.html')
-    #     context = RequestContext(request, {
-    #         'report': report,
-    #     })
-    # #
-    #     return HttpResponse(template.render(context))
+
     else:
         messages.error(request, "You must be a franchisee/receptionist/foreperson in order to view this page.")
         return redirect('/garits/')
 
 
+# renders spare parts report object to template
 @login_required
 def view_spare_parts_report(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \
                     request.user.staffmember.role == '2':
         report = get_object_or_404(SparePartsReport, uuid=uuid)
-        print('c')
         template = loader.get_template('nod/view_spare_parts_report.html')
         context = RequestContext(request, {
             'report': report,
@@ -3636,6 +3548,7 @@ def view_spare_parts_report(request, uuid):
         return redirect('/garits/')
 
 
+# configures time report table
 @login_required
 def time_report_table(request):
     if request.user.staffmember.role == '3':
@@ -3647,6 +3560,7 @@ def time_report_table(request):
         return redirect('/garits/')
 
 
+# generates time report when prompted to (on demand, as opposed to automatic), using today's date
 @login_required
 def generate_time_report(request):
     if request.user.staffmember.role == '3':
@@ -3656,14 +3570,13 @@ def generate_time_report(request):
         date = datetime.date(year, month, 1)
         today = datetime.date.today()
         report = TimeReport.objects.create(start_date=date, end_date=today, date=today)
-        # for job in Job.objects.filter(is_deleted=False, booking_date__gte=report.start_date,
-        #                               booking_date__lte=report.end_date):
         return view_time_report(request, report.uuid)
     else:
         messages.error(request, "You must be a franchisee in order to view this page.")
         return redirect('/garits/')
 
 
+# renders time report and mechanic objects to the template
 @login_required
 def view_time_report(request, uuid):
     if request.user.staffmember.role == '3':
@@ -3683,6 +3596,7 @@ def view_time_report(request, uuid):
         return redirect('/garits/')
 
 
+# renders specify reminder, vehicle, and customer objects to template
 @login_required
 def view_mot_reminder(request, uuid):
     if request.user.staffmember.role == '3' or request.user.staffmember.role == '4' or \

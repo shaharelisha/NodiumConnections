@@ -1,16 +1,10 @@
-import calendar
-
-from django import forms
 from django.forms.formsets import BaseFormSet
 from collections import OrderedDict
-from datetime import timedelta
-
 from crispy_forms_foundation.forms import *
 from crispy_forms_foundation.layout import *
 
-from crispy_forms_foundation.forms import FoundationModelForm
-
 from nod.models import *
+
 
 class EmailForm(forms.Form):
     CONTACT_TYPE = [
@@ -21,54 +15,54 @@ class EmailForm(forms.Form):
 
     email_type = forms.ChoiceField(label="Email Type", required=False, choices=CONTACT_TYPE)
     email_address = forms.EmailField(required=False, widget=forms.EmailInput(
-        attrs={'placeholder': "Email",'rows': '1'}))
+        attrs={'placeholder': "Email", 'rows': '1'}))
 
 
 class BaseEmailFormSet(BaseFormSet):
-         def clean(self):
-             """
-             Adds validation to check that no two emails have the same type or address
-             and that all emails have both a type and address.
-             """
-             if any(self.errors):
-                 return
+    def clean(self):
+        """
+        Adds validation to check that no two emails have the same type or address
+        and that all emails have both a type and address.
+        """
+        if any(self.errors):
+            return
 
-             # email_types = []
-             email_addresses = []
-             duplicates = False
+        # email_types = []
+        email_addresses = []
+        duplicates = False
 
-             for form in self.forms:
-                 if form.cleaned_data:
-                     email_type = form.cleaned_data['email_type']
-                     email_address = form.cleaned_data['email_address']
+        for form in self.forms:
+            if form.cleaned_data:
+                email_type = form.cleaned_data['email_type']
+                email_address = form.cleaned_data['email_address']
 
-                     # Check that no two emails have the same address
-                     if email_address and email_type:
-                         if email_address in email_addresses:
-                             duplicates = True
-                         email_addresses.append(email_address)
+                # Check that no two emails have the same address
+                if email_address and email_type:
+                    if email_address in email_addresses:
+                        duplicates = True
+                    email_addresses.append(email_address)
 
-                         # if email_type in email_types:
-                         #     duplicates = True
-                         # email_types.append(email_type)
+                    # if email_type in email_types:
+                    #     duplicates = True
+                    # email_types.append(email_type)
 
-                     if duplicates:
-                         raise forms.ValidationError(
-                             'This email already exists.',
-                             code='duplicate_emails'
-                         )
+                if duplicates:
+                    raise forms.ValidationError(
+                        'This email already exists.',
+                        code='duplicate_emails'
+                    )
 
-                     # Check that all emails have both a type and address
-                     # if email_type and not email_address:
-                     #     raise forms.ValidationError(
-                     #         'All emails must have an address.',
-                     #         code='missing_email_address'
-                     #     )
-                     elif email_address and not email_type:
-                         raise forms.ValidationError(
-                             'All emails must have a type.',
-                             code='missing_email_atype'
-                         )
+                # Check that all emails have both a type and address
+                # if email_type and not email_address:
+                #     raise forms.ValidationError(
+                #         'All emails must have an address.',
+                #         code='missing_email_address'
+                #     )
+                elif email_address and not email_type:
+                    raise forms.ValidationError(
+                        'All emails must have a type.',
+                        code='missing_email_atype'
+                    )
 
 
 class EmailFormSetHelper(FormHelper):
@@ -93,14 +87,14 @@ class PhoneForm(forms.Form):
     ]
     phone_type = forms.ChoiceField(label="Phone Type", required=False, choices=CONTACT_TYPE)
     phone_number = forms.CharField(label="Phone Number", required=False, widget=forms.TextInput(
-        attrs={'placeholder': "Phone Number",'rows': '1'}))
+        attrs={'placeholder': "Phone Number", 'rows': '1'}))
 
 
 class BasePhoneFormSet(BaseFormSet):
     def clean(self):
         """
-        Adds validation to check that no two links have the same anchor or URL
-        and that all links have both an anchor and URL.
+        Adds validation to check that no two phones have the same type and number
+        and that all phones have both a type and a number.
         """
         if any(self.errors):
             return
@@ -132,7 +126,6 @@ class BasePhoneFormSet(BaseFormSet):
                     )
 
 
-
 class PhoneFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(PhoneFormSetHelper, self).__init__(*args, **kwargs)
@@ -144,42 +137,6 @@ class PhoneFormSetHelper(FormHelper):
             'phone_number',
         )
         self.render_required_fields = True
-
-
-# class BaseTrackerForm(FoundationModelForm):
-#     def __init__(self, user=None, title=None, *args, **kwargs):
-#         self.title = title
-#         self.user = user
-#
-#         super(BaseTrackerForm, self).__init__(*args, **kwargs)
-#
-#         for field in self.fields.values():
-#             field.widget.attrs['placeholder'] = field.label
-#
-#     def save(self, *args, **kwargs):
-#         commit = kwargs.pop('commit', True)
-#         instance = super(BaseTrackerForm, self).save(
-#             commit=False, *args, **kwargs)
-#
-#         self.pre_save(instance)
-#
-#         if commit:
-#             instance.save()
-#
-#         return instance
-#
-#     def pre_save(self, instance):
-#         pass
-#
-#
-# class JobForm(BaseTrackerForm):
-#     class Meta:
-#         model = Job
-#         fields =
-
-
-# class TaskForm(forms.Form):
-#     task_name = forms.ModelChoiceField(queryset=Task.objects.filter(is_deleted=False))
 
 
 class JobCreateTaskForm(forms.Form):
@@ -331,8 +288,6 @@ class PartFormSetHelper(FormHelper):
         super(PartFormSetHelper, self).__init__(*args, **kwargs)
         self.form_method = 'post'
         self.form_class = 'form-horizontal'
-        # self.label_class = 'col-lg-8'
-        # self.field_class = 'col-lg-5'
         self.form_tag = False
         self.layout = Layout(
             'part_name',
@@ -340,14 +295,14 @@ class PartFormSetHelper(FormHelper):
         )
         self.render_required_fields = True
 
+
 class MechanicJobForm(forms.Form):
     mechanic = forms.ModelChoiceField(queryset=Mechanic.objects.filter(is_deleted=False))
+
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_action = 'POST'
         self.helper.form_class = 'form-horizontal'
-        # self.helper.label_class = 'col-lg-8'
-        # self.helper.field_class = 'col-lg-5'
         self.helper.form_tag = False
         self.helper.layout = Layout(
             'mechanic',
@@ -359,7 +314,7 @@ class MechanicJobForm(forms.Form):
 class JobCreateForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
     vehicle = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Vehicle Registration No.",'rows': '1', "id": "vehicles"}))
+        attrs={'placeholder': "Vehicle Registration No.", 'rows': '1', "id": "vehicles"}))
 
     JOB_TYPE = [
         ('1', 'MOT'),
@@ -370,9 +325,8 @@ class JobCreateForm(forms.Form):
 
     # define today's date in order to autofill the 'booking date' attribute to today's date.
     today = timezone.now().date()
-    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
-                                   widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
-    # mechanic = forms.ModelChoiceField(queryset=Mechanic.objects.filter(is_deleted=False))
+    booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'],
+                                   initial=today, widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
 
     def __init__(self, *args, **kwargs):
@@ -396,18 +350,19 @@ class JobCreateForm(forms.Form):
         self.fields['booking_date'].label = "Booking Date"
         self.fields['bay'].label = "Bay"
 
+        # TODO: limit vehicles only to those assigned to the given customer
         # if customer_uuid:
-        #     self.fields['vehicle'] = forms.ChoiceField(choices=tuple([(str(o) ,str(o)) for o in customer.get_vehicles()]))
+        # self.fields['vehicle'] = forms.ChoiceField(choices=tuple([(str(o) ,str(o)) for o in customer.get_vehicles()]))
 
 
 class JobEditForm(forms.Form):
     job_number = forms.IntegerField(min_value=0, widget=forms.TextInput(attrs={'readonly': True}))
     vehicle = forms.CharField(max_length=300, widget=forms.TextInput(
-        attrs={'placeholder': "Vehicle Registration No.",'rows': '1', 'readonly': True}))
+        attrs={'placeholder': "Vehicle Registration No.", 'rows': '1', 'readonly': True}))
     booking_date = forms.DateField(label="Booking Date", input_formats=['%d/%m/%Y', '%Y-%m-%d'],
                                    widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     work_carried_out = forms.CharField(max_length=1000, required=False, widget=forms.Textarea(
-        attrs={'placeholder': "Work Carried Out",'rows': '3'}))
+        attrs={'placeholder': "Work Carried Out", 'rows': '3'}))
     bay = forms.ModelChoiceField(queryset=Bay.objects.filter(is_deleted=False), empty_label="Select Bay")
     JOB_TYPE = [
         ('1', 'MOT'),
@@ -454,12 +409,13 @@ class CustomerPartsOrderForm(forms.Form):
         super(CustomerPartsOrderForm, self).__init__(*args, **kwargs)
         self.fields['date'].label = "Date"
 
+
 class CustomerForm(forms.Form):
     customer_uuid = forms.CharField(widget=forms.HiddenInput())
     forename = forms.CharField(max_length=50, widget=forms.TextInput(
-        attrs={'placeholder': "Forename",'rows': '1'}))
+        attrs={'placeholder': "Forename", 'rows': '1'}))
     surname = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Surname",'rows': '1'}))
+        attrs={'placeholder': "Surname", 'rows': '1'}))
 
     # define today's date in order to autofill the 'joining date' attribute to today's date.
     today = timezone.now().date().strftime('%d/%m/%Y')
@@ -484,6 +440,7 @@ class DropinForm(CustomerForm):
         self.fields['surname'].label = "Surname"
         self.fields['date'].label = "Date Arrived"
 
+
 class DiscountPlanForm(forms.Form):
     PLAN = [
         ('', 'Select Discount Plan'),
@@ -507,9 +464,9 @@ class DiscountPlanForm(forms.Form):
 
 class AccountHolderForm(CustomerForm):
     address = forms.CharField(max_length=80, widget=forms.Textarea(
-        attrs={'placeholder': "Address",'rows': '1'}))
+        attrs={'placeholder': "Address", 'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
-        attrs={'placeholder': "Postcode",'rows': '1'}))
+        attrs={'placeholder': "Postcode", 'rows': '1'}))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -534,13 +491,13 @@ class AccountHolderForm(CustomerForm):
 
 class BusinessCustomerForm(CustomerForm):
     company_name = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Company Name",'rows': '1'}))
+        attrs={'placeholder': "Company Name", 'rows': '1'}))
     rep_role = forms.CharField(max_length=100, widget=forms.TextInput(
         attrs={'placeholder': "Representative Role", 'rows': '1'}))
     address = forms.CharField(max_length=80, widget=forms.Textarea(
-        attrs={'placeholder': "Address",'rows': '1'}))
+        attrs={'placeholder': "Address", 'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
-        attrs={'placeholder': "Postcode",'rows': '1'}))
+        attrs={'placeholder': "Postcode", 'rows': '1'}))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -569,17 +526,17 @@ class BusinessCustomerForm(CustomerForm):
 
 class VehicleForm(forms.Form):
     reg_number = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Registration No.",'rows': '1'}))
+        attrs={'placeholder': "Registration No.", 'rows': '1'}))
     make = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Make",'rows': '1'}))
+        attrs={'placeholder': "Make", 'rows': '1'}))
     model = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Model",'rows': '1'}))
+        attrs={'placeholder': "Model", 'rows': '1'}))
     engine_serial = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Engine Serial",'rows': '1'}))
+        attrs={'placeholder': "Engine Serial", 'rows': '1'}))
     chassis_number = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Chassis No.",'rows': '1'}))
+        attrs={'placeholder': "Chassis No.", 'rows': '1'}))
     color = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Colour",'rows': '1'}))
+        attrs={'placeholder': "Colour", 'rows': '1'}))
     mot_base_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d'], required=False,
                                     widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
 
@@ -638,15 +595,15 @@ class EditPartForm(forms.Form):
 
 class CreatePartForm(forms.Form):
     name = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Name",'rows': '1'}))
+        attrs={'placeholder': "Name", 'rows': '1'}))
     manufacturer = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Manufacturer",'rows': '1'}))
+        attrs={'placeholder': "Manufacturer", 'rows': '1'}))
     vehicle_type = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Vehicle Type",'rows': '1'}))
+        attrs={'placeholder': "Vehicle Type", 'rows': '1'}))
     years = forms.CharField(max_length=9, widget=forms.TextInput(
-        attrs={'placeholder': "Year(s)",'rows': '1'}))
+        attrs={'placeholder': "Year(s)", 'rows': '1'}))
     code = forms.CharField(max_length=20, widget=forms.TextInput(
-        attrs={'placeholder': "Code",'rows': '1'}))
+        attrs={'placeholder': "Code", 'rows': '1'}))
     low_level_threshold = forms.IntegerField(min_value=0, initial=10)
     price = forms.FloatField(min_value=0)
     quantity = forms.IntegerField(min_value=0)
@@ -682,7 +639,7 @@ class ReplenishmentOrderForm(forms.Form):
     date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
                            widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     company_name = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Supplier Company Name",'rows': '1', "id": 'suppliers'}))
+        attrs={'placeholder': "Supplier Company Name", 'rows': '1', "id": 'suppliers'}))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -700,11 +657,11 @@ class ReplenishmentOrderForm(forms.Form):
 
 class SupplierForm(forms.Form):
     company_name = forms.CharField(max_length=100, widget=forms.TextInput(
-        attrs={'placeholder': "Company Name",'rows': '1'}))
+        attrs={'placeholder': "Company Name", 'rows': '1'}))
     address = forms.CharField(max_length=80, widget=forms.Textarea(
-        attrs={'placeholder': "Address",'rows': '1'}))
+        attrs={'placeholder': "Address", 'rows': '1'}))
     postcode = forms.CharField(max_length=8, widget=forms.TextInput(
-        attrs={'placeholder': "Postcode",'rows': '1'}))
+        attrs={'placeholder': "Postcode", 'rows': '1'}))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -758,12 +715,13 @@ class PaymentForm(forms.Form):
 
 class UserForm(forms.Form):
     first_name = forms.CharField(max_length=30, widget=forms.TextInput(
-        attrs={'placeholder': "Forename",'rows': '1'}))
+        attrs={'placeholder': "Forename", 'rows': '1'}))
     last_name = forms.CharField(max_length=30, widget=forms.TextInput(
-        attrs={'placeholder': "Surname",'rows': '1'}))
+        attrs={'placeholder': "Surname", 'rows': '1'}))
     user_name = forms.CharField(max_length=30, widget=forms.TextInput(
         attrs={'placeholder': "Username", 'rows': '1'}))
-    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': "Password",'rows': '1',}))
+    password = forms.CharField(required=False,
+                               widget=forms.PasswordInput(attrs={'placeholder': "Password", 'rows': '1'}))
     ROLES = [
         ("1", "Mechanic"),
         ("2", "Foreperson"),
@@ -816,10 +774,10 @@ class PriceControlForm(forms.Form):
 
 class SparePartsReportGenerateForm(forms.Form):
     start_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'],
-                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+                                 widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     today = timezone.now().date()
     end_date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
-                           widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
+                               widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
     date = forms.DateField(input_formats=['%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y'], initial=today,
                            widget=forms.DateInput(attrs={'type': 'date', 'class': 'datepicker'}))
 
@@ -860,7 +818,7 @@ class SetPasswordForm(forms.Form):
     password
     """
     error_messages = {
-        'password_mismatch': ("The two password fields didn't match."),
+        'password_mismatch': "The two password fields didn't match.",
     }
     new_password1 = forms.CharField(widget=forms.PasswordInput, required=False)
     new_password2 = forms.CharField(widget=forms.PasswordInput, required=False)
