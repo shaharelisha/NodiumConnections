@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'django_tables2',
     'dbbackup',  # django-dbbackup
-    # 'simple_history'
 )
 
 DBBACKUP_STORAGE = 'dbbackup.storage.filesystem_storage'

@@ -1,4 +1,10 @@
+import calendar
+import datetime
+
 from django import template
+
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, FieldDoesNotExist
+from django.utils import timezone
 
 from nod.models import *
 
